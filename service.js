@@ -85,7 +85,7 @@ define(function(require, exports, module) {
                 /**
                  * Launches the Save As window which allows the user to save the 
                  * currently active file under a new name an path
-                 * @param {Page} page an alternative page to save as
+                 * @param {Tab} tab an alternative tab to save as
                  * @param {Function} callback called after the file is saved
                  */
                 show : show
