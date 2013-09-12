@@ -6,7 +6,7 @@
  */
 define(function(require, exports, module) {
     main.consumes = [
-        "plugin", "c9", "util", "settings", "ui", "layout", "anims", //"tabs", 
+        "plugin", "c9", "util", "settings", "ui", "layout", "anims", //"tabManager", 
         "fs", "panels" //, "save"
     ];
     main.provides = ["test"];
@@ -70,7 +70,7 @@ define(function(require, exports, module) {
         var settings = imports.settings;
         var ui       = imports.ui;
         var anims    = imports.anims;
-        var tabs     = imports.tabs;
+        var tabs     = imports.tabManager;
         var save     = imports.save;
         var panels   = imports.panels;
         var layout   = imports.layout;
