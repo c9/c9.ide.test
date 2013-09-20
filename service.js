@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "c9", "util", "settings", "ui", "layout",
+        "plugin", "c9", "util", "settings", "ui", "layout",
         "anims", "menus", "test"
     ];
     main.provides = ["testservice"];
@@ -9,7 +9,7 @@ define(function(require, exports, module) {
     function main(options, imports, register) {
         var c9       = imports.c9;
         var util     = imports.util;
-        var Plugin   = imports.Plugin;
+        var Plugin   = imports.plugin;
         var settings = imports.settings;
         var ui       = imports.ui;
         var anims    = imports.anims;
@@ -77,7 +77,7 @@ define(function(require, exports, module) {
             /**
              * Draws the file tree
              * @event afterfilesave Fires after a file is saved
-             * @param {Object} e
+             *   object:
              *     node     {XMLNode} description
              *     oldpath  {String} description
              **/
@@ -85,8 +85,8 @@ define(function(require, exports, module) {
                 /**
                  * Launches the Save As window which allows the user to save the 
                  * currently active file under a new name an path
-                 * @param {Tab} tab an alternative tab to save as
-                 * @param {Function} callback called after the file is saved
+                 * @param page {Page} an alternative page to save as
+                 * @param callback {Function} called after the file is saved
                  */
                 show : show
                 
