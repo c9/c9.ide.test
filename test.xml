@@ -4,10 +4,10 @@
         <a:divider />
         
         <a:divider />
-        <a:item type="check" checked="[{settings.model}::user/testpanel/@showlibraries]" onclick="
+        <a:item type="check" checked="user/testpanel/@showlibraries" onclick="
             require('ext/testpanel/testpanel').toggleSubmodules(this.checked);
         ">Show Libraries</a:item>
-        <a:item type="check" checked="[{settings.model}::user/testpanel/@autoexpand]" onclick="
+        <a:item type="check" checked="user/testpanel/@autoexpand" onclick="
             require('ext/testpanel/testpanel').toggleExpandTests(this.checked);
         ">Auto Expand Tests</a:item>
         <a:divider />
@@ -15,7 +15,7 @@
     </a:menu>
     
     <a:menu id="mnuAutorunTests">
-        <a:group id="grpAutoRunTests" value="[{settings.model}::user/testpanel/@autorun]" />
+        <a:group id="grpAutoRunTests" value="user/testpanel/@autorun" />
         <a:item group="grpAutoRunTests" type="radio" value="none">None</a:item>
         <a:divider />
         <a:item group="grpAutoRunTests" type="radio" value="selection">Selection</a:item>
