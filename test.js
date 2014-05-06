@@ -64,24 +64,24 @@ define(function(require, exports, module) {
     */
 
     function main(options, imports, register) {
-        var c9       = imports.c9;
-        var util     = imports.util;
-        var Plugin   = imports.Plugin;
+        var c9 = imports.c9;
+        var util = imports.util;
+        var Plugin = imports.Plugin;
         var settings = imports.settings;
-        var ui       = imports.ui;
-        var anims    = imports.anims;
-        var tabs     = imports.tabManager;
-        var save     = imports.save;
-        var panels   = imports.panels;
-        var layout   = imports.layout;
-        var fs       = imports.fs;
+        var ui = imports.ui;
+        var anims = imports.anims;
+        var tabs = imports.tabManager;
+        var save = imports.save;
+        var panels = imports.panels;
+        var layout = imports.layout;
+        var fs = imports.fs;
         
-        var markup   = require("text!./test.xml");
+        var markup = require("text!./test.xml");
         
         /***** Initialization *****/
         
         var plugin = new Plugin("Ajax.org", main.consumes);
-        var emit   = plugin.getEmitter();
+        var emit = plugin.getEmitter();
         
         var loaded = false;
         function load(){
@@ -90,21 +90,21 @@ define(function(require, exports, module) {
             
             // Register this panel on the left-side panels
             panels.register({
-                index        : 200,
-                caption      : "Test",
-                command      : "toggletest",
-                hint         : "show the test panel",
+                index: 200,
+                caption: "Test",
+                command: "toggletest",
+                hint: "show the test panel",
                 // bindKey      : { mac: "Command-Shift-D", win: "Ctrl-Shift-D" },
-                className    : "test",
-                panel        : plugin,
-                elementName  : "winTest",
-                minWidth     : 165,
-                width        : 200,
-                draw         : draw,
-                where        : "right"
+                className: "test",
+                panel: plugin,
+                elementName: "winTest",
+                minWidth: 165,
+                width: 200,
+                draw: draw,
+                where: "right"
             });
     
-            settings.on("read", function(e){
+            settings.on("read", function(e) {
                 settings.setDefaults("user/test", [
                     ["autorun", "none"],
                     ["type", "all"],
@@ -142,7 +142,7 @@ define(function(require, exports, module) {
         });
         plugin.on("unload", function(){
             loaded = false;
-            drawn  = false;
+            drawn = false;
         });
         
         /***** Register and define API *****/
@@ -161,7 +161,7 @@ define(function(require, exports, module) {
              * @param {Tab} tab an alternative tab to save as
              * @param {Function} callback called after the file is saved
              */
-            show : show
+            show: show
             
             
         });

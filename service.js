@@ -7,14 +7,14 @@ define(function(require, exports, module) {
     return main;
 
     function main(options, imports, register) {
-        var c9       = imports.c9;
-        var util     = imports.util;
-        var Plugin   = imports.Plugin;
+        var c9 = imports.c9;
+        var util = imports.util;
+        var Plugin = imports.Plugin;
         var settings = imports.settings;
-        var ui       = imports.ui;
-        var anims    = imports.anims;
-        var menus    = imports.menus;
-        var layout   = imports.layout;
+        var ui = imports.ui;
+        var anims = imports.anims;
+        var menus = imports.menus;
+        var layout = imports.layout;
         
         function Service(){
             
@@ -25,7 +25,7 @@ define(function(require, exports, module) {
             
             // Get a reference to the event emitter
             var plugin = this;
-            var emit   = plugin.getEmitter();
+            var emit = plugin.getEmitter();
             
             var loaded = false;
             function load(){
@@ -40,8 +40,8 @@ define(function(require, exports, module) {
                 
                 // Import Skin
                 ui.insertSkin({
-                    name         : "c9statusbar",
-                    data         : require("text!./skin.xml"),
+                    name: "c9statusbar",
+                    data: require("text!./skin.xml"),
                     "media-path" : options.staticPrefix + "/images/",
                     "icon-path"  : options.staticPrefix + "/icons/"
                 }, plugin);
@@ -69,7 +69,7 @@ define(function(require, exports, module) {
             });
             plugin.on("unload", function(){
                 loaded = false;
-                drawn  = false;
+                drawn = false;
             });
             
             /***** Register and define API *****/
@@ -88,7 +88,7 @@ define(function(require, exports, module) {
                  * @param {Tab} tab an alternative tab to save as
                  * @param {Function} callback called after the file is saved
                  */
-                show : show
+                show: show
                 
                 
             });
