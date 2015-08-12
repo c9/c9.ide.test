@@ -1,28 +1,23 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Panel", "ui", "settings", "panels", "menus"
+        "TestPanel", "ui", "Tree", "settings"
     ];
-    main.provides = ["test"];
+    main.provides = ["test.all"];
     return main;
 
     function main(options, imports, register) {
-        var Panel = imports.Panel;
-        var ui = imports.ui;
+        var TestPanel = imports.TestPanel;
         var settings = imports.settings;
-        var panels = imports.panels;
-        var menus = imports.menus;
-        
+        var ui = imports.ui;
+        var Tree = imports.Tree;
+
         /***** Initialization *****/
-        
-        var plugin = new Panel("Ajax.org", main.consumes, {
-            index: options.index || 400,
-            caption: "Test",
-            minWidth: 150,
-            where: options.where || "left"
+
+        var plugin = new TestPanel("Ajax.org", main.consumes, {
+            caption: "All Tests",
+            index: 400
         });
         var emit = plugin.getEmitter();
-        
-        var toolbar, container;
         
         function load() {
             // plugin.setCommand({
@@ -47,38 +42,8 @@ define(function(require, exports, module) {
             if (drawn) return;
             drawn = true;
             
-            // Import CSS
-            // ui.insertCss(require("text!./style.css"), plugin);
+            opts.html.innerHTML = "Hello World";
             
-            // Splitbox
-            var vbox = opts.aml.appendChild(new ui.vbox({ 
-                anchors: "0 0 0 0" 
-            }));
-            
-            // Toolbar
-            toolbar = vbox.appendChild(new ui.bar({
-                id: "toolbar",
-                skin: "toolbar-top",
-                class: "fakehbox aligncenter debugger_buttons basic"
-            }));
-            plugin.addElement(toolbar);
-            
-            ui.insertByIndex(toolbar, new ui.button({
-                caption: "Run Test",
-                skinset: "default",
-                skin: "c9-menu-btn"
-            }), 100, plugin);
-            
-            ui.insertByIndex(toolbar, new ui.button({
-                caption: "Run All",
-                skinset: "default",
-                skin: "c9-menu-btn"
-            }), 100, plugin);
-            
-            // Container
-            container = vbox.appendChild(new ui.bar());
-            
-            emit.sticky("drawPanels", { html: container.$int, aml: container });
         }
         
         /***** Methods *****/
@@ -92,12 +57,6 @@ define(function(require, exports, module) {
         plugin.on("draw", function(e) {
             draw(e);
         });
-        plugin.on("enable", function(){
-            
-        });
-        plugin.on("disable", function(){
-            
-        });
         plugin.on("show", function(e) {
             // txtFilter.focus();
             // txtFilter.select();
@@ -108,8 +67,6 @@ define(function(require, exports, module) {
         });
         plugin.on("unload", function(){
             drawn = false;
-            toolbar = null;
-            container = null;
         });
         
         /***** Register and define API *****/
@@ -131,7 +88,7 @@ define(function(require, exports, module) {
         });
         
         register(null, {
-            test: plugin
+            "test.all": plugin
         });
     }
 });
