@@ -14,9 +14,9 @@ define(function(require, exports, module) {
         /***** Initialization *****/
 
         var plugin = new TestPanel("Ajax.org", main.consumes, {
-            caption: "All Tests",
-            index: 200,
-            style: "flex:1;-webkit-flex:1"
+            caption: "Test Results",
+            index: 100,
+            height: 150
         });
         var emit = plugin.getEmitter();
         

@@ -59,7 +59,8 @@ define(function(require, exports, module) {
             toolbar = vbox.appendChild(new ui.bar({
                 id: "toolbar",
                 skin: "toolbar-top",
-                class: "fakehbox aligncenter debugger_buttons basic"
+                class: "fakehbox aligncenter debugger_buttons basic",
+                style: "white-space:nowrap !important"
             }));
             plugin.addElement(toolbar);
             
@@ -76,7 +77,9 @@ define(function(require, exports, module) {
             }), 100, plugin);
             
             // Container
-            container = vbox.appendChild(new ui.bar());
+            container = vbox.appendChild(new ui.bar({
+                style: "flex:1;-webkit-flex:1;display:flex;flex-direction: column;"
+            }));
             
             emit.sticky("drawPanels", { html: container.$int, aml: container });
         }
