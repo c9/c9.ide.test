@@ -31,11 +31,6 @@ define(function(require, exports, module) {
             //     bindKey: { mac: "Command-.", win: "Ctrl-." }
             // });
             
-            // panels.on("afterAnimate", function(){
-            //     if (panels.isActive("commands.panel"))
-            //         tree && tree.resize();
-            // });
-            
             // Menus
             // menus.addItemByPath("Run/Test", new ui.item({ 
             //     command: "commands" 
@@ -46,9 +41,6 @@ define(function(require, exports, module) {
         function draw(opts) {
             if (drawn) return;
             drawn = true;
-            
-            // Import CSS
-            // ui.insertCss(require("text!./style.css"), plugin);
             
             // Splitbox
             var vbox = opts.aml.appendChild(new ui.vbox({ 
@@ -87,6 +79,7 @@ define(function(require, exports, module) {
         /***** Methods *****/
         
         
+        
         /***** Lifecycle *****/
         
         plugin.on("load", function() {
@@ -95,21 +88,19 @@ define(function(require, exports, module) {
         plugin.on("draw", function(e) {
             draw(e);
         });
-        plugin.on("enable", function(){
+        plugin.on("enable", function() {
             
         });
-        plugin.on("disable", function(){
+        plugin.on("disable", function() {
             
         });
         plugin.on("show", function(e) {
-            // txtFilter.focus();
-            // txtFilter.select();
+            
         });
         plugin.on("hide", function(e) {
-            // Cancel Preview
-            // tabs.preview({ cancel: true });
+            
         });
-        plugin.on("unload", function(){
+        plugin.on("unload", function() {
             drawn = false;
             toolbar = null;
             container = null;
@@ -117,20 +108,7 @@ define(function(require, exports, module) {
         
         /***** Register and define API *****/
         
-        /**
-         * This is an example of an implementation of a plugin. Check out [the source](source/template.html)
-         * for more information.
-         * 
-         * @class Template
-         * @extends Plugin
-         * @singleton
-         */
         plugin.freezePublicAPI({
-            /**
-             * @property {Object}  The tree implementation
-             * @private
-             */
-            // get tree() { return tree; }
         });
         
         register(null, {

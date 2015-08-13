@@ -119,6 +119,17 @@ define(function(require, module, exports) {
                  * @readonly
                  */
                 get aml(){ return amlFrame; },
+                
+                /**
+                 * @property {Number} height
+                 */
+                get height(){ return amlFrame.getHeight(); },
+                set height(v){ 
+                    if (height != v) {
+                        height = v; 
+                        amlFrame.setHeight(v); 
+                    }
+                },
 
                 _events: [
                     /**
