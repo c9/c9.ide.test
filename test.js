@@ -22,6 +22,7 @@ define(function(require, exports, module) {
         });
         var emit = plugin.getEmitter();
         
+        var runners = [];
         var toolbar, container;
         
         function load() {
@@ -78,7 +79,17 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
+        function register(runner){
+            runners.push(runner);
+            
+            emit("register", { runner: runner });
+        }
         
+        function unregister(runner){
+            runners.splice(runners.indexOf(runner), 1);
+            
+            emit("unregister", { runner: runner });
+        }
         
         /***** Lifecycle *****/
         
@@ -108,7 +119,24 @@ define(function(require, exports, module) {
         
         /***** Register and define API *****/
         
+        /**
+         * 
+         */
         plugin.freezePublicAPI({
+            /**
+             * 
+             */
+            get runners(){ return runners; },
+            
+            /**
+             * 
+             */
+            register: register,
+            
+            /**
+             * 
+             */
+            unregister: unregister,
         });
         
         register(null, {

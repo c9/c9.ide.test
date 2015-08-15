@@ -21,7 +21,7 @@ define(function(require, exports, module) {
         });
         var emit = plugin.getEmitter();
         
-        var tree;
+        var tree, wsNode, rmtNode;
         
         function load() {
             // plugin.setCommand({
@@ -67,50 +67,92 @@ define(function(require, exports, module) {
             tree.container.style.bottom = "10px";
             tree.container.style.height = "";
             
+            wsNode = {
+                label: "workspace",
+                isOpen: true,
+                className: "heading",
+                status: "loaded",
+                noSelect: true,
+                $sorted: true,
+                
+                items: []
+            };
+            rmtNode = {
+                label: "remote",
+                isOpen: true,
+                className: "heading",
+                status: "loaded",
+                noSelect: true,
+                $sorted: true,
+                
+                items: []
+            };
+            
             tree.setRoot({
                 label: "root",
-                items: [{
-                    label: "workspace",
-                    isOpen: true,
-                    className: "heading",
-                    isRoot: true,
-                    isFolder: true,
-                    status: "loaded",
-                    noSelect: true,
-                    $sorted: true,
-                    
-                    items: [{
-                        label: "test",
-                        isFolder: true,
-                        items: [
-                            { label: "sub1" },
-                            { label: "sub2" }
-                        ]
-                    }, { label: "test2", isFolder: true } ]
-                }, {
-                    label: "remote",
-                    isOpen: true,
-                    className: "heading",
-                    isRoot: true,
-                    isFolder: true,
-                    status: "loaded",
-                    noSelect: true,
-                    $sorted: true,
-                    
-                    items: [{
-                        label: "test",
-                        isFolder: true,
-                        items: [
-                            { label: "sub1" },
-                            { label: "sub2" }
-                        ]
-                    }, { label: "test2", isFolder: true } ]
-                }]
+                items: [wsNode, rmtNode]
             });
+            
+            // Tree Events
+            tree.on("expand", function(e){
+                var node = e.node;
+                var runner = findRunner(node);
+                
+                node.status = "loading";
+                
+                runner.populate(node, function(err){
+                    if (err) return console.error(err); // TODO
+                    
+                    // Loop through nodes, 
+                    
+                    node.status = "loaded";
+                });
+            }, plugin);
+            
+            // Initiate test runners
+            test.on("register", function(e){ init(e.runner) }, plugin);
+            test.on("unregister", function(e){ deinit(e.runner) }, plugin);
+            
+            test.runners.forEach(init);
+        }
+        
+        /***** Helper Methods *****/
+        
+        function findRunner(node){
+            while (!node.runner) node = node._parent;
+            return node;
+        }
+        
+        function init(runner){
+            var parent = runner.remote ? rmtNode : wsNode;
+            parent.items.push(runner.root);
+            
+            runner.init(runner.root, function(err){
+                if (err) return console.error(err); // TODO
+                
+                tree.refresh();
+            });
+        }
+        
+        function deinit(runner){
             
         }
         
         /***** Methods *****/
+        
+        function run(){
+            if (node.status != "loaded")
+                return populate(node, run.bind(this, node, log, callback));
+            
+            node.status = "running";
+            
+            while (fileNode.type != "file") {
+                fileNode.status = "loading";
+                fileNode = fileNode._parent;
+            }
+            
+            node.status = "loaded";
+        }
         
         function reloadModel() {
             if (!model) return;
