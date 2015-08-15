@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "TestPanel", "ui", "Tree", "settings", "panels"
+        "TestPanel", "ui", "Tree", "settings", "panels", "commands"
     ];
     main.provides = ["test.all"];
     return main;
@@ -11,6 +11,9 @@ define(function(require, exports, module) {
         var panels = imports.panels;
         var ui = imports.ui;
         var Tree = imports.Tree;
+        var commands = imports.commands;
+        
+        var async = require("async");
 
         /***** Initialization *****/
 
@@ -21,7 +24,7 @@ define(function(require, exports, module) {
         });
         var emit = plugin.getEmitter();
         
-        var tree, wsNode, rmtNode;
+        var tree, wsNode, rmtNode, btnRun, btnRunAll, stopping;
         
         function load() {
             // plugin.setCommand({
@@ -39,6 +42,16 @@ define(function(require, exports, module) {
             // menus.addItemByPath("Run/Test", new ui.item({ 
             //     command: "commands" 
             // }), 250, plugin);
+            
+            commands.addCommand({
+                name: "runtest",
+                hint: "runs the selected test(s) in the test panel",
+                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
+                group: "Test",
+                exec: function(){
+                    run();
+                }
+            }, plugin);
         }
         
         var drawn = false;
@@ -46,6 +59,23 @@ define(function(require, exports, module) {
             if (drawn) return;
             drawn = true;
             
+            // Buttons
+            var toolbar = test.getElement("toolbar");
+            
+            btnRun = ui.insertByIndex(toolbar, new ui.button({
+                caption: "Run Test",
+                skinset: "default",
+                skin: "c9-menu-btn",
+                command: "runtest"
+            }), 100, plugin);
+            
+            btnRunAll = ui.insertByIndex(toolbar, new ui.button({
+                caption: "Run All",
+                skinset: "default",
+                skin: "c9-menu-btn"
+            }), 100, plugin);
+            
+            // Tree
             tree = new Tree({
                 container: opts.html,
             
@@ -95,17 +125,8 @@ define(function(require, exports, module) {
             
             // Tree Events
             tree.on("expand", function(e){
-                var node = e.node;
-                var runner = findRunner(node);
-                
-                node.status = "loading";
-                
-                runner.populate(node, function(err){
-                    if (err) return console.error(err); // TODO
-                    
-                    // Loop through nodes, 
-                    
-                    node.status = "loaded";
+                populate(e.node, function(err){
+                    if (err) return console.error(err);
                 });
             }, plugin);
             
@@ -118,6 +139,20 @@ define(function(require, exports, module) {
         
         /***** Helper Methods *****/
         
+        function populate(node, callback){
+            var runner = findRunner(node);
+                
+            updateStatus(node, "loading");
+            
+            runner.populate(node, function(err){
+                if (err) return callback(err); // TODO
+                
+                updateStatus(node, "loaded");
+                
+                callback();
+            });
+        }
+        
         function findRunner(node){
             while (!node.runner) node = node._parent;
             return node;
@@ -127,114 +162,103 @@ define(function(require, exports, module) {
             var parent = runner.remote ? rmtNode : wsNode;
             parent.items.push(runner.root);
             
+            updateStatus(runner.root, "loading");
+            
             runner.init(runner.root, function(err){
                 if (err) return console.error(err); // TODO
                 
-                tree.refresh();
+                updateStatus(runner.root, "loaded");
             });
         }
         
         function deinit(runner){
+            if (runner.root._parent) {
+                var items = runner.root._parent.items;
+                items.splice(items.indexOf(runner.root), 1);
+            }
             
+            tree.refresh();
         }
         
         /***** Methods *****/
         
-        function run(){
-            if (node.status != "loaded")
-                return populate(node, run.bind(this, node, log, callback));
+        function run(nodes, parallel, callback){
+            if (typeof parallel == "function")
+                callback = parallel, parallel = false;
             
-            node.status = "running";
+            if (!nodes)
+                nodes = tree.selection;
             
-            while (fileNode.type != "file") {
-                fileNode.status = "loading";
-                fileNode = fileNode._parent;
-            }
+            if (parallel === undefined)
+                parallel = settings.getBool("shared/test/@parallel"); // TODO have a setting per runner
             
-            node.status = "loaded";
+            // TODO influence run button
+                
+            async[parallel ? "each" : "eachSeries"](nodes, function(node, callback){
+                if (node.status != "loaded")
+                    return populate(node, function(err){
+                        if (err) return callback(err);
+                        _run(node, callback);
+                    });
+                
+                _run(node, callback);
+            }, function(err){
+                if (err) return callback(err);
+                
+                // TODO influence run button
+                
+                callback();
+            });
         }
         
-        function reloadModel() {
-            if (!model) return;
-
-            var groups = {};
-            var packages = {};
-            var root = [];
-
-            ["custom", "pre", "core", "runtime"].forEach(function(name){
-                root.push(groups[name] = {
-                    items: [],
-                    isOpen: name != "runtime",
-                    className: "group",
-                    isGroup: true,
-                    isType: name,
-                    noSelect: true,
-                    name: GROUPS[name]
-                });
+        function _run(node, callback){
+            var runner = findRunner(node);
+            
+            updateStatus(node, "running");
+            
+            runner.run(node, function(chunk){
+                emit("log", chunk);
+            }, function(err, node){
+                if (err) return callback(err);
+                
+                updateStatus(node, "loaded");
+                
+                callback();
             });
-
-            var lut = ext.named;
-
-            ext.plugins.forEach(function(plugin) {
-                var info = architect.pluginToPackage[plugin.name];
-                var packageName = info && info.package || "runtime";
-
-                var groupName;
-                if (CORE[packageName]) groupName = "core";
-                else if (info && info.isAdditionalMode) groupName = "custom";
-                else groupName = "pre";
-
-                var package;
-                if (packageName == "runtime") {
-                    package = groups.runtime;
-                }
-                else {
-                    package = packages[packageName];
-                    if (!package)
-                        groups[groupName].items.push(package = packages[packageName] = {
-                            items: [],
-                            isPackage: true,
-                            className: "package",
-                            parent: groups[groupName],
-                            name: packageName
-                        });
-                }
-
-                package.items.push({
-                    name: plugin.name,
-                    enabled: lut[plugin.name].loaded ? "true" : "false",
-                    time: plugin.time,
-                    version: info && info.version || "N/A",
-                    parent: package,
-                    package: packageName,
-                    developer: plugin.developer == "Ajax.org"
-                        ? "Cloud9"
-                        : plugin.developer
-                });
-            });
-
-            model.cachedRoot = { items: root };
-            applyFilter();
         }
-
-        function applyFilter() {
-            model.keyword = filterbox && filterbox.getValue();
-
-            if (!model.keyword) {
-                model.reKeyword = null;
-                model.setRoot(model.cachedRoot);
-
-                // model.isOpen = function(node){ return node.isOpen; }
-            }
-            else {
-                model.reKeyword = new RegExp("("
-                    + util.escapeRegExp(model.keyword) + ")", 'i');
-                var root = search.treeSearch(model.cachedRoot.items, model.keyword, true);
-                model.setRoot(root);
-
-                // model.isOpen = function(node){ return true; };
-            }
+        
+        function updateStatus(node, s){
+            node.status = s;
+            
+            while (node.type != "file")
+                node.status = s, node = node._parent;
+            
+            tree.refresh();
         }
+        
+        function stop(){
+            // TODO
+            stopping = true;
+        }
+        
+        // function applyFilter() {
+        //     model.keyword = filterbox && filterbox.getValue();
+
+        //     if (!model.keyword) {
+        //         model.reKeyword = null;
+        //         model.setRoot(model.cachedRoot);
+
+        //         // model.isOpen = function(node){ return node.isOpen; }
+        //     }
+        //     else {
+        //         model.reKeyword = new RegExp("("
+        //             + util.escapeRegExp(model.keyword) + ")", 'i');
+        //         var root = search.treeSearch(model.cachedRoot.items, model.keyword, true);
+        //         model.setRoot(root);
+
+        //         // model.isOpen = function(node){ return true; };
+        //     }
+        // }
         
         /***** Lifecycle *****/
         
@@ -272,7 +296,12 @@ define(function(require, exports, module) {
              * @property {Object}  The tree implementation
              * @private
              */
-            get tree() { return tree; }
+            get tree() { return tree; },
+            
+            /**
+             * 
+             */
+            run: run
         });
         
         register(null, {

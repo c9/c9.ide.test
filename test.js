@@ -57,18 +57,6 @@ define(function(require, exports, module) {
             }));
             plugin.addElement(toolbar);
             
-            ui.insertByIndex(toolbar, new ui.button({
-                caption: "Run Test",
-                skinset: "default",
-                skin: "c9-menu-btn"
-            }), 100, plugin);
-            
-            ui.insertByIndex(toolbar, new ui.button({
-                caption: "Run All",
-                skinset: "default",
-                skin: "c9-menu-btn"
-            }), 100, plugin);
-            
             // Container
             container = vbox.appendChild(new ui.bar({
                 style: "flex:1;-webkit-flex:1;display:flex;flex-direction: column;"
