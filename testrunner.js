@@ -13,6 +13,19 @@ define(function(require, module, exports) {
 
             var caption = options.caption;
             var index = options.index || 100;
+            var root = {
+                label: caption,
+                runner: plugin,
+                isOpen: true,
+                type: "root",
+                items: []
+            }
+            var all = {
+                type: "all",
+                label: "All Tests",
+                items: []
+            }
+            root.items.push(all);
             
             plugin.on("load", function(){
                 test.register(plugin);
@@ -43,12 +56,8 @@ define(function(require, module, exports) {
                 /**
                  * @property {Object} root
                  */
-                root: {
-                    label: caption,
-                    isFolder: true,
-                    runner: plugin,
-                    items: []
-                }
+                root: root,
+                all: all
             });
 
             return plugin;

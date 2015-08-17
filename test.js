@@ -67,13 +67,13 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function register(runner){
+        function registerTestRunner(runner){
             runners.push(runner);
             
             emit("register", { runner: runner });
         }
         
-        function unregister(runner){
+        function unregisterTestRunner(runner){
             runners.splice(runners.indexOf(runner), 1);
             
             emit("unregister", { runner: runner });
@@ -119,12 +119,12 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            register: register,
+            register: registerTestRunner,
             
             /**
              * 
              */
-            unregister: unregister,
+            unregister: unregisterTestRunner,
         });
         
         register(null, {

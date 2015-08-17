@@ -118,7 +118,7 @@ define(function(require, exports, module) {
             
             tree.on("afterRender", recalc);
             
-            // plugin.hide();
+            plugin.hide();
         }
         
         /***** Methods *****/

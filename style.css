@@ -1,0 +1,19 @@
+/* .image-2x("@{icon-path}/@{tree-folder-icon}", @tree-folder-icon-width, @tree-folder-icon-height); */
+.test-in-progress{
+    background-image: url("@{icon-path}/testInProgress1.png");
+}
+.test-passed{
+    background-image: url("@{icon-path}/testPassed.png");
+}
+.test-failed{
+    background-image: url("@{icon-path}/testFailed.png");
+}
+.test-error{
+    background-image: url("@{icon-path}/testError.png");
+}
+.test-terminated{
+    background-image: url("@{icon-path}/testTerminated.png");
+}
+.test-ignored{
+    background-image: url("@{icon-path}/testIgnored.png");
+}
