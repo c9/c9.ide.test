@@ -16,7 +16,7 @@ define(function(require, module, exports) {
             var root = {
                 label: caption,
                 runner: plugin,
-                isOpen: true,
+                // isOpen: true,
                 type: "root",
                 items: []
             }
@@ -25,7 +25,7 @@ define(function(require, module, exports) {
                 label: "All Tests",
                 items: []
             }
-            root.items.push(all);
+            // root.items.push(all);
             
             plugin.on("load", function(){
                 test.register(plugin);

@@ -12,6 +12,29 @@ define(function(require, exports, module) {
         var panels = imports.panels;
         var menus = imports.menus;
         
+        /*
+            TODO:
+            - skip test (temporary exclusion)
+            - remote test (permanent exclusion)
+            - Run All button
+            - Better icons
+            - Toggle run button / stop
+            - clear all previous states of list before running any
+            - Hide Remote when it's not used
+            
+            - Test results view
+            
+            - View test results in ace
+            - View log in viewer
+            
+            - Code coverage panel
+            - View code coverage in ace
+            
+            - Triggers for running tests (based on code coverage)
+            
+            - Parallel test execution
+        */
+        
         /***** Initialization *****/
         
         var plugin = new Panel("Ajax.org", main.consumes, {

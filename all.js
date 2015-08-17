@@ -1,6 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test"
+        "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test",
+        "Menu", "MenuItem", "Divider", "tabManager"
     ];
     main.provides = ["test.all"];
     return main;
@@ -13,6 +14,10 @@ define(function(require, exports, module) {
         var Tree = imports.Tree;
         var test = imports.test;
         var commands = imports.commands;
+        var Menu = imports.Menu;
+        var MenuItem = imports.MenuItem;
+        var Divider = imports.Divider;
+        var tabManager = imports.tabManager;
         
         var async = require("async");
         var basename = require("path").basename;
@@ -28,7 +33,7 @@ define(function(require, exports, module) {
         });
         var emit = plugin.getEmitter();
         
-        var tree, wsNode, rmtNode, btnRun, btnRunAll, stopping;
+        var tree, wsNode, rmtNode, btnRun, btnRunAll, stopping, menuContext;
         
         function load() {
             // plugin.setCommand({
@@ -181,6 +186,26 @@ define(function(require, exports, module) {
                 items: [wsNode, rmtNode]
             });
             
+            tree.commands.bindKey("Space", function(e) {
+                openTestFile();
+            });
+            
+            tree.commands.bindKey("Enter", function(e) {
+                commands.exec("runtest");
+            });
+            
+            // Menu
+            menuContext = new Menu({ items: [
+                new MenuItem({ command: "runtest", caption: "Run", class: "strong" }),
+                new Divider(),
+                new MenuItem({ caption: "Open Test File", onclick: openTestFile }),
+                new MenuItem({ caption: "Open Related Files", disabled: true }),
+                new Divider(),
+                new MenuItem({ caption: "Skip" }),
+                new MenuItem({ caption: "Remove" })
+            ] }, plugin);
+            opts.aml.setAttribute("contextmenu", menuContext.aml);
+            
             // Initiate test runners
             test.on("register", function(e){ init(e.runner) }, plugin);
             test.on("unregister", function(e){ deinit(e.runner) }, plugin);
@@ -218,6 +243,7 @@ define(function(require, exports, module) {
             runner.init(runner.root, function(err){
                 if (err) return console.error(err); // TODO
                 
+                tree.open(runner.root);
                 updateStatus(runner.root, "loaded");
             });
         }
@@ -229,6 +255,13 @@ define(function(require, exports, module) {
             }
             
             tree.refresh();
+        }
+        
+        function openTestFile(){
+            tree.selectedNodes.forEach(function(n){
+                if (n.type == "file")
+                    tabManager.openFile(n.path, true, function(){})
+            });
         }
         
         /***** Methods *****/
