@@ -243,10 +243,19 @@ define(function(require, exports, module) {
             if (parallel === undefined)
                 parallel = settings.getBool("shared/test/@parallel"); // TODO have a setting per runner
             
+            var list = [];
+            nodes.forEach(function(n){
+                if (n.type == "all" || n.type == "root")
+                    getAllNodes(n, "file").forEach(function(n){ list.push(n); });
+                else
+                    list.push(n);
+            });
+            
             // TODO influence run button
+            // TODO clear all previous states of list before running any
                 
-            async[parallel ? "each" : "eachSeries"](nodes, function(node, callback){
-                if (node.status == "pending")
+            async[parallel ? "each" : "eachSeries"](list, function(node, callback){
+                if (node.status == "pending") // TODO do this lazily
                     return populate(node, function(err){
                         if (err) return callback(err);
                         _run(node, callback);
@@ -279,7 +288,7 @@ define(function(require, exports, module) {
             
             updateStatus(node, "running");
             
-            runner.run(node, progress, function(err, node){
+            runner.run(node, progress, function(err){
                 if (err) return callback(err);
                 
                 updateStatus(node, "loaded");
@@ -288,12 +297,12 @@ define(function(require, exports, module) {
             });
         }
         
-        function getAllTestNodes(node){
+        function getAllNodes(node, type){
             var nodes = [];
             (function recur(items){
                 for (var j, i = 0; i < items.length; i++) {
                     j = items[i];
-                    if (j.type == "test") nodes.push(j);
+                    if (j.type.match(type)) nodes.push(j);
                     else if (j.items) recur(j.items);
                 }
             })([node]);
@@ -304,7 +313,7 @@ define(function(require, exports, module) {
         function updateStatus(node, s){
             // TODO make this more efficient by trusting the child nodes
             if (node.type == "file" || node.type == "describe") {
-                var tests = getAllTestNodes(node);
+                var tests = getAllNodes(node, /test|prepare/);
                 
                 var st, p = [];
                 tests.forEach(function(test){
@@ -314,7 +323,7 @@ define(function(require, exports, module) {
                     p[test.passed]++;
                 });
                 
-                node.passed = p[3] ? 3 : (p[2] ? 2 : p[1] ? 1 : (p[0] ? 0 : undefined));
+                node.passed = p[3] ? 3 : (p[2] ? 2 : p[0] ? 0 : (p[1] ? 1 : undefined));
                 node.status = st || "loaded";
             }
             else if (node.type == "all" && node.type == "root") {
