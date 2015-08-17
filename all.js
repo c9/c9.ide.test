@@ -264,7 +264,7 @@ define(function(require, exports, module) {
         
         var progress = {
             log: function(chunk){
-                emit("log", chunk);
+                emit("log", chunk); console.log(chunk)
             },
             start: function(node){
                 updateStatus(node, "running");
@@ -307,7 +307,7 @@ define(function(require, exports, module) {
                 var tests = getAllTestNodes(node);
                 
                 var st, p = [];
-                tests.some(function(test){
+                tests.forEach(function(test){
                     if (st === undefined && test.status != "loaded")
                         st = test.status;
                     if (!p[test.passed]) p[test.passed] = 0;
