@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Panel", "ui", "settings", "panels", "menus"
+        "Panel", "ui", "settings", "panels", "menus", "commands"
     ];
     main.provides = ["test"];
     return main;
@@ -11,35 +11,43 @@ define(function(require, exports, module) {
         var settings = imports.settings;
         var panels = imports.panels;
         var menus = imports.menus;
+        var commands = imports.commands;
         
         /*
             TODO:
-            - Test results view
             
-            - skip test (temporary exclusion)
-            - remote test (permanent exclusion)
-            - Run All button
-            - Better icons
-            - Toggle run button / stop
-            - clear all previous states of list before running any
-            - Hide Remote when it's not used
-            - Error state for failed tests
-            - Mocha: other test formats (not bdd)
-            - Space bar should open specific test in file
-            - While navigating the tree, scroll to the selected test if test file is active or on space bar
-                Use `node.getPos()` or `b.something.getPos()`
-                Note that https://github.com/c9/newclient/blob/master/plugins/c9.ide.language/outline.js#L550 can scroll to a definition using a starting and ending line, trying to scroll in such a way that both of them are visible.
-            - Address anomaly for writer-test not being able to execute single test
-            - Fix border (move to theme) of results
-            - Fix: closed tree nodes don't have .parent set
+            - Test results view
+                * Fix: closed tree nodes don't have .parent set
+                * Add context menu
+                - Run tests from results
+                    - use event in all to update loading state
+                    - gather set of tests and find them in all and send to run (either full test set or individuals)
+            LATER:
+                - Fix border (move to theme) of results
+                - Focus a tree when panel gets focussed (last one)
+            
+            - All view
+                - Toggle run button / stop
+                - While navigating the tree, scroll to the selected test if test file is active or on space bar
+                    Use `node.getPos()` or `b.something.getPos()`
+                    Note that https://github.com/c9/newclient/blob/master/plugins/c9.ide.language/outline.js#L550 can scroll to a definition using a starting and ending line, trying to scroll in such a way that both of them are visible.
+                - Address anomaly for writer-test not being able to execute single test
+                
+                - skip test (temporary exclusion)
+                - remove test (permanent exclusion)
+                - clear all previous states of list before running any
+                * Hide Remote when it's not used
+                - Error state for failed tests
+                * Space bar should open specific test in file
+            LATER: 
+                - Better icons
+                - Mocha: other test formats (not bdd)
             
             - View test results in ace
             - View log in viewer
-            
             - Code coverage panel
-            - View code coverage in ace
-            
-            - Triggers for running tests (based on code coverage)
+                - View code coverage in ace
+                - Triggers for running tests (based on code coverage)
             
             - Parallel test execution
             
@@ -63,7 +71,7 @@ define(function(require, exports, module) {
         var emit = plugin.getEmitter();
         
         var runners = [];
-        var toolbar, container;
+        var toolbar, container, btnRun, btnClear, focussedPanel;
         
         function load() {
             // plugin.setCommand({
@@ -76,6 +84,28 @@ define(function(require, exports, module) {
             // menus.addItemByPath("Run/Test", new ui.item({ 
             //     command: "commands" 
             // }), 250, plugin);
+            
+            commands.addCommand({
+                name: "runtest",
+                hint: "runs the selected test(s) in the test panel",
+                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
+                group: "Test",
+                exec: function(editor, args){
+                    focussedPanel.run(null, function(err){
+                        if (err) console.log(err);
+                    });
+                }
+            }, plugin);
+            
+            commands.addCommand({
+                name: "cleartestresults",
+                // hint: "runs the selected test(s) in the test panel",
+                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
+                group: "Test",
+                exec: function(){
+                    emit("clear");
+                }
+            }, plugin);
         }
         
         var drawn = false;
@@ -96,6 +126,21 @@ define(function(require, exports, module) {
                 style: "white-space:nowrap !important"
             }));
             plugin.addElement(toolbar);
+            
+            // Buttons
+            btnRun = ui.insertByIndex(toolbar, new ui.button({
+                caption: "Run Tests",
+                skinset: "default",
+                skin: "c9-menu-btn",
+                command: "runtest"
+            }), 100, plugin);
+            
+            btnClear = ui.insertByIndex(toolbar, new ui.button({
+                caption: "Clear Results",
+                skinset: "default",
+                skin: "c9-menu-btn",
+                command: "cleartestresults"
+            }), 100, plugin);
             
             // Container
             container = vbox.appendChild(new ui.bar({
@@ -155,6 +200,12 @@ define(function(require, exports, module) {
              * 
              */
             get runners(){ return runners; },
+            
+            /**
+             * 
+             */
+            get focussedPanel(){ return focussedPanel; },
+            set focussedPanel(v){ focussedPanel = v; },
             
             /**
              * 

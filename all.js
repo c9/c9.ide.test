@@ -34,7 +34,7 @@ define(function(require, exports, module) {
         });
         var emit = plugin.getEmitter();
         
-        var tree, wsNode, rmtNode, btnRun, stopping, menuContext;
+        var tree, wsNode, rmtNode, stopping, menuContext;
         
         function load() {
             // plugin.setCommand({
@@ -53,17 +53,7 @@ define(function(require, exports, module) {
             //     command: "commands" 
             // }), 250, plugin);
             
-            commands.addCommand({
-                name: "runtest",
-                hint: "runs the selected test(s) in the test panel",
-                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
-                group: "Test",
-                exec: function(){
-                    run(null, function(err){
-                        if (err) console.log(err);
-                    });
-                }
-            }, plugin);
+            test.focussedPanel = plugin;
         }
         
         var drawn = false;
@@ -73,16 +63,6 @@ define(function(require, exports, module) {
             
             // Insert CSS
             ui.insertCss(require("text!./style.css"), options.staticPrefix, plugin);
-            
-            // Buttons
-            var toolbar = test.getElement("toolbar");
-            
-            btnRun = ui.insertByIndex(toolbar, new ui.button({
-                caption: "Run Tests",
-                skinset: "default",
-                skin: "c9-menu-btn",
-                command: "runtest"
-            }), 100, plugin);
             
             // Tree
             tree = new Tree({
@@ -191,12 +171,21 @@ define(function(require, exports, module) {
                 commands.exec("runtest");
             });
             
+            tree.on("focus", function(){
+                test.focussedPanel = plugin;
+            });
+            
+            // Hook clear
+            test.on("clear", function(){
+                clear();
+            }, plugin);
+            
             // Menu
             menuContext = new Menu({ items: [
                 new MenuItem({ command: "runtest", caption: "Run", class: "strong" }),
                 new Divider(),
                 new MenuItem({ caption: "Open Test File", onclick: openTestFile }),
-                new MenuItem({ caption: "Open Related Files", disabled: true }),
+                // new MenuItem({ caption: "Open Related Files", disabled: true }),
                 new Divider(),
                 new MenuItem({ caption: "Skip" }),
                 new MenuItem({ caption: "Remove" })
@@ -222,6 +211,7 @@ define(function(require, exports, module) {
                 if (err) return callback(err); // TODO
                 
                 updateStatus(node, "loaded");
+                fixParents(node);
                 
                 callback();
             });
@@ -243,6 +233,8 @@ define(function(require, exports, module) {
                 
                 tree.open(runner.root);
                 updateStatus(runner.root, "loaded");
+                
+                fixParents(runner.root);
             });
         }
         
@@ -255,10 +247,19 @@ define(function(require, exports, module) {
             tree.refresh();
         }
         
-        function openTestFile(){
-            tree.selectedNodes.forEach(function(n){
+        function openTestFile(nodes){
+            (nodes || tree.selectedNodes).forEach(function(n){
                 if (n.type == "file")
                     tabManager.openFile(n.path, true, function(){})
+            });
+        }
+        
+        function fixParents(node){
+            if (!node.items) return;
+            
+            node.items.forEach(function(n){
+                if (!n.parent) n.parent = node;
+                if (n.items) fixParents(n);
             });
         }
         
@@ -375,6 +376,19 @@ define(function(require, exports, module) {
             stopping = true;
         }
         
+        function clear(node){
+            if (!node) 
+                node = tree.root;
+            
+            node.items.forEach(function(n){
+                delete n.passed;
+                if (n.items) clear(n);
+            });
+            
+            if (node == tree.root) 
+                tree.refresh();
+        }
+        
         // function applyFilter() {
         //     model.keyword = filterbox && filterbox.getValue();
 
@@ -435,7 +449,12 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            run: run
+            run: run,
+            
+            /**
+             *
+             */
+            openTestFile: openTestFile
         });
         
         register(null, {

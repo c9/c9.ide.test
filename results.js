@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test.all",
-        "util", "test"
+        "util", "test", "Menu", "MenuItem", "Divider"
     ];
     main.provides = ["test.results"];
     return main;
@@ -15,6 +15,9 @@ define(function(require, exports, module) {
         var Tree = imports.Tree;
         var test = imports.test;
         var commands = imports.commands;
+        var Menu = imports.Menu;
+        var MenuItem = imports.MenuItem;
+        var Divider = imports.Divider;
         var all = imports["test.all"];
         
         var async = require("async");
@@ -28,11 +31,11 @@ define(function(require, exports, module) {
             caption: "Test Results",
             index: 100,
             height: 150,
-            style: "border-bottom:1px solid #DDD" // TODO
+            style: "border-bottom:1px solid #DDD;overflow:auto" // TODO
         });
         var emit = plugin.getEmitter();
         
-        var tree, failNode, passNode, skipNode, errNode, rootNode, btnClear;
+        var tree, failNode, passNode, skipNode, errNode, rootNode, menuContext;
         var state = {};
         
         function load() {
@@ -51,16 +54,6 @@ define(function(require, exports, module) {
             // menus.addItemByPath("Run/Test", new ui.item({ 
             //     command: "commands" 
             // }), 250, plugin);
-            
-            commands.addCommand({
-                name: "cleartestresults",
-                // hint: "runs the selected test(s) in the test panel",
-                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
-                group: "Test",
-                exec: function(){
-                    clear();
-                }
-            }, plugin);
         }
         
         var drawn = false;
@@ -199,16 +192,29 @@ define(function(require, exports, module) {
                 commands.exec("runtest");
             });
             
+            tree.on("focus", function(){
+                test.focussedPanel = plugin;
+            });
+            
             tree.on("afterRender", recalc);
             
-            // Toolbar Button
-            var toolbar = test.getElement("toolbar");
-            btnClear = ui.insertByIndex(toolbar, new ui.button({
-                caption: "Clear Results",
-                skinset: "default",
-                skin: "c9-menu-btn",
-                command: "cleartestresults"
-            }), 100, plugin);
+            // Menu
+            menuContext = new Menu({ items: [
+                new MenuItem({ caption: "Open Test File", onclick: openTestFile, class: "strong" }),
+                // new MenuItem({ caption: "Open Related Files", disabled: true }),
+                new MenuItem({ command: "runtest", caption: "Run Test" }),
+                new Divider(),
+                new MenuItem({ command: "showtestresults", caption: "View Raw Test Results" }),
+                new Divider(),
+                new MenuItem({ caption: "Skip" }),
+                new MenuItem({ caption: "Remove" })
+            ] }, plugin);
+            opts.aml.setAttribute("contextmenu", menuContext.aml);
+            
+            // Hook clear
+            test.on("clear", function(){
+                clear();
+            }, plugin);
             
             // Process Result
             var nodes = [failNode, passNode, errNode, null, skipNode];
@@ -216,7 +222,7 @@ define(function(require, exports, module) {
                 var results = [failNode.items, passNode.items, errNode.items, [], skipNode.items];
                 importResultsToTree(e.node, results);
                 
-                var hasFail = results[0].length || results[1].length;
+                // var hasFail = results[0].length || results[1].length;
                 
                 rootNode.items.length = 0;
                 [0,2,1,4].forEach(function(i){
@@ -238,6 +244,10 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
+        function openTestFile(nodes){
+            all.openTestFile(nodes || tree.selectedNodes);
+        }
+        
         function clear(){
             plugin.hide();
             
@@ -248,13 +258,12 @@ define(function(require, exports, module) {
             
             state = {};
             tree.refresh();
-            
-            // all.clear();
         }
         
         function recalc() {
+            var maxHeight = Math.round(test.aml.getHeight() * 0.6);
             var cells = tree.container.querySelector(".ace_tree_cells").lastChild;
-            plugin.height = cells.scrollHeight + tree.container.parentNode.offsetTop + 20;
+            plugin.height = Math.min(maxHeight, cells.scrollHeight + tree.container.parentNode.offsetTop + 20);
         }
         
         // Calculate the index of the 
@@ -303,16 +312,18 @@ define(function(require, exports, module) {
                     })) {
                         groupNode = util.cloneObject(pNode, true);
                         
-                        if (groupNode.type == "file")
+                        if (groupNode.type == "file") {
                             group.unshift(groupNode);
+                            groupNode.runner = pNode.parent.runner;
+                        }
                         else
                             group.splice(calcIndex(group, pNode), 0, groupNode);
                         
                         groupNode.children =
                         groupNode.items = [];
                         
-                        if ((node.passed === 1 || node.passed === 4) && groupNode.type == "file")
-                            groupNode.isOpen = false;
+                        if (groupNode.type == "file")
+                            groupNode.isOpen = !(node.passed === 1 || node.passed === 4);
                     }
                     else {
                         var items = groupNode.items;
@@ -346,6 +357,12 @@ define(function(require, exports, module) {
                     importResultsToTree(n, results);
                 });
             }
+        }
+        
+        function run(nodes, parallel, callback){
+            if (!nodes) nodes = tree.selectedNodes;
+            
+            all.run(nodes, parallel, callback);
         }
         
         /***** Lifecycle *****/
@@ -383,7 +400,12 @@ define(function(require, exports, module) {
              * @property {Object}  The tree implementation
              * @private
              */
-            get tree() { return tree; }
+            get tree() { return tree; },
+            
+            /**
+             * 
+             */
+            run: run
         });
         
         register(null, {
