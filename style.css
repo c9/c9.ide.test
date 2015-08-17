@@ -17,3 +17,6 @@
 .test-ignored{
     background-image: url("@{icon-path}/testIgnored.png");
 }
+.test-notran{
+    background-image: url("@{icon-path}/testNotRan.png");
+}

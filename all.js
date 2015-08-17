@@ -123,6 +123,7 @@ define(function(require, exports, module) {
                     else if (node.passed === 3) icon = "test-terminated";
                     else if (node.passed === -1) icon = "test-ignored";
                     else if (node.type == "describe") icon = "folder";
+                    else if (node.type == "test") icon = "test-notran";
                     
                     return "<span class='ace_tree-icon " + icon + "'></span>";
                 },
