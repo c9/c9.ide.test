@@ -19,6 +19,7 @@ define(function(require, module, exports) {
             var index = options.index || 100;
             var height = options.height || "";
             var style = options.style || "";
+            var showTitle = options.showTitle || false;
             var amlFrame;
 
             plugin.on("load", function(){
@@ -27,7 +28,7 @@ define(function(require, module, exports) {
             });
 
             function draw(e) {
-                amlFrame = ui.frame({
+                amlFrame = showTitle ? ui.frame({
                     buttons: "min",
                     activetitle: "min",
                     "class"     : "absframe",
@@ -35,6 +36,9 @@ define(function(require, module, exports) {
                     textselect: options.textselect,
                     // height      : height,
                     caption: caption
+                }) : ui.bar({
+                    style: "position:relative;" + (style || ""),
+                    textselect: options.textselect
                 });
                 
                 var aml = e.aml;
@@ -80,7 +84,10 @@ define(function(require, module, exports) {
 
             function show(){
                 test.show();
-                amlFrame && amlFrame.restore();
+                if (amlFrame) {
+                    if (amlFrame.restore) amlFrame.restore();
+                    else amlFrame.show();
+                }
             }
 
             function hide(){

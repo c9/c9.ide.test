@@ -29,11 +29,12 @@ define(function(require, exports, module) {
         var plugin = new TestPanel("Ajax.org", main.consumes, {
             caption: "All Tests",
             index: 200,
+            // showTitle: true,
             style: "flex:1;-webkit-flex:1"
         });
         var emit = plugin.getEmitter();
         
-        var tree, wsNode, rmtNode, btnRun, btnRunAll, stopping, menuContext;
+        var tree, wsNode, rmtNode, btnRun, stopping, menuContext;
         
         function load() {
             // plugin.setCommand({
@@ -77,21 +78,16 @@ define(function(require, exports, module) {
             var toolbar = test.getElement("toolbar");
             
             btnRun = ui.insertByIndex(toolbar, new ui.button({
-                caption: "Run Test",
+                caption: "Run Tests",
                 skinset: "default",
                 skin: "c9-menu-btn",
                 command: "runtest"
             }), 100, plugin);
             
-            btnRunAll = ui.insertByIndex(toolbar, new ui.button({
-                caption: "Run All",
-                skinset: "default",
-                skin: "c9-menu-btn"
-            }), 100, plugin);
-            
             // Tree
             tree = new Tree({
                 container: opts.html,
+                scrollMargin: [10, 0],
             
                 getCaptionHTML: function(node) {
                    if (node.type == "file") {
@@ -121,7 +117,7 @@ define(function(require, exports, module) {
                     else if (node.passed === 0) icon = "test-failed";
                     else if (node.passed === 2) icon = "test-error";
                     else if (node.passed === 3) icon = "test-terminated";
-                    else if (node.passed === -1) icon = "test-ignored";
+                    else if (node.passed === 4) icon = "test-ignored";
                     else if (node.type == "describe") icon = "folder";
                     else if (node.type == "test") icon = "test-notran";
                     
@@ -156,9 +152,9 @@ define(function(require, exports, module) {
             
             tree.container.style.position = "absolute";
             tree.container.style.left = "10px";
-            tree.container.style.top = "10px";
+            tree.container.style.top = "0";
             tree.container.style.right = "10px";
-            tree.container.style.bottom = "10px";
+            tree.container.style.bottom = "0";
             tree.container.style.height = "";
             
             wsNode = {
@@ -184,7 +180,7 @@ define(function(require, exports, module) {
             
             tree.setRoot({
                 label: "root",
-                items: [wsNode, rmtNode]
+                items: [wsNode] //, rmtNode]
             });
             
             tree.commands.bindKey("Space", function(e) {
@@ -212,6 +208,7 @@ define(function(require, exports, module) {
             test.on("unregister", function(e){ deinit(e.runner) }, plugin);
             
             test.runners.forEach(init);
+            tree.resize();
         }
         
         /***** Helper Methods *****/
@@ -326,6 +323,7 @@ define(function(require, exports, module) {
                 if (err) return callback(err);
                 
                 updateStatus(node, "loaded");
+                emit("result", { node: node });
                 
                 callback();
             });
