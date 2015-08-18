@@ -23,6 +23,10 @@ define(function(require, exports, module) {
         var basename = require("path").basename;
         var dirname = require("path").dirname;
         var escapeHTML = require("ace/lib/lang").escapeHTML;
+        
+        var LineWidgets = require("ace/line_widgets").LineWidgets;
+        var dom = require("ace/lib/dom");
+        // var Range = require("../range").Range;
 
         /***** Initialization *****/
 
@@ -184,6 +188,17 @@ define(function(require, exports, module) {
                 clear();
             }, plugin);
             
+            // Hook opening of known files
+            tabManager.on("open", function(e){
+                var node, tab = e.tab;
+                if (getAllNodes(tree.root, "file").some(function(n){
+                    node = n;
+                    return n.path == tab.path;
+                })) {
+                    decorate(node, tab);
+                }
+            });
+            
             // Menu
             menuContext = new Menu({ items: [
                 new MenuItem({ command: "runtest", caption: "Run", class: "strong" }),
@@ -344,7 +359,7 @@ define(function(require, exports, module) {
             });
             
             // clear all previous states of list before running any
-            clear();
+            // clear();
             
             async[parallel ? "each" : "eachSeries"](list, function(node, callback){
                 if (stopping) return callback(new Error("Terminated"));
@@ -395,7 +410,7 @@ define(function(require, exports, module) {
             (function recur(items){
                 for (var j, i = 0; i < items.length; i++) {
                     j = items[i];
-                    if (j.type.match(type)) nodes.push(j);
+                    if ((j.type || "").match(type)) nodes.push(j);
                     else if (j.items) recur(j.items);
                 }
             })([node]);
@@ -475,6 +490,207 @@ define(function(require, exports, module) {
         //         // model.isOpen = function(node){ return true; };
         //     }
         // }
+        
+        // TODO: Think about moving this to a separate plugin
+        
+        /*
+            TODO:
+            - Moving a tab to a different pane
+            - When line is deleted all widgets should go
+            - Cannot select inside widget
+            - Increase scroll width:
+                https://github.com/ajaxorg/ace/blob/master/lib/ace/virtual_renderer.js#L951
+            - Set width of line widget to full scroll width
+            - We can add onchange listener and update decorations array
+        */
+        function decorate(fileNode, tab) {
+            var editor = tab.editor.ace;
+            var session = tab.document.getSession().session;
+            if (!session) return;
+            
+            if (!session.widgetManager) {
+                session.widgetManager = new LineWidgets(session);
+                session.widgetManager.attach(editor);
+            }
+            
+            // var pos = editor.getCursorPosition();
+            // var row = pos.row;
+            // var oldWidget = session.lineWidgets && session.lineWidgets[row];
+            // if (oldWidget) {
+            //     oldWidget.destroy();
+            
+            if (session.$markers) {
+                session.$markers.forEach(function(m){
+                    session.removeGutterDecoration(m[0], m[1]);
+                });
+            }
+            
+            var nodes = getAllNodes(fileNode, /test|prepare/);
+            nodes.forEach(function(node){
+                if (node.passed !== undefined) {
+                    // TODO: Add gutter image
+                    session.addGutterDecoration(node.pos.sl - 1, "test-" + node.passed);
+                    (session.$markers || (session.$markers = [])).push([node.pos.sl - 1, "test-" + node.passed]);
+                }
+                if (node.stackTrace)
+                    createStackWidget(editor, session, node);
+                if (node.output)
+                    createOutputWidget(editor, session, node);
+            });
+        };
+        
+        function createOutputWidget(editor, session, node){
+            // editor.session.unfold(pos.row);
+            // editor.selection.moveToPosition(pos);
+            
+            var w = {
+                row: node.pos.el - 1, 
+                // fixedWidth: true,
+                // coverGutter: true,
+                // rowCount: 0,
+                // coverLine: 1,
+                el: dom.createElement("div")
+            };
+            var extraClass = node.passed == 2 ? "ace_error" : "ace_warning";
+            var el = w.el.appendChild(dom.createElement("div"));
+            var arrow = w.el.appendChild(dom.createElement("div"));
+            arrow.className = "error_widget_arrow " + extraClass;
+            
+            var left = editor.renderer.$cursorLayer
+                .getPixelPosition({ column: node.pos.sc - 1 }).left;
+            arrow.style.left = left + editor.renderer.gutterWidth - 5 + "px";
+            
+            w.el.className = "error_widget_wrapper";
+            el.style.whiteSpace = "pre";
+            el.className = "error_widget " + extraClass;
+            el.innerHTML = node.output;
+            
+            el.appendChild(dom.createElement("div"));
+            
+            // var kb = function(_, hashId, keyString) {
+            //     if (hashId === 0 && (keyString === "esc" || keyString === "return")) {
+            //         w.destroy();
+            //         return {command: "null"};
+            //     }
+            // };
+            
+            // w.destroy = function() {
+            //     if (editor.$mouseHandler.isMousePressed)
+            //         return;
+            //     editor.keyBinding.removeKeyboardHandler(kb);
+            //     session.widgetManager.removeLineWidget(w);
+            //     editor.off("changeSelection", w.destroy);
+            //     editor.off("changeSession", w.destroy);
+            //     editor.off("mouseup", w.destroy);
+            //     editor.off("change", w.destroy);
+            // };
+            
+            // editor.keyBinding.addKeyboardHandler(kb);
+            // editor.on("changeSelection", w.destroy);
+            // editor.on("changeSession", w.destroy);
+            // editor.on("mouseup", w.destroy);
+            // editor.on("change", w.destroy);
+            
+            session.widgetManager.addLineWidget(w);
+            
+            w.el.onmousedown = editor.focus.bind(editor);
+        }
+        
+        var lineAnnotations = [];
+        function createStackWidget(editor, session, node){
+            // editor.session.unfold(pos.row);
+            // editor.selection.moveToPosition(pos);
+            
+            if (!editor.decorated) {
+                editor.renderer.on("afterRender", updateLines)
+                var onMouseDown = function(e) {
+                    if (e.target.classList.contains("widget")) {
+                        e.stopPropagation();
+                    }
+                }
+                editor.container.addEventListener("mousedown", onMouseDown, true)
+            }
+            
+            lineAnnotations[node.stackTrace[0].lineNumber - 1] = node.stackTrace.message.trim();
+            
+            // var w = {
+            //     row: node.stackTrace[0].lineNumber,  // @TODO .column
+            //     // fixedWidth: true,
+            //     // coverGutter: true,
+            //     rowCount: 0,
+            //     coverLine: 1,
+            //     el: dom.createElement("div")
+            // };
+            // // var el = w.el.appendChild(dom.createElement("div"));
+            // w.el.innerHTML = node.stackTrace.message;
+            // w.el.className = "stack-message"
+            
+            // var kb = function(_, hashId, keyString) {
+            //     if (hashId === 0 && (keyString === "esc" || keyString === "return")) {
+            //         w.destroy();
+            //         return {command: "null"};
+            //     }
+            // };
+            
+            // w.destroy = function() {
+            //     if (editor.$mouseHandler.isMousePressed)
+            //         return;
+            //     editor.keyBinding.removeKeyboardHandler(kb);
+            //     session.widgetManager.removeLineWidget(w);
+            //     editor.off("changeSelection", w.destroy);
+            //     editor.off("changeSession", w.destroy);
+            //     editor.off("mouseup", w.destroy);
+            //     editor.off("change", w.destroy);
+            // };
+            
+            // editor.keyBinding.addKeyboardHandler(kb);
+            // editor.on("changeSelection", w.destroy);
+            // editor.on("changeSession", w.destroy);
+            // editor.on("mouseup", w.destroy);
+            // editor.on("change", w.destroy);
+            
+            // session.widgetManager.addLineWidget(w);
+            
+            // w.el.onmousedown = editor.focus.bind(editor);
+        }
+        
+        var widgets = {}
+        
+        var updateLines = function(e, renderer) {
+            var textLayer = renderer.$textLayer
+            var config = textLayer.config;
+            
+            var first = config.firstRow;
+            var last = config.lastRow;
+            
+            var lineElements = textLayer.element.childNodes;
+            var lineElementsIdx = 0;
+            
+            var row = first;
+            var foldLine = textLayer.session.getNextFoldLine(row);
+            var foldStart = foldLine ? foldLine.start.row : Infinity;
+            
+            while (true) {
+                if (row > foldStart) {
+                    row = foldLine.end.row + 1;
+                    foldLine = textLayer.session.getNextFoldLine(row, foldLine);
+                    foldStart = foldLine ? foldLine.start.row : Infinity;
+                }
+                if (row > last)
+                    break;
+                
+                var lineElement = lineElements[lineElementsIdx++];
+                if (lineElement && lineAnnotations[row]) {
+                    if (!widgets[row])
+                        widgets[row] = document.createElement("span")
+                    // widgets[row].className = ""
+                    widgets[row].textContent = lineAnnotations[row];
+                    widgets[row].className = "widget stack-message"
+                    lineElement.appendChild(widgets[row])
+                }
+                row++;
+            }
+        }
         
         /***** Lifecycle *****/
         

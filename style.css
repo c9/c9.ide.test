@@ -20,3 +20,19 @@
 .test-notran{
     background-image: url("@{icon-path}/testNotRan.png");
 }
+
+.stack-message{
+    margin-top: -16px;
+    border-radius: 4px;
+    padding: 0px 3px 1px 4px;
+    background-color: #FFDAB6;
+    margin: 0 5px;
+    pointer-events:auto; 
+    cursor:pointer;
+}
+
+.test-0 { background-image: url("@{icon-path}/testFailed.png"); }
+.test-1 { background-image: url("@{icon-path}/testPassed.png"); }
+.test-2 { background-image: url("@{icon-path}/testError.png"); }
+.test-3 { background-image: url("@{icon-path}/testTerminated.png"); }
+.test-4 { background-image: url("@{icon-path}/testIgnored.png"); }

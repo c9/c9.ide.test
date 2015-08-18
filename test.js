@@ -16,7 +16,7 @@ define(function(require, exports, module) {
         /*
             TODO:
             
-            - Test results view
+            RESULTS VIEW
                 - Run tests from results
                     - use event in all to update loading state
                     - gather set of tests and find them in all and send to run (either full test set or individuals)
@@ -25,7 +25,7 @@ define(function(require, exports, module) {
                 - Fix border (move to theme) of results
                 - Focus a tree when panel gets focussed (last one)
             
-            - All view
+            ALL VIEW
                 - Address anomaly for writer-test not being able to execute single test
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
                 
