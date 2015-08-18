@@ -175,6 +175,10 @@ define(function(require, exports, module) {
                 test.focussedPanel = plugin;
             });
             
+            tree.on("select", function(){
+                openTestFile([tree.selectedNode], true);
+            });
+            
             // Hook clear
             test.on("clear", function(){
                 clear();
@@ -247,10 +251,56 @@ define(function(require, exports, module) {
             tree.refresh();
         }
         
-        function openTestFile(nodes){
+        function findFileNode(node){
+            while (node.type != "file") node = node.parent;
+            return node;
+        }
+        
+        function scrollToDefinition(ace, line, lineEnd) {
+            var lineHeight = ace.renderer.$cursorLayer.config.lineHeight;
+            var lineVisibleStart = ace.renderer.scrollTop / lineHeight;
+            var linesVisible = ace.renderer.$size.height / lineHeight;
+            lineEnd = Math.min(lineEnd, line + linesVisible);
+            if (lineVisibleStart <= line && lineEnd <= lineVisibleStart + linesVisible)
+                return;
+
+            var SAFETY = 1.5;
+            ace.scrollToLine(Math.round((line + lineEnd) / 2 - SAFETY), true);
+        }
+        
+        function openTestFile(nodes, onlyWhenOpen){
             (nodes || tree.selectedNodes).forEach(function(n){
-                if (n.type == "file")
-                    tabManager.openFile(n.path, true, function(){})
+                if (n.type == "file") {
+                    if (onlyWhenOpen && !tabManager.findTab(n.path))
+                        return;
+                    
+                    tabManager.openFile(n.path, true, function(){});
+                }
+                else if (n.pos) {
+                    var fileNode = findFileNode(n);
+                    if (onlyWhenOpen && !tabManager.findTab(fileNode.path))
+                        return;
+                    
+                    var pos = n.selpos || n.pos;
+                    var select = n.selpos ? {
+                        row: n.selpos.el,
+                        column: n.selpos.ec
+                    } : undefined;
+                    
+                    tabManager.open({
+                        path: fileNode.path,
+                        focus: true
+                    }, function(err, tab){
+                        var ace = tab.editor.ace;
+                        
+                        ace.selection.clearSelection();
+                        scrollToDefinition(ace, n.pos.sl, n.pos.el);
+                        
+                        ace.moveCursorTo(pos.sl - 1, pos.sc);
+                        if (select)
+                            ace.getSession().getSelection().selectToPosition({ row: pos.el - 1, column: pos.ec });
+                    });
+                }
             });
         }
         

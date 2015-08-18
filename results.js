@@ -196,6 +196,10 @@ define(function(require, exports, module) {
                 test.focussedPanel = plugin;
             });
             
+            tree.on("select", function(){
+                openTestFile([tree.selectedNode], true);
+            });
+            
             tree.on("afterRender", recalc);
             
             // Menu
@@ -244,8 +248,8 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function openTestFile(nodes){
-            all.openTestFile(nodes || tree.selectedNodes);
+        function openTestFile(nodes, onlyWhenOpen){
+            all.openTestFile(nodes || tree.selectedNodes, onlyWhenOpen);
         }
         
         function clear(){

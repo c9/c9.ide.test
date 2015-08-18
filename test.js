@@ -17,8 +17,6 @@ define(function(require, exports, module) {
             TODO:
             
             - Test results view
-                * Fix: closed tree nodes don't have .parent set
-                * Add context menu
                 - Run tests from results
                     - use event in all to update loading state
                     - gather set of tests and find them in all and send to run (either full test set or individuals)
@@ -27,18 +25,13 @@ define(function(require, exports, module) {
                 - Focus a tree when panel gets focussed (last one)
             
             - All view
-                - Toggle run button / stop
-                - While navigating the tree, scroll to the selected test if test file is active or on space bar
-                    Use `node.getPos()` or `b.something.getPos()`
-                    Note that https://github.com/c9/newclient/blob/master/plugins/c9.ide.language/outline.js#L550 can scroll to a definition using a starting and ending line, trying to scroll in such a way that both of them are visible.
                 - Address anomaly for writer-test not being able to execute single test
+                - Toggle run button / stop
                 
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
                 - clear all previous states of list before running any
-                * Hide Remote when it's not used
                 - Error state for failed tests
-                * Space bar should open specific test in file
             LATER: 
                 - Better icons
                 - Mocha: other test formats (not bdd)
