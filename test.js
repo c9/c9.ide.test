@@ -28,12 +28,14 @@ define(function(require, exports, module) {
                 - Address anomaly for writer-test not being able to execute single test
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
                     * Fix code to deal with this.
-                - Toggle run button / stop
+                * Toggle run button / stop
                 
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
-                - clear all previous states of list before running any
+                * clear all previous states of list before running any
                 - Error state for failed tests
+                    - Timed out tests
+                    - Broken mid-run
             LATER: 
                 - Better icons
                 - Mocha: other test formats (not bdd)

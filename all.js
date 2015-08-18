@@ -256,6 +256,7 @@ define(function(require, exports, module) {
             return node;
         }
         
+        // TODO export to ace editor and add loading detection
         function scrollToDefinition(ace, line, lineEnd) {
             var lineHeight = ace.renderer.$cursorLayer.config.lineHeight;
             var lineVisibleStart = ace.renderer.scrollTop / lineHeight;
@@ -293,12 +294,19 @@ define(function(require, exports, module) {
                     }, function(err, tab){
                         var ace = tab.editor.ace;
                         
-                        ace.selection.clearSelection();
-                        scrollToDefinition(ace, n.pos.sl, n.pos.el);
+                        var scroll = function(){
+                            ace.selection.clearSelection();
+                            scrollToDefinition(ace, n.pos.sl, n.pos.el);
+                            
+                            ace.moveCursorTo(pos.sl - 1, pos.sc);
+                            if (select)
+                                ace.getSession().getSelection().selectToPosition({ row: pos.el - 1, column: pos.ec });
+                        }
                         
-                        ace.moveCursorTo(pos.sl - 1, pos.sc);
-                        if (select)
-                            ace.getSession().getSelection().selectToPosition({ row: pos.el - 1, column: pos.ec });
+                        if (ace.session.doc.$lines.length)
+                            scroll();
+                        else
+                            ace.once("changeSession", scroll);
                     });
                 }
             });
