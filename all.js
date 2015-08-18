@@ -290,7 +290,7 @@ define(function(require, exports, module) {
                     
                     tabManager.open({
                         path: fileNode.path,
-                        focus: true
+                        focus: false
                     }, function(err, tab){
                         var ace = tab.editor.ace;
                         

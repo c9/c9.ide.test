@@ -20,6 +20,7 @@ define(function(require, exports, module) {
                 - Run tests from results
                     - use event in all to update loading state
                     - gather set of tests and find them in all and send to run (either full test set or individuals)
+                - Add stop() method
             LATER:
                 - Fix border (move to theme) of results
                 - Focus a tree when panel gets focussed (last one)
@@ -27,17 +28,16 @@ define(function(require, exports, module) {
             - All view
                 - Address anomaly for writer-test not being able to execute single test
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
-                    * Fix code to deal with this.
-                * Toggle run button / stop
                 
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
-                * clear all previous states of list before running any
                 - Error state for failed tests
                     - Timed out tests
                     - Broken mid-run
+                    - Terminated (stop button)
             LATER: 
                 - Better icons
+                - Icons for play/stop button
                 - Mocha: other test formats (not bdd)
             
             - View test results in ace
