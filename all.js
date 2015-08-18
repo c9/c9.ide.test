@@ -34,7 +34,7 @@ define(function(require, exports, module) {
         });
         var emit = plugin.getEmitter();
         
-        var tree, wsNode, rmtNode, stopping, menuContext;
+        var tree, wsNode, rmtNode, stopping, menuContext, running;
         
         function load() {
             // plugin.setCommand({
@@ -316,6 +316,8 @@ define(function(require, exports, module) {
         /***** Methods *****/
         
         function run(nodes, parallel, callback){
+            running = true;
+            
             if (typeof parallel == "function")
                 callback = parallel, parallel = false;
             
@@ -333,10 +335,12 @@ define(function(require, exports, module) {
                     list.push(n);
             });
             
-            // TODO influence run button
-            // TODO clear all previous states of list before running any
-                
+            // clear all previous states of list before running any
+            clear();
+            
             async[parallel ? "each" : "eachSeries"](list, function(node, callback){
+                if (stopping) return callback(new Error("Terminated"));
+                
                 if (node.status == "pending") // TODO do this lazily
                     return populate(node, function(err){
                         if (err) return callback(err);
@@ -345,11 +349,11 @@ define(function(require, exports, module) {
                 
                 _run(node, callback);
             }, function(err){
-                if (err) return callback(err);
+                emit("stop");
+                running = false;
+                delete progress.stop;
                 
-                // TODO influence run button
-                
-                callback();
+                callback(err);
             });
         }
         
@@ -370,13 +374,11 @@ define(function(require, exports, module) {
             
             updateStatus(node, "running");
             
-            runner.run(node, progress, function(err){
-                if (err) return callback(err);
-                
+            progress.stop = runner.run(node, progress, function(err){
                 updateStatus(node, "loaded");
                 emit("result", { node: node });
                 
-                callback();
+                callback(err)
             });
         }
         
@@ -421,9 +423,17 @@ define(function(require, exports, module) {
             else tree.refresh();
         }
         
-        function stop(){
-            // TODO
+        function stop(callback){
+            if (!running) return callback(new Error("Not Running"));
+            
             stopping = true;
+            plugin.once("stop", function(){
+                stopping = false;
+                callback();
+            });
+            
+            if (progress.stop)
+                progress.stop();
         }
         
         function clear(node){
@@ -500,6 +510,11 @@ define(function(require, exports, module) {
              * 
              */
             run: run,
+            
+            /**
+             * 
+             */
+            stop: stop,
             
             /**
              *

@@ -26,6 +26,8 @@ define(function(require, exports, module) {
             
             - All view
                 - Address anomaly for writer-test not being able to execute single test
+                    - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
+                    * Fix code to deal with this.
                 - Toggle run button / stop
                 
                 - skip test (temporary exclusion)
@@ -84,9 +86,21 @@ define(function(require, exports, module) {
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
                 exec: function(editor, args){
+                    transformRunButton("stop");
                     focussedPanel.run(null, function(err){
                         if (err) console.log(err);
+                        transformRunButton("run");
                     });
+                }
+            }, plugin);
+            
+            commands.addCommand({
+                name: "stoptest",
+                // hint: "runs the selected test(s) in the test panel",
+                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
+                group: "Test",
+                exec: function(editor, args){
+                    focussedPanel.stop(function(err){});
                 }
             }, plugin);
             
@@ -116,7 +130,7 @@ define(function(require, exports, module) {
                 id: "toolbar",
                 skin: "toolbar-top",
                 class: "fakehbox aligncenter debugger_buttons basic",
-                style: "white-space:nowrap !important"
+                style: "white-space:nowrap !important; height:32px;"
             }));
             plugin.addElement(toolbar);
             
@@ -155,6 +169,11 @@ define(function(require, exports, module) {
             runners.splice(runners.indexOf(runner), 1);
             
             emit("unregister", { runner: runner });
+        }
+        
+        function transformRunButton(type){
+            btnRun.setCaption(type == "stop" ? "Stop" : "Run Tests");
+            btnRun.setAttribute("command", type == "stop" ? "stoptest" : "runtest");
         }
         
         /***** Lifecycle *****/
