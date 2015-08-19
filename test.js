@@ -29,6 +29,8 @@ define(function(require, exports, module) {
                 - Address anomaly for writer-test not being able to execute single test
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
                 
+                - Only switch to file if it's already active
+                - Clear() should also clear from ace
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
                 - Error state for failed tests
@@ -40,16 +42,27 @@ define(function(require, exports, module) {
                 - Icons for play/stop button
                 - Mocha: other test formats (not bdd)
             
-            - View test results in ace
+            * View test results in ace
+            - Add key binding for run test
             - View log in viewer
             - Code coverage panel
+                - Add code coverage toggle button
                 - View code coverage in ace
                 - Triggers for running tests (based on code coverage)
+                LATER:
+                - Clear all coverage from subnodes
             
             - Parallel test execution
             
             - Different row heights:
             https://github.com/c9/newclient/blob/master/node_modules/ace_tree/lib/ace_tree/data_provider.js#L392
+            
+            SETTINGS (add settings button like tree)
+            - disable adding test results to ace
+            - always run with code coverage
+            
+            MOCHA
+            - Add setting for debug mode
             
             - Update Tree documentation:
                 - Expand/Collapse using .isOpen = true/false + tree.refresh
@@ -92,6 +105,27 @@ define(function(require, exports, module) {
                     focussedPanel.run(null, function(err){
                         if (err) console.log(err);
                         transformRunButton("run");
+                    });
+                }
+            }, plugin);
+            
+            commands.addCommand({
+                name: "runtestwithcoverage",
+                hint: "runs the selected test(s) in the test panel with code coverage enabled",
+                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
+                group: "Test",
+                exec: function(editor, args){
+                    transformRunButton("stop");
+                    focussedPanel.run({ withCodeCoverage: true }, function(err, nodes){
+                        transformRunButton("run");
+                        if (err) return console.log(err);
+                        
+                        if (nodes) {
+                            nodes.forEach(function(node){
+                                if (node.coverage)
+                                    emit("coverage", { node: node });
+                            });
+                        }
                     });
                 }
             }, plugin);

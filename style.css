@@ -22,10 +22,10 @@
 }
 
 .stack-message{
-    margin-top: -16px;
     border-radius: 4px;
     padding: 0px 3px 1px 4px;
-    background-color: #FFDAB6;
+    background-color: #FFF3A5;
+    color: #795A0A;
     margin: 0 5px;
     pointer-events:auto; 
     cursor:pointer;
@@ -36,3 +36,57 @@
 .test-2 { background-image: url("@{icon-path}/testError.png"); }
 .test-3 { background-image: url("@{icon-path}/testTerminated.png"); }
 .test-4 { background-image: url("@{icon-path}/testIgnored.png"); }
+
+.test-covered { background: rgba(0, 128, 0, 0.1); }
+.test-uncovered { background: rgba(128, 0, 0, 0.1); }
+
+.ace_gutter-cell.covered:after, .ace_gutter-cell.uncovered:after {
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    background-color: #73C373;
+    float: right;
+    margin: 3px -11px 0 0;
+    border-radius: 2px;
+}
+.ace_gutter-cell.uncovered:after {
+    background-color: #DC7272;
+}
+
+.coverage-btn {
+    font-family: Arial;
+    font-size: 9px;
+    /*padding: @stats-button-padding;*/
+    padding: 4px 5px 2px 5px;
+    box-sizing: border-box;
+    height: 100%;
+    border-right: @stats-button-border-right;
+    border-left: @stats-button-border-left;
+    box-shadow: @stats-button-box-shadow;
+    color: @stats-button-color;
+    margin-left: @stats-button-margin-left;
+}
+
+.coverage-btn .title {
+    /*padding: @stats-button-item-padding;*/
+    position: relative;
+    text-transform: uppercase;
+    font-size: @stats-button-item-font-size;
+    line-height: @stats-button-item-font-size;
+}
+
+.coverage-btn .amount {
+    text-align: center;
+    font-size: 25px;
+}
+
+.coverage-btn:hover {
+    background: @stats-button-hover-background;
+}
+/*.stats-btn.c9-simple-btnmenuDown{*/
+/*    background: @stats-button-active-background;*/
+/*    z-index: 196000;*/
+/*    position: relative;*/
+/*    box-shadow: @stats-button-active-box-shadow;*/
+/*}*/

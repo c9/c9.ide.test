@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test",
-        "Menu", "MenuItem", "Divider", "tabManager"
+        "Menu", "MenuItem", "Divider", "tabManager", "save"
     ];
     main.provides = ["test.all"];
     return main;
@@ -18,6 +18,7 @@ define(function(require, exports, module) {
         var MenuItem = imports.MenuItem;
         var Divider = imports.Divider;
         var tabManager = imports.tabManager;
+        var save = imports.save;
         
         var async = require("async");
         var basename = require("path").basename;
@@ -202,6 +203,7 @@ define(function(require, exports, module) {
             // Menu
             menuContext = new Menu({ items: [
                 new MenuItem({ command: "runtest", caption: "Run", class: "strong" }),
+                new MenuItem({ command: "runtestwithcoverage", caption: "Run with Code Coverage" }),
                 new Divider(),
                 new MenuItem({ caption: "Open Test File", onclick: openTestFile }),
                 // new MenuItem({ caption: "Open Related Files", disabled: true }),
@@ -210,6 +212,16 @@ define(function(require, exports, module) {
                 new MenuItem({ caption: "Remove" })
             ] }, plugin);
             opts.aml.setAttribute("contextmenu", menuContext.aml);
+            
+            // Save hooks (TODO: move to load and get list from plugins at startup)
+            save.on("afterSave", function(e){
+                getAllNodes(tree.root, "file").some(function(n){
+                    if (n.path == e.path) {
+                        run([n], function(){});
+                        return true;
+                    }
+                });
+            });
             
             // Initiate test runners
             test.on("register", function(e){ init(e.runner) }, plugin);
@@ -338,17 +350,21 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function run(nodes, parallel, callback){
+        function run(nodes, options, callback){
             running = true;
             
-            if (typeof parallel == "function")
-                callback = parallel, parallel = false;
+            if (typeof nodes != "array")
+                callback = options, options = nodes, nodes = null;
+            
+            if (typeof options == "function")
+                callback = options, options = null;
             
             if (!nodes)
                 nodes = tree.selectedNodes;
             
-            if (parallel === undefined)
-                parallel = settings.getBool("shared/test/@parallel"); // TODO have a setting per runner
+            var parallel = !options || options.parallel === undefined
+                ? settings.getBool("shared/test/@parallel")
+                : options.parallel; // TODO have a setting per runner
             
             var list = [];
             nodes.forEach(function(n){
@@ -370,13 +386,13 @@ define(function(require, exports, module) {
                         _run(node, callback);
                     });
                 
-                _run(node, callback);
+                _run(node, options, callback);
             }, function(err){
                 emit("stop");
                 running = false;
                 delete progress.stop;
                 
-                callback(err);
+                callback(err, list);
             });
         }
         
@@ -392,16 +408,25 @@ define(function(require, exports, module) {
             }
         }
         
-        function _run(node, callback){
+        function findFileNode(node){
+            while (node.type != "file") node = node.parent;
+            return node;
+        }
+        
+        function _run(node, options, callback){
             var runner = findRunner(node);
             
             updateStatus(node, "running");
             
-            progress.stop = runner.run(node, progress, function(err){
+            progress.stop = runner.run(node, progress, options, function(err){
                 updateStatus(node, "loaded");
                 emit("result", { node: node });
                 
-                callback(err)
+                var fileNode = findFileNode(node);
+                var tab = tabManager.findTab(fileNode.path);
+                if (tab) decorate(fileNode, tab);
+                
+                callback(err, node);
             });
         }
         
@@ -492,7 +517,6 @@ define(function(require, exports, module) {
         // }
         
         // TODO: Think about moving this to a separate plugin
-        
         /*
             TODO:
             - Moving a tab to a different pane
@@ -502,6 +526,11 @@ define(function(require, exports, module) {
                 https://github.com/ajaxorg/ace/blob/master/lib/ace/virtual_renderer.js#L951
             - Set width of line widget to full scroll width
             - We can add onchange listener and update decorations array
+                - line annotations should move as well
+            
+            - When writing in a certain test, invalidate those resuls
+                - On save, only execute those tests that are changed
+    
         */
         function decorate(fileNode, tab) {
             var editor = tab.editor.ace;
@@ -524,6 +553,19 @@ define(function(require, exports, module) {
                     session.removeGutterDecoration(m[0], m[1]);
                 });
             }
+            if (session.lineAnnotations) {
+                session.lineAnnotations.forEach(function(item){
+                    if (item.element && item.element.parentNode)
+                        item.element.parentNode.removeChild(item.element);
+                });
+            }
+            session.lineAnnotations = [];
+            if (session.$lineWidgets) {
+                session.$lineWidgets.forEach(function(widget){
+                    session.widgetManager.removeLineWidget(widget);
+                });
+            }
+            session.$lineWidgets = [];
             
             var nodes = getAllNodes(fileNode, /test|prepare/);
             nodes.forEach(function(node){
@@ -545,7 +587,7 @@ define(function(require, exports, module) {
             
             var w = {
                 row: node.pos.el - 1, 
-                // fixedWidth: true,
+                fixedWidth: true,
                 // coverGutter: true,
                 // rowCount: 0,
                 // coverLine: 1,
@@ -592,15 +634,12 @@ define(function(require, exports, module) {
             // editor.on("change", w.destroy);
             
             session.widgetManager.addLineWidget(w);
+            session.$lineWidgets.push(w);
             
             w.el.onmousedown = editor.focus.bind(editor);
         }
         
-        var lineAnnotations = [];
         function createStackWidget(editor, session, node){
-            // editor.session.unfold(pos.row);
-            // editor.selection.moveToPosition(pos);
-            
             if (!editor.decorated) {
                 editor.renderer.on("afterRender", updateLines)
                 var onMouseDown = function(e) {
@@ -611,54 +650,15 @@ define(function(require, exports, module) {
                 editor.container.addEventListener("mousedown", onMouseDown, true)
             }
             
-            lineAnnotations[node.stackTrace[0].lineNumber - 1] = node.stackTrace.message.trim();
-            
-            // var w = {
-            //     row: node.stackTrace[0].lineNumber,  // @TODO .column
-            //     // fixedWidth: true,
-            //     // coverGutter: true,
-            //     rowCount: 0,
-            //     coverLine: 1,
-            //     el: dom.createElement("div")
-            // };
-            // // var el = w.el.appendChild(dom.createElement("div"));
-            // w.el.innerHTML = node.stackTrace.message;
-            // w.el.className = "stack-message"
-            
-            // var kb = function(_, hashId, keyString) {
-            //     if (hashId === 0 && (keyString === "esc" || keyString === "return")) {
-            //         w.destroy();
-            //         return {command: "null"};
-            //     }
-            // };
-            
-            // w.destroy = function() {
-            //     if (editor.$mouseHandler.isMousePressed)
-            //         return;
-            //     editor.keyBinding.removeKeyboardHandler(kb);
-            //     session.widgetManager.removeLineWidget(w);
-            //     editor.off("changeSelection", w.destroy);
-            //     editor.off("changeSession", w.destroy);
-            //     editor.off("mouseup", w.destroy);
-            //     editor.off("change", w.destroy);
-            // };
-            
-            // editor.keyBinding.addKeyboardHandler(kb);
-            // editor.on("changeSelection", w.destroy);
-            // editor.on("changeSession", w.destroy);
-            // editor.on("mouseup", w.destroy);
-            // editor.on("change", w.destroy);
-            
-            // session.widgetManager.addLineWidget(w);
-            
-            // w.el.onmousedown = editor.focus.bind(editor);
+            session.lineAnnotations[node.stackTrace[0].lineNumber - 1] = { 
+                message: node.stackTrace.message.trim() 
+            };
         }
-        
-        var widgets = {}
         
         var updateLines = function(e, renderer) {
             var textLayer = renderer.$textLayer
             var config = textLayer.config;
+            var session = textLayer.session;
             
             var first = config.firstRow;
             var last = config.lastRow;
@@ -667,7 +667,7 @@ define(function(require, exports, module) {
             var lineElementsIdx = 0;
             
             var row = first;
-            var foldLine = textLayer.session.getNextFoldLine(row);
+            var foldLine = session.getNextFoldLine(row);
             var foldStart = foldLine ? foldLine.start.row : Infinity;
             
             while (true) {
@@ -680,13 +680,17 @@ define(function(require, exports, module) {
                     break;
                 
                 var lineElement = lineElements[lineElementsIdx++];
-                if (lineElement && lineAnnotations[row]) {
-                    if (!widgets[row])
-                        widgets[row] = document.createElement("span")
-                    // widgets[row].className = ""
-                    widgets[row].textContent = lineAnnotations[row];
-                    widgets[row].className = "widget stack-message"
-                    lineElement.appendChild(widgets[row])
+                if (lineElement && session.lineAnnotations[row]) {
+                    var widget;
+                    if (!session.lineAnnotations[row].element) {
+                        widget = document.createElement("span");
+                        widget.textContent = session.lineAnnotations[row].message;
+                        widget.className = "widget stack-message"
+                        session.lineAnnotations[row].element = widget;
+                    }
+                    else widget = session.lineAnnotations[row].element;
+                    
+                    lineElement.appendChild(widget)
                 }
                 row++;
             }
