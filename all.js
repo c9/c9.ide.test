@@ -298,16 +298,24 @@ define(function(require, exports, module) {
         
         function openTestFile(nodes, onlyWhenOpen){
             (nodes || tree.selectedNodes).forEach(function(n){
+                var tab;
+                
                 if (n.type == "file") {
-                    if (onlyWhenOpen && !tabManager.findTab(n.path))
-                        return;
+                    if (onlyWhenOpen) {
+                        tab = tabManager.findTab(n.path);
+                        if (!tab || !tab.isActive())
+                            return;
+                    }
                     
                     tabManager.openFile(n.path, true, function(){});
                 }
                 else if (n.pos) {
                     var fileNode = findFileNode(n);
-                    if (onlyWhenOpen && !tabManager.findTab(fileNode.path))
-                        return;
+                    if (onlyWhenOpen) {
+                        tab = tabManager.findTab(fileNode.path);
+                        if (!tab || !tab.isActive())
+                            return;
+                    }
                     
                     var pos = n.selpos || n.pos;
                     var select = n.selpos ? {

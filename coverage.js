@@ -97,10 +97,11 @@ define(function(require, exports, module) {
             
             node.coverage.forEach(function(coverage){
                 var path = coverage.file.replace(reWs, "");
+                var tab;
                 
                 if (tests[path]) {
                     tests[path] = coverage;
-                    var tab = tabManager.findTab(path);
+                    tab = tabManager.findTab(path);
                     if (tab) decorateTest(tab);
                 }
                 else {
@@ -133,6 +134,9 @@ define(function(require, exports, module) {
                             update(fInfo.coverage[id]);
                         }
                     }
+                    
+                    tab = tabManager.findTab(path);
+                    if (tab) decorateFile(tab);
                 }
             });
             
@@ -154,7 +158,7 @@ define(function(require, exports, module) {
         }
         
         function addMarker(session, type, row) {
-            var marker = session.addMarker(new Range(row, 0, row, 1), "test-" + type, "fullLine");
+            var marker = null;//session.addMarker(new Range(row, 0, row, 1), "test-" + type, "fullLine");
             session.addGutterDecoration(row, type);
             session.coverageLines.push({ marker: marker, gutter: row, type: type });
         }
@@ -162,10 +166,14 @@ define(function(require, exports, module) {
         function decorateTest(tab){
             var coverage = tests[tab.path];
             var session = tab.document.getSession().session;
+            if (!session) {
+                tab.once("activate", function(){ setTimeout(function(){ decorateTest(tab); }); });
+                return;
+            }
             
             if (session.coverageLines) {
                 session.coverageLines.forEach(function(i){
-                    session.removeMarker(i.marker);
+                    // session.removeMarker(i.marker);
                     session.removeGutterDecoration(i.gutter, i.type);
                 });
             }
@@ -182,6 +190,10 @@ define(function(require, exports, module) {
         function decorateFile(tab){
             var lines = files[tab.path].lines;
             var session = tab.document.getSession().session;
+            if (!session) {
+                tab.once("activate", function(){ setTimeout(function(){ decorateFile(tab); }); });
+                return;
+            }
             
             if (session.coverageLines) {
                 session.coverageLines.forEach(function(i){
