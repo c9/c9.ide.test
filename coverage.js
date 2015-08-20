@@ -442,8 +442,11 @@ define(function(require, exports, module) {
             files = {};
             tests = {};
             settings.set("state/test/coverage/@total", "");
-            button.hide();
-            clearAllDecorations();
+            
+            if (drawn) {
+                button.hide();
+                clearAllDecorations();
+            }
         }
         
         /***** Lifecycle *****/

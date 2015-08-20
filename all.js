@@ -445,7 +445,7 @@ define(function(require, exports, module) {
                 if (node.status == "pending") // TODO do this lazily
                     return populate(node, function(err){
                         if (err) return callback(err);
-                        _run(node, callback);
+                        _run(node, options, callback);
                     });
                 
                 _run(node, options, callback);

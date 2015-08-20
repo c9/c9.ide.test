@@ -30,9 +30,6 @@ define(function(require, exports, module) {
                 - Focus a tree when panel gets focussed (last one)
             
             ALL VIEW
-                - Address anomaly for writer-test not being able to execute single test
-                    - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
-                
                 - Update outline when typing in file that has outline open in all view
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
@@ -49,15 +46,11 @@ define(function(require, exports, module) {
                 - Parallel test execution
             
             COVERAGE
-                - Add code coverage toggle button
-                * View code coverage in ace
                 - When to clear coverage?
-                - Triggers for running tests (based on code coverage)
             LATER:
                 - Clear all coverage from subnodes
             ISSUES:
                 - AssertError is on the wrong line
-                - Error is not detected with coverage on
                 - Clear coverage on re-execution without coverage
             
             - Different row heights:
@@ -68,7 +61,6 @@ define(function(require, exports, module) {
             - Code coverage panel
             
             STATE
-            - Keep total code coverage in state
             - Keep coverage filename in state
             - Should test results be kept in state?
             - Should test output be kept in state?
@@ -76,6 +68,8 @@ define(function(require, exports, module) {
             MOCHA
             - Add setting for debug mode
             - other test formats (not bdd)
+            - Address anomaly for writer-test not being able to execute single test
+                    - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
             
             - Update Tree documentation:
                 - Expand/Collapse using .isOpen = true/false + tree.refresh
