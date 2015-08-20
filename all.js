@@ -607,7 +607,7 @@ define(function(require, exports, module) {
             
             var editor = tab.editor.ace;
             var session = (tab.document.getSession() || 0).session;
-            if (!session || !session.editor) {
+            if (!session) {
                 tab.once("activate", function(){
                     setTimeout(function(){ decorate(fileNode, tab); });
                 });
