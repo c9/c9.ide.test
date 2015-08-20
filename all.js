@@ -238,6 +238,7 @@ define(function(require, exports, module) {
                 new Divider(),
                 new MenuItem({ caption: "Open Test File", onclick: openTestFile }),
                 new MenuItem({ caption: "Open Related Files", command: "openrelatedtestfiles" }), // TODO move to coverage plugin
+                new MenuItem({ caption: "Open Raw Test Output", command: "opentestoutput" }),
                 new Divider(),
                 new MenuItem({ caption: "Skip" }),
                 new MenuItem({ caption: "Remove" })
@@ -459,8 +460,9 @@ define(function(require, exports, module) {
         }
         
         var progress = {
-            log: function(chunk){
-                emit("log", chunk); console.log(chunk)
+            log: function(node, chunk){
+                node.fullOutput += chunk;
+                emit("log", chunk);
             },
             start: function(node){
                 updateStatus(node, "running");
@@ -484,14 +486,15 @@ define(function(require, exports, module) {
         
         function _run(node, options, callback){
             var runner = findRunner(node);
+            var fileNode = findFileNode(node);
             
+            fileNode.fullOutput = ""; // Reset output
             updateStatus(node, "running");
             
             progress.stop = runner.run(node, progress, options, function(err){
                 updateStatus(node, "loaded");
                 emit("result", { node: node });
                 
-                var fileNode = findFileNode(node);
                 var tab = tabManager.findTab(fileNode.path);
                 if (tab) decorate(fileNode, tab);
                 
@@ -607,7 +610,7 @@ define(function(require, exports, module) {
             
             var editor = tab.editor.ace;
             var session = (tab.document.getSession() || 0).session;
-            if (!session) {
+            if (!session || !tab.isActive()) {
                 tab.once("activate", function(){
                     setTimeout(function(){ decorate(fileNode, tab); });
                 });
@@ -624,7 +627,6 @@ define(function(require, exports, module) {
             var nodes = getAllNodes(fileNode, /test|prepare/);
             nodes.forEach(function(node){
                 if (node.passed !== undefined) {
-                    // TODO: Add gutter image
                     session.addGutterDecoration(node.pos.sl - 1, "test-" + node.passed);
                     (session.$markers || (session.$markers = [])).push([node.pos.sl - 1, "test-" + node.passed]);
                 }
@@ -819,6 +821,11 @@ define(function(require, exports, module) {
              * @private
              */
             get tree() { return tree; },
+            
+            /**
+             * 
+             */
+            get contextMenu() { return menuContext },
             
             /**
              * 

@@ -41,6 +41,9 @@ define(function(require, exports, module) {
             test.on("coverage", function(e){
                 var node = e.node;
                 addToLibrary(node);
+                
+                if (!showCoverage)
+                    commands.exec("togglecoverage");
             }, plugin);
             
             test.on("clear", function(){
@@ -88,7 +91,10 @@ define(function(require, exports, module) {
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
                 exec: function(){
-                    if (showCoverage)
+                    showCoverage = !showCoverage;
+                    settings.set("state/test/coverage/@show", showCoverage);
+                    
+                    if (!showCoverage)
                         clearAllDecorations();
                     else {
                         var tab;
@@ -337,6 +343,8 @@ define(function(require, exports, module) {
             });
             
             updateGlobalCoverage();
+            
+            emit("update");
         }
         
         function updateGlobalCoverage(){
@@ -386,11 +394,6 @@ define(function(require, exports, module) {
             coverage.lines.uncovered.forEach(function(row){
                 addMarker(session, "uncovered", row - 1, showMarker);
             });
-            
-            if (!showCoverage) {
-                showCoverage = true;
-                settings.set("state/test/coverage/@show", showCoverage);
-            }
         }
         
         function decorateFile(tab){
@@ -409,11 +412,6 @@ define(function(require, exports, module) {
             for (var row in lines) {
                 var css = lines[row] === true ? "covered" : "uncovered";
                 addMarker(session, css, row - 1, showMarker);    
-            }
-            
-            if (!showCoverage) {
-                showCoverage = true;
-                settings.set("state/test/coverage/@show", showCoverage);
             }
         }
         
@@ -447,6 +445,8 @@ define(function(require, exports, module) {
                 button.hide();
                 clearAllDecorations();
             }
+            
+            emit("update");
         }
         
         /***** Lifecycle *****/
@@ -460,15 +460,22 @@ define(function(require, exports, module) {
         
         /***** Register and define API *****/
         
-        /**
-         * This is an example of an implementation of a plugin. Check out [the source](source/template.html)
-         * for more information.
-         * 
-         * @class Template
-         * @extends Plugin
-         * @singleton
-         */
         plugin.freezePublicAPI({
+            /**
+             * 
+             */
+            get buttonMenu(){ return menu; },
+            
+            /**
+             * 
+             */
+            get tests(){ return tests; },
+            
+            /**
+             * 
+             */
+            get files(){ return files; },
+            
             /**
              * 
              */

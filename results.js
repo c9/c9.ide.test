@@ -187,16 +187,6 @@ define(function(require, exports, module) {
                 $sorted: true,
                 items: []
             };
-            // rootNode = {
-            //     label: "results",
-            //     isOpen: true,
-            //     className: "heading",
-            //     status: "loaded",
-            //     noSelect: true,
-            //     $sorted: true,
-                
-            //     items: []
-            // };
             
             tree.setRoot(rootNode = {
                 label: "root",
@@ -221,18 +211,10 @@ define(function(require, exports, module) {
             
             tree.on("afterRender", recalc);
             
-            // Menu
-            menuContext = new Menu({ items: [
-                new MenuItem({ caption: "Open Test File", onclick: openTestFile, class: "strong" }),
-                // new MenuItem({ caption: "Open Related Files", disabled: true }),
-                new MenuItem({ command: "runtest", caption: "Run Test" }),
-                new Divider(),
-                new MenuItem({ command: "showtestresults", caption: "View Raw Test Results" }),
-                new Divider(),
-                new MenuItem({ caption: "Skip" }),
-                new MenuItem({ caption: "Remove" })
-            ] }, plugin);
-            opts.aml.setAttribute("contextmenu", menuContext.aml);
+            all.on("draw", function(){
+                // Menu
+                opts.aml.setAttribute("contextmenu", all.contextMenu.aml);
+            }, plugin);
             
             // Hook clear
             test.on("clear", function(){
@@ -245,7 +227,7 @@ define(function(require, exports, module) {
                 var results = [failNode.items, passNode.items, errNode.items, [], skipNode.items];
                 importResultsToTree(e.node, results);
                 
-                var hasFail = results[0].length || results[1].length;
+                var hasFail = results[0].length || results[2].length;
                 
                 rootNode.items.length = 0;
                 [0,2,1,4].forEach(function(i){
