@@ -1,7 +1,8 @@
 define(function(require, exports, module) {
     main.consumes = [
         "Editor", "editors", "ui", "save", "test.coverage", "Datagrid",
-        "layout", "settings", "tabManager"
+        "layout", "settings", "tabManager", "commands", "Divider", "MenuItem",
+        "console"
     ];
     main.provides = ["test.coverageview"];
     return main;
@@ -13,13 +14,54 @@ define(function(require, exports, module) {
         var Datagrid = imports.Datagrid;
         var editors = imports.editors;
         var layout = imports.layout;
+        var Divider = imports.Divider;
+        var MenuItem = imports.MenuItem;
         var tabManager = imports.tabManager;
         var settings = imports.settings;
+        var console = imports.console;
+        var commands = imports.commands;
         var coverage = imports["test.coverage"];
         
         /***** Initialization *****/
         
         var extensions = [];
+        
+        var handle = editors.register("coverageview", "Coverage View", CoverageView, extensions);
+        
+        handle.on("load", function(){
+            commands.addCommand({
+                name: "opencoverageview",
+                // hint: "runs the selected test(s) in the test panel",
+                // bindKey: { mac: "F6", win: "F6" },
+                group: "Test",
+                exec: function(editor, args){
+                    var tab;
+                    if (tabManager.getTabs().some(function(t){
+                        if (t.editorType == "coverageview") {
+                            tab = t;
+                            return true;
+                        }
+                    })) {
+                        tabManager.focusTab(tab);
+                    }
+                    else {
+                        tabManager.open({
+                            editorType: "coverageview", 
+                            focus: true, 
+                            pane: console.getPanes()[0]
+                        }, function(){});
+                    }
+                }
+            }, handle);
+            
+            coverage.on("draw", function(){
+                coverage.buttonMenu.append(new Divider());
+                coverage.buttonMenu.append(new MenuItem({ 
+                    caption: "Open Code Coverage View", 
+                    command: "opencoverageview"
+                }));
+            }, handle);
+        });
                           
         function CoverageView(){
             var plugin = new Editor("Ajax.org", main.consumes, extensions);
@@ -64,25 +106,31 @@ define(function(require, exports, module) {
                 });
                 
                 coverage.on("update", function(){
-                    var nodes = datagrid.root || [];
-                    var lookup = nodes.lookup || (nodes.lookup = {});
-                    
-                    var files = coverage.files;
-                    for (var path in files) {
-                        var file = files[path];
-                        var node = lookup[path];
-                        if (!node) nodes.push(node = lookup[path] = { label: path.substr(1) });
-                        node.covered = Math.round(file.coveredLines / file.totalLines * 100);
-                        node.uncovered = file.totalLines - file.coveredLines;
-                    }
-                    
-                    datagrid.setRoot(nodes);
+                    update();
                 }, plugin);
                 
                 e.htmlNode.style.padding = 0;
+                
+                update();
             });
             
             /***** Method *****/
+            
+            function update(){
+                var nodes = datagrid.root || [];
+                var lookup = nodes.lookup || (nodes.lookup = {});
+                
+                var files = coverage.files;
+                for (var path in files) {
+                    var file = files[path];
+                    var node = lookup[path];
+                    if (!node) nodes.push(node = lookup[path] = { label: path.substr(1) });
+                    node.covered = Math.round(file.coveredLines / file.totalLines * 100);
+                    node.uncovered = file.totalLines - file.coveredLines;
+                }
+                
+                datagrid.setRoot(nodes);
+            }
             
             /***** Lifecycle *****/
             
@@ -119,8 +167,7 @@ define(function(require, exports, module) {
         }
         
         register(null, {
-            "test.coverageview": editors.register("coverageview", 
-                "Coverage View", CoverageView, extensions)
+            "test.coverageview": handle
         });
     }
 });

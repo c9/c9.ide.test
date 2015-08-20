@@ -282,6 +282,8 @@ define(function(require, exports, module) {
             button.$ext.innerHTML = '\
                 <div class="title">Code coverage</div>\
                 <div class="amount">~</div>';
+            
+            emit.sticky("draw");
         }
         
         /***** Methods *****/

@@ -22,19 +22,22 @@ define(function(require, exports, module) {
             TODO:
             
             RESULTS VIEW
-                - Use context menu from all
                 - Run tests from results
                     - use event in all to update loading state
                     - gather set of tests and find them in all and send to run (either full test set or individuals)
                 - Add stop() method
             LATER:
                 - Fix border (move to theme) of results
-                - Focus a tree when panel gets focussed (last one)
             
+            REFACTOR TO USE DATA OBJECTS
+                    - Start using data objects (emitter based, tree walker to find certain node types)
+                    - Implement change event and create updateOutline
+                    - Instead of .stackTrace do .annotations = {<linenr>: <message>}
+                - Update outline when typing in file that has outline open in all view
+                
             ALL VIEW
                 - Tests should be able to run without test panel open
                     - Test panel shouldnt open when running tests
-                - Update outline when typing in file that has outline open in all view
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
                 - Error state for failed tests
@@ -56,11 +59,11 @@ define(function(require, exports, module) {
             LATER:
                 - Clear all coverage from subnodes
             ISSUES:
-                - AssertError is on the wrong line
                 - Clear coverage on re-execution without coverage
             
             STATE
-            - Keep coverage filenames in state
+            - Keep coverage data filename in state
+            - Keep coverage totals in state (trigger "update" event)
             - Should test results be kept in state?
             - Should test output be kept in state?
             
