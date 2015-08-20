@@ -87,9 +87,9 @@
 .coverage-btn:hover {
     background: @stats-button-hover-background;
 }
-/*.stats-btn.c9-simple-btnmenuDown{*/
-/*    background: @stats-button-active-background;*/
-/*    z-index: 196000;*/
-/*    position: relative;*/
-/*    box-shadow: @stats-button-active-box-shadow;*/
-/*}*/
+.coverage-btn.c9-simple-btnmenuDown{
+    background: @stats-button-active-background;
+    z-index: 196000;
+    position: relative;
+    box-shadow: @stats-button-active-box-shadow;
+}

@@ -2,7 +2,7 @@ define(function(require, exports, module) {
     main.consumes = [
         "Plugin", "test", "ui", "layout", "test.all", "c9", "util", 
         "tabManager", "commands", "settings", "Menu", "MenuItem", "Divider",
-        "preferences"
+        "preferences", "save"
     ];
     main.provides = ["test.coverage"];
     return main;
@@ -21,6 +21,7 @@ define(function(require, exports, module) {
         var Menu = imports.Menu;
         var MenuItem = imports.MenuItem;
         var Divider = imports.Divider;
+        var save = imports.save;
         var prefs = imports.preferences;
         
         var Range = require("ace/range").Range;
@@ -161,7 +162,7 @@ define(function(require, exports, module) {
                     }));
                     test.settingsMenu.append(new MenuItem({ 
                         caption: "Mark Full Line Coverage In Editor", 
-                        checked: "user/test/coverage/@toolbar",
+                        checked: "user/test/coverage/@fullline",
                         type: "check",
                         position: 700
                     }));
@@ -225,6 +226,18 @@ define(function(require, exports, module) {
                         },
                     }
                 }
+            }, plugin);
+            
+            // Save hooks
+            // TODO figure out what changed in the file and only run applicable tests
+            save.on("afterSave", function(e){
+                if (!settings.getBool("user/test/@runonsave") || !files[e.path])
+                    return;
+                
+                var tests = Object.keys(files[e.path].coverage).map(function(path){
+                    return all.findTest(path);
+                });
+                commands.exec("runtest", null, { nodes: tests });
             }, plugin);
         }
         

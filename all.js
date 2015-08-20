@@ -60,7 +60,10 @@ define(function(require, exports, module) {
             // }), 250, plugin);
             
             settings.on("read", function(){
-                settings.setDefaults("user/test", [["inlineresults", true]]);
+                settings.setDefaults("user/test", [
+                    ["inlineresults", true],
+                    ["runonsave", true]
+                ]);
             }, plugin);
             
             prefs.add({
@@ -68,6 +71,11 @@ define(function(require, exports, module) {
                     position: 1000,
                     "Test Runner" : {
                         position: 100,
+                        "Run Tests On Save" : {
+                            type: "checkbox",
+                            position: 50,
+                            setting: "user/test/@runonsave"
+                        },
                         "Show Inline Test Results" : {
                             type: "checkbox",
                             position: 100,
@@ -195,6 +203,10 @@ define(function(require, exports, module) {
                 commands.exec("runtest");
             });
             
+            tree.commands.bindKey("Shift-Enter", function(e) {
+                commands.exec("runtestwithcoverage");
+            });
+            
             tree.on("focus", function(){
                 test.focussedPanel = plugin;
             });
@@ -234,13 +246,16 @@ define(function(require, exports, module) {
             
             // Save hooks (TODO: move to load and get list from plugins at startup)
             save.on("afterSave", function(e){
+                if (!settings.getBool("user/test/@runonsave"))
+                    return;
+                
                 getAllNodes(tree.root, "file").some(function(n){
                     if (n.path == e.path) {
                         run([n], function(){});
                         return true;
                     }
                 });
-            });
+            }, plugin);
             
             // Initiate test runners
             test.on("register", function(e){ init(e.runner) }, plugin);
@@ -400,7 +415,7 @@ define(function(require, exports, module) {
         function run(nodes, options, callback){
             running = true;
             
-            if (typeof nodes != "array")
+            if (nodes && typeof nodes != "array")
                 callback = options, options = nodes, nodes = null;
             
             if (typeof options == "function")
@@ -455,9 +470,16 @@ define(function(require, exports, module) {
             }
         }
         
-        function findFileNode(node){
-            while (node.type != "file") node = node.parent;
-            return node;
+        function findTest(path){
+            return (function recur(items){
+                for (var j, i = 0; i < items.length; i++) {
+                    j = items[i];
+                    if (j.type == "file") {
+                        if (j.path == path) return j;
+                    }
+                    else if (j.items) recur(j.items);
+                }
+            })(tree.root.items);
         }
         
         function _run(node, options, callback){
@@ -811,7 +833,12 @@ define(function(require, exports, module) {
             /**
              *
              */
-            openTestFile: openTestFile
+            openTestFile: openTestFile,
+            
+            /**
+             * 
+             */
+            findTest: findTest
         });
         
         register(null, {

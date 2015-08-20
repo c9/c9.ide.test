@@ -34,7 +34,6 @@ define(function(require, exports, module) {
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
                 
                 - Update outline when typing in file that has outline open in all view
-                - Clear() should also clear from ace
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
                 - Error state for failed tests
@@ -47,23 +46,19 @@ define(function(require, exports, module) {
             LATER: 
                 - Better icons
                 - Icons for play/stop button
-            
-            * View test results in ace
-            - Add key binding for run test
+                - Parallel test execution
             
             COVERAGE
                 - Add code coverage toggle button
                 * View code coverage in ace
                 - When to clear coverage?
                 - Triggers for running tests (based on code coverage)
-                LATER:
+            LATER:
                 - Clear all coverage from subnodes
-                ISSUES:
+            ISSUES:
                 - AssertError is on the wrong line
                 - Error is not detected with coverage on
                 - Clear coverage on re-execution without coverage
-            
-            - Parallel test execution
             
             - Different row heights:
             https://github.com/c9/newclient/blob/master/node_modules/ace_tree/lib/ace_tree/data_provider.js#L392
@@ -71,11 +66,6 @@ define(function(require, exports, module) {
             TWO EDITORS:
             - View log in viewer
             - Code coverage panel
-            
-            SETTINGS (add settings button like tree)
-            - disable adding test results to ace
-            - always run with code coverage
-            - show coverage for test files
             
             STATE
             - Keep total code coverage in state
@@ -125,14 +115,14 @@ define(function(require, exports, module) {
             commands.addCommand({
                 name: "runtest",
                 hint: "runs the selected test(s) in the test panel",
-                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
+                bindKey: { mac: "F6", win: "F6" },
                 group: "Test",
                 exec: function(editor, args){
                     if (settings.getBool("user/test/coverage/@alwayson"))
                         return commands.exec("runtestwithcoverage", editor, args);
                     
                     transformRunButton("stop");
-                    focussedPanel.run(null, function(err){
+                    focussedPanel.run(args.nodes || null, function(err){
                         if (err) console.log(err);
                         transformRunButton("run");
                     });
@@ -142,11 +132,13 @@ define(function(require, exports, module) {
             commands.addCommand({
                 name: "runtestwithcoverage",
                 hint: "runs the selected test(s) in the test panel with code coverage enabled",
-                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
+                bindKey: { mac: "Shift-F6", win: "Shift-F6" },
                 group: "Test",
                 exec: function(editor, args){
                     transformRunButton("stop");
-                    focussedPanel.run({ withCodeCoverage: true }, function(err, nodes){
+                    focussedPanel.run(args.nodes || null, { 
+                        withCodeCoverage: true 
+                    }, function(err, nodes){
                         transformRunButton("run");
                         if (err) return console.log(err);
                         
