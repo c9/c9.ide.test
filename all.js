@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test",
-        "Menu", "MenuItem", "Divider", "tabManager", "save"
+        "Menu", "MenuItem", "Divider", "tabManager", "save", "preferences"
     ];
     main.provides = ["test.all"];
     return main;
@@ -19,6 +19,7 @@ define(function(require, exports, module) {
         var Divider = imports.Divider;
         var tabManager = imports.tabManager;
         var save = imports.save;
+        var prefs = imports.preferences;
         
         var async = require("async");
         var basename = require("path").basename;
@@ -57,6 +58,24 @@ define(function(require, exports, module) {
             // menus.addItemByPath("Run/Test", new ui.item({ 
             //     command: "commands" 
             // }), 250, plugin);
+            
+            settings.on("read", function(){
+                settings.setDefaults("user/test", [["inlineresults", true]]);
+            }, plugin);
+            
+            prefs.add({
+                "Test" : {
+                    position: 1000,
+                    "Test Runner" : {
+                        position: 100,
+                        "Show Inline Test Results" : {
+                            type: "checkbox",
+                            position: 100,
+                            setting: "user/test/@inlineresults"
+                        }
+                    }
+                }
+            }, plugin);
             
             test.focussedPanel = plugin;
         }
@@ -231,15 +250,12 @@ define(function(require, exports, module) {
             tree.resize();
             
             settings.on("read", function(){
-                settings.setDefaults("user/test", [["inlineresults", true]]);
-                
-                var item = new MenuItem({ 
+                test.settingsMenu.append(new MenuItem({ 
                     caption: "Show Inline Test Results", 
                     checked: "user/test/@inlineresults",
                     type: "check",
                     position: 100
-                });
-                test.settingsMenu.append(item);
+                }));
             }, plugin);
             
             settings.on("user/test/@inlineresults", function(value){

@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test.all",
-        "util", "test", "Menu", "MenuItem", "Divider"
+        "util", "test", "Menu", "MenuItem", "Divider", "preferences"
     ];
     main.provides = ["test.results"];
     return main;
@@ -12,6 +12,7 @@ define(function(require, exports, module) {
         var panels = imports.panels;
         var ui = imports.ui;
         var util = imports.util;
+        var prefs = imports.preferences;
         var Tree = imports.Tree;
         var test = imports.test;
         var commands = imports.commands;
@@ -54,6 +55,24 @@ define(function(require, exports, module) {
             // menus.addItemByPath("Run/Test", new ui.item({ 
             //     command: "commands" 
             // }), 250, plugin);
+            
+            settings.on("read", function(){
+                settings.setDefaults("user/test", [["collapsegroups", false]]);
+            }, plugin);
+            
+            prefs.add({
+                "Test" : {
+                    position: 1000,
+                    "Test Runner" : {
+                        position: 100,
+                        "Collapse Passed and Skipped Groups" : {
+                            type: "checkbox",
+                            position: 200,
+                            setting: "user/test/@collapsegroups"
+                        }
+                    }
+                }
+            }, plugin);
         }
         
         var drawn = false;
@@ -245,15 +264,12 @@ define(function(require, exports, module) {
             }, plugin);
             
             settings.on("read", function(){
-                settings.setDefaults("user/test", [["collapsegroups", false]]);
-                
-                var item = new MenuItem({ 
+                test.settingsMenu.append(new MenuItem({ 
                     caption: "Collapse Passed and Skipped Groups", 
                     checked: "user/test/@collapsegroups",
                     type: "check",
                     position: 300
-                })
-                test.settingsMenu.append(item);
+                }));
             }, plugin);
             
             settings.on("user/test/@collapsegroups", function(value){
@@ -263,10 +279,6 @@ define(function(require, exports, module) {
                     tree.refresh();
                 }
             }, plugin);
-            
-            // prefs.add({
-                
-            // });
             
             plugin.hide();
         }
