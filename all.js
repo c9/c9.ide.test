@@ -206,7 +206,7 @@ define(function(require, exports, module) {
                 new MenuItem({ command: "runtestwithcoverage", caption: "Run with Code Coverage" }),
                 new Divider(),
                 new MenuItem({ caption: "Open Test File", onclick: openTestFile }),
-                // new MenuItem({ caption: "Open Related Files", disabled: true }),
+                new MenuItem({ caption: "Open Related Files", command: "openrelatedtestfiles" }), // TODO move to coverage plugin
                 new Divider(),
                 new MenuItem({ caption: "Skip" }),
                 new MenuItem({ caption: "Remove" })
@@ -229,6 +229,29 @@ define(function(require, exports, module) {
             
             test.runners.forEach(init);
             tree.resize();
+            
+            settings.on("read", function(){
+                settings.setDefaults("user/test", [["inlineresults", true]]);
+                
+                var item = new MenuItem({ 
+                    caption: "Show Inline Test Results", 
+                    checked: "user/test/@inlineresults",
+                    type: "check",
+                    position: 100
+                });
+                test.settingsMenu.append(item);
+            }, plugin);
+            
+            settings.on("user/test/@inlineresults", function(value){
+                if (!value)
+                    clearAllDecorations();
+                else
+                    getAllNodes(tree.root, "file").forEach(function(fileNode){
+                        if (fileNode.passed === undefined) return;
+                        var tab = tabManager.findTab(fileNode.path);
+                        if (tab) decorate(fileNode, tab);
+                    });
+            }, plugin);
         }
         
         /***** Helper Methods *****/
@@ -325,7 +348,7 @@ define(function(require, exports, module) {
                     
                     tabManager.open({
                         path: fileNode.path,
-                        focus: false
+                        active: true
                     }, function(err, tab){
                         var ace = tab.editor.ace;
                         
@@ -503,6 +526,8 @@ define(function(require, exports, module) {
             
             if (node == tree.root) 
                 tree.refresh();
+            
+            clearAllDecorations();
         }
         
         // function applyFilter() {
@@ -538,42 +563,25 @@ define(function(require, exports, module) {
             
             - When writing in a certain test, invalidate those resuls
                 - On save, only execute those tests that are changed
-    
         */
         function decorate(fileNode, tab) {
+            if (!settings.getBool("user/test/@inlineresults")) return;
+            
             var editor = tab.editor.ace;
-            var session = tab.document.getSession().session;
-            if (!session) return;
+            var session = (tab.document.getSession() || 0).session;
+            if (!session || !session.editor) {
+                tab.once("activate", function(){
+                    setTimeout(function(){ decorate(fileNode, tab); });
+                });
+                return;
+            }
             
             if (!session.widgetManager) {
                 session.widgetManager = new LineWidgets(session);
                 session.widgetManager.attach(editor);
             }
             
-            // var pos = editor.getCursorPosition();
-            // var row = pos.row;
-            // var oldWidget = session.lineWidgets && session.lineWidgets[row];
-            // if (oldWidget) {
-            //     oldWidget.destroy();
-            
-            if (session.$markers) {
-                session.$markers.forEach(function(m){
-                    session.removeGutterDecoration(m[0], m[1]);
-                });
-            }
-            if (session.lineAnnotations) {
-                session.lineAnnotations.forEach(function(item){
-                    if (item.element && item.element.parentNode)
-                        item.element.parentNode.removeChild(item.element);
-                });
-            }
-            session.lineAnnotations = [];
-            if (session.$lineWidgets) {
-                session.$lineWidgets.forEach(function(widget){
-                    session.widgetManager.removeLineWidget(widget);
-                });
-            }
-            session.$lineWidgets = [];
+            clearDecoration(session);
             
             var nodes = getAllNodes(fileNode, /test|prepare/);
             nodes.forEach(function(node){
@@ -668,6 +676,8 @@ define(function(require, exports, module) {
             var config = textLayer.config;
             var session = textLayer.session;
             
+            if (!session.lineAnnotations) return;
+            
             var first = config.firstRow;
             var last = config.lastRow;
             
@@ -702,6 +712,36 @@ define(function(require, exports, module) {
                 }
                 row++;
             }
+        }
+        
+        function clearAllDecorations() {
+            tabManager.getTabs().forEach(function(tab){
+                if (tab.editorType != "ace") return;
+                var session = tab.document.getSession().session;
+                if (session) clearDecoration(session);
+            });
+        }
+        
+        function clearDecoration(session){
+            if (session.$markers) {
+                session.$markers.forEach(function(m){
+                    session.removeGutterDecoration(m[0], m[1]);
+                });
+            }
+            if (session.lineAnnotations) {
+                session.lineAnnotations.forEach(function(item){
+                    if (item.element && item.element.parentNode)
+                        item.element.parentNode.removeChild(item.element);
+                });
+            }
+            if (session.$lineWidgets) {
+                session.$lineWidgets.forEach(function(widget){
+                    session.widgetManager.removeLineWidget(widget);
+                });
+            }
+            session.$markers = [];
+            session.lineAnnotations = [];
+            session.$lineWidgets = [];
         }
         
         /***** Lifecycle *****/

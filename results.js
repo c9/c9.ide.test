@@ -20,7 +20,7 @@ define(function(require, exports, module) {
         var Divider = imports.Divider;
         var all = imports["test.all"];
         
-        var async = require("async");
+        // var async = require("async");
         var basename = require("path").basename;
         var dirname = require("path").dirname;
         var escapeHTML = require("ace/lib/lang").escapeHTML;
@@ -33,7 +33,7 @@ define(function(require, exports, module) {
             height: 150,
             style: "border-bottom:1px solid #DDD;overflow:auto" // TODO
         });
-        var emit = plugin.getEmitter();
+        // var emit = plugin.getEmitter();
         
         var tree, failNode, passNode, skipNode, errNode, rootNode, menuContext;
         var state = {};
@@ -226,14 +226,15 @@ define(function(require, exports, module) {
                 var results = [failNode.items, passNode.items, errNode.items, [], skipNode.items];
                 importResultsToTree(e.node, results);
                 
-                // var hasFail = results[0].length || results[1].length;
+                var hasFail = results[0].length || results[1].length;
                 
                 rootNode.items.length = 0;
                 [0,2,1,4].forEach(function(i){
                     if (results[i].length) {
                         rootNode.items.push(nodes[i]);
-                        // if (i === 1 || i === 4)
-                        //     nodes[i].isOpen = !hasFail;
+                        
+                        if (settings.getBool("user/test/@collapsegroups") && (i === 1 || i === 4))
+                            nodes[i].isOpen = !hasFail;
                     }
                 });
                 
@@ -242,6 +243,30 @@ define(function(require, exports, module) {
                     
                 tree.refresh();
             }, plugin);
+            
+            settings.on("read", function(){
+                settings.setDefaults("user/test", [["collapsegroups", false]]);
+                
+                var item = new MenuItem({ 
+                    caption: "Collapse Passed and Skipped Groups", 
+                    checked: "user/test/@collapsegroups",
+                    type: "check",
+                    position: 300
+                })
+                test.settingsMenu.append(item);
+            }, plugin);
+            
+            settings.on("user/test/@collapsegroups", function(value){
+                if (plugin.visible) {
+                    skipNode.isOpen = !value;
+                    passNode.isOpen = !value;
+                    tree.refresh();
+                }
+            }, plugin);
+            
+            // prefs.add({
+                
+            // });
             
             plugin.hide();
         }

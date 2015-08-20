@@ -1,6 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Panel", "ui", "settings", "panels", "menus", "commands"
+        "Panel", "ui", "settings", "panels", "menus", "commands", "Menu", 
+        "MenuItem", "Divider"
     ];
     main.provides = ["test"];
     return main;
@@ -12,6 +13,9 @@ define(function(require, exports, module) {
         var panels = imports.panels;
         var menus = imports.menus;
         var commands = imports.commands;
+        var Menu = imports.Menu;
+        var MenuItem = imports.MenuItem;
+        var Divider = imports.Divider;
         
         /*
             TODO:
@@ -29,7 +33,7 @@ define(function(require, exports, module) {
                 - Address anomaly for writer-test not being able to execute single test
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
                 
-                - Only switch to file if it's already active
+                - Update outline when typing in file that has outline open in all view
                 - Clear() should also clear from ace
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
@@ -37,37 +41,59 @@ define(function(require, exports, module) {
                     - Timed out tests
                     - Broken mid-run
                     - Terminated (stop button)
+                - Add split button back
+                    - Add menu and allow runners to give settings in form format
+                    - Pass settings to run()
             LATER: 
                 - Better icons
                 - Icons for play/stop button
-                - Mocha: other test formats (not bdd)
             
             * View test results in ace
             - Add key binding for run test
-            - View log in viewer
-            - Code coverage panel
+            
+            COVERAGE
                 - Add code coverage toggle button
-                - View code coverage in ace
+                * View code coverage in ace
+                - When to clear coverage?
                 - Triggers for running tests (based on code coverage)
                 LATER:
                 - Clear all coverage from subnodes
+                ISSUES:
+                - AssertError is on the wrong line
+                - Error is not detected with coverage on
+                - Clear coverage on re-execution without coverage
             
             - Parallel test execution
             
             - Different row heights:
             https://github.com/c9/newclient/blob/master/node_modules/ace_tree/lib/ace_tree/data_provider.js#L392
             
+            TWO EDITORS:
+            - View log in viewer
+            - Code coverage panel
+            
             SETTINGS (add settings button like tree)
             - disable adding test results to ace
             - always run with code coverage
+            - show coverage for test files
+            
+            STATE
+            - Keep total code coverage in state
+            - Keep coverage filename in state
+            - Should test results be kept in state?
+            - Should test output be kept in state?
             
             MOCHA
             - Add setting for debug mode
+            - other test formats (not bdd)
             
             - Update Tree documentation:
                 - Expand/Collapse using .isOpen = true/false + tree.refresh
                 - Partial loading using status = potential + loadChildren
                 - use of scrollMargin
+            
+            BUGS:
+            - tab.once("activate", function(){ setTimeout(function(){ decorateFile(tab); }); });
         */
         
         /***** Initialization *****/
@@ -82,6 +108,7 @@ define(function(require, exports, module) {
         
         var runners = [];
         var toolbar, container, btnRun, btnClear, focussedPanel;
+        var mnuSettings, btnSettings;
         
         function load() {
             // plugin.setCommand({
@@ -101,6 +128,9 @@ define(function(require, exports, module) {
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
                 exec: function(editor, args){
+                    if (settings.getBool("user/test/coverage/@alwayson"))
+                        return commands.exec("runtestwithcoverage", editor, args);
+                    
                     transformRunButton("stop");
                     focussedPanel.run(null, function(err){
                         if (err) console.log(err);
@@ -179,11 +209,22 @@ define(function(require, exports, module) {
             }), 100, plugin);
             
             btnClear = ui.insertByIndex(toolbar, new ui.button({
-                caption: "Clear Results",
+                caption: "Clear",
                 skinset: "default",
                 skin: "c9-menu-btn",
                 command: "cleartestresults"
             }), 100, plugin);
+            
+            mnuSettings = new Menu({ items: [
+                
+            ]}, plugin);
+            
+            btnSettings = opts.aml.appendChild(new ui.button({
+                skin: "header-btn",
+                class: "panel-settings",
+                style: "top:46px",
+                submenu: mnuSettings.aml
+            }));
             
             // Container
             container = vbox.appendChild(new ui.bar({
@@ -248,6 +289,11 @@ define(function(require, exports, module) {
              * 
              */
             get runners(){ return runners; },
+            
+            /**
+             * 
+             */
+            get settingsMenu(){ return mnuSettings; },
             
             /**
              * 

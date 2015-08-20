@@ -128,6 +128,11 @@ define(function(require, module, exports) {
                 get aml(){ return amlFrame; },
                 
                 /**
+                 * 
+                 */
+                get visible(){ return amlFrame.visible; },
+                
+                /**
                  * @property {Number} height
                  */
                 get height(){ return amlFrame.getHeight(); },

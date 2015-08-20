@@ -37,18 +37,21 @@
 .test-3 { background-image: url("@{icon-path}/testTerminated.png"); }
 .test-4 { background-image: url("@{icon-path}/testIgnored.png"); }
 
-.test-covered { background: rgba(0, 128, 0, 0.1); }
-.test-uncovered { background: rgba(128, 0, 0, 0.1); }
+.test-covered { position: absolute; background: rgba(0, 128, 0, 0.1); }
+.test-uncovered { position: absolute; background: rgba(128, 0, 0, 0.1); }
 
 .ace_gutter-cell.covered:after, .ace_gutter-cell.uncovered:after {
     content: "";
     display: block;
-    width: 8px;
-    height: 8px;
+    /*width: 8px;*/
+    /*height: 8px;*/
+    /*margin: 3px -11px 0 0;*/
+    /*border-radius: 2px;*/
+    width: 5px;
+    height: 16px;
+    margin: 0px -11px 0 0;
     background-color: #73C373;
     float: right;
-    margin: 3px -11px 0 0;
-    border-radius: 2px;
 }
 .ace_gutter-cell.uncovered:after {
     background-color: #DC7272;
