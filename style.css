@@ -28,6 +28,8 @@
     color: #795A0A;
     margin: 0 5px;
     pointer-events:auto; 
+}
+.stack-message.more{
     cursor:pointer;
 }
 

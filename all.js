@@ -491,8 +491,8 @@ define(function(require, exports, module) {
         
         function refreshTree(node){
             while (node && !node.tree) node = node.parent;
-            var tree = node && node.tree || tree;
-            if (tree) tree.refresh();
+            var T = node && node.tree || tree;
+            if (T) T.refresh();
         }
         
         function updateStatus(node, s){
@@ -609,7 +609,7 @@ define(function(require, exports, module) {
             
             var w = {
                 row: node.pos.el - 1, 
-                fixedWidth: true,
+                // fixedWidth: true,
                 // coverGutter: true,
                 // rowCount: 0,
                 // coverLine: 1,
@@ -621,7 +621,7 @@ define(function(require, exports, module) {
             arrow.className = "error_widget_arrow " + extraClass;
             
             var left = editor.renderer.$cursorLayer
-                .getPixelPosition({ column: node.pos.sc - 1 }).left;
+                .getPixelPosition({ column: node.pos.ec - 1 }).left;
             arrow.style.left = left + editor.renderer.gutterWidth - 5 + "px";
             
             w.el.className = "error_widget_wrapper";
@@ -665,18 +665,38 @@ define(function(require, exports, module) {
             if (!editor.decorated) {
                 editor.renderer.on("afterRender", updateLines);
                 var onMouseDown = function(e) {
-                    if (e.target.classList.contains("widget")) {
+                    var widget = e.target;
+                    if (widget.annotation 
+                      && widget.classList.contains("widget") 
+                      && widget.classList.contains("more")) {
+                        var a = widget.annotation;
+                        createOutputWidget(editor, a.session, {
+                            pos: { el: a.line, ec: a.column },
+                            passed: 0,
+                            output: a.more
+                        });
+                        
+                        widget.classList.remove("more");
+                        widget.annotation = null;
                         e.stopPropagation();
                     }
                 };
                 editor.container.addEventListener("mousedown", onMouseDown, true);
             }
             
-            for (var line in node.annotations) {
-                session.lineAnnotations[line - 1] = { 
-                    message: node.annotations[line].trim()
+            var m, d;
+            node.annotations.forEach(function(item){
+                m = item.message.trim();
+                d = m.length <= 50 ? m : m.substr(0, 20) + " ... " + m.substr(-25);
+                
+                session.lineAnnotations[item.line - 1] = { 
+                    display: d,
+                    line: item.line,
+                    column: item.column,
+                    more: m.length > 50 ? m : null,
+                    session: session
                 };
-            }
+            });
         }
         
         var updateLines = function(e, renderer) {
@@ -707,14 +727,15 @@ define(function(require, exports, module) {
                 
                 var lineElement = lineElements[lineElementsIdx++];
                 if (lineElement && session.lineAnnotations[row]) {
-                    var widget;
-                    if (!session.lineAnnotations[row].element) {
+                    var widget, a = session.lineAnnotations[row];
+                    if (!a.element) {
                         widget = document.createElement("span");
-                        widget.textContent = session.lineAnnotations[row].message;
-                        widget.className = "widget stack-message";
+                        widget.textContent = a.display;
+                        widget.className = "widget stack-message" + (a.more ? " more" : "");
+                        widget.annotation = a;
                         session.lineAnnotations[row].element = widget;
                     }
-                    else widget = session.lineAnnotations[row].element;
+                    else widget = a.element;
                     
                     lineElement.appendChild(widget);
                 }

@@ -11,8 +11,8 @@ define(function(require, exports, module) {
     
     Test.prototype = new Data(
         ["passed", "type", "output", "kind"],
-        null,
-        ["pos", "selpos", "annotations"]
+        ["annotations"],
+        ["pos", "selpos"]
     );
     
     Test.prototype.equals = function(frame) {

@@ -41,8 +41,6 @@ define(function(require, exports, module) {
                 - Fix border (move to theme) of results
             
             ALL VIEW
-                - Deal with content overflow of inline widgets
-                
                 Inline Test Decorations:
                 - Moving a tab to a different pane
                 
