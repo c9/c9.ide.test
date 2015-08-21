@@ -83,7 +83,7 @@ define(function(require, module, exports) {
             /***** Methods *****/
 
             function show(){
-                test.show();
+                // test.show();
                 if (amlFrame) {
                     if (amlFrame.restore) amlFrame.restore();
                     else amlFrame.show();

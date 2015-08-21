@@ -219,29 +219,22 @@ define(function(require, exports, module) {
                 clear();
             }, plugin);
             
+            plugin.hide();
+            
             // Process Result
-            var nodes = [failNode, passNode, errNode, null, skipNode];
             all.on("result", function(e){
-                var results = [failNode.items, passNode.items, errNode.items, [], skipNode.items];
-                importResultsToTree(e.node, results);
-                
-                var hasFail = results[0].length || results[2].length;
-                
-                rootNode.items.length = 0;
-                [0,2,1,4].forEach(function(i){
-                    if (results[i].length) {
-                        rootNode.items.push(nodes[i]);
-                        
-                        if (settings.getBool("user/test/@collapsegroups") && (i === 1 || i === 4))
-                            nodes[i].isOpen = !hasFail;
-                    }
-                });
-                
-                if (rootNode.items.length)
-                    plugin.show();
-                    
-                tree.refresh();
+                handleResult(e.node);
             }, plugin);
+            
+            (function _(node){
+                node.items.forEach(function(node){
+                    if (node.type == "file") {
+                        if (node.passed !== undefined)
+                            handleResult(node);
+                    }
+                    else _(node);
+                });
+            })(all.root);
             
             settings.on("read", function(){
                 test.settingsMenu.append(new MenuItem({ 
@@ -259,8 +252,6 @@ define(function(require, exports, module) {
                     tree.refresh();
                 }
             }, plugin);
-            
-            plugin.hide();
         }
         
         /***** Methods *****/
@@ -306,6 +297,29 @@ define(function(require, exports, module) {
                 if (found) return found;
             }
             return found;
+        }
+        
+        function handleResult(node){
+            var nodes = [failNode, passNode, errNode, null, skipNode];
+            var results = [failNode.items, passNode.items, errNode.items, [], skipNode.items];
+            importResultsToTree(node, results);
+            
+            var hasFail = results[0].length || results[2].length;
+            
+            rootNode.items.length = 0;
+            [0,2,1,4].forEach(function(i){
+                if (results[i].length) {
+                    rootNode.items.push(nodes[i]);
+                    
+                    if (settings.getBool("user/test/@collapsegroups") && (i === 1 || i === 4))
+                        nodes[i].isOpen = !hasFail;
+                }
+            });
+            
+            if (rootNode.items.length)
+                plugin.show();
+                
+            tree.refresh();
         }
         
         function importResultsToTree(node, results) {

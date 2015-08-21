@@ -41,6 +41,11 @@ define(function(require, exports, module) {
                 - Fix border (move to theme) of results
             
             ALL VIEW
+                - Deal with content overflow of inline widgets
+                
+                Inline Test Decorations:
+                - Moving a tab to a different pane
+                
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
                 - Error state for failed tests
@@ -48,15 +53,9 @@ define(function(require, exports, module) {
                     - Broken mid-run
                     - Terminated (stop button)
                 
-                - Tests should be able to run without test panel open
-                    - Test panel shouldnt open when running tests
-                - Deal with content overflow of inline widgets
                 - Add split button back
                     - Add menu and allow runners to give settings in form format
                     - Pass settings to run()
-                
-                Inline Test Decorations:
-                - Moving a tab to a different pane
                 
                 - When writing in a certain test, invalidate those resuls
                     - On save, only execute those tests that are changed
@@ -217,7 +216,7 @@ define(function(require, exports, module) {
                 group: "Test",
                 exec: function(){
                     focussedPanel.tree.selectedNodes.forEach(function(n){
-                        var output = (findFileNode(n) || 0).fullOutput;
+                        var output = (n.findFileNode() || 0).fullOutput;
                         if (!output) return;
                         
                         tabManager.open({
@@ -232,7 +231,7 @@ define(function(require, exports, module) {
                 },
                 isAvailable: function(){
                     return focussedPanel.tree.selectedNodes.some(function(n){
-                        return (findFileNode(n) || 0).fullOutput || false;
+                        return (n.findFileNode() || 0).fullOutput || false;
                     });
                 }
             }, plugin);
@@ -308,11 +307,6 @@ define(function(require, exports, module) {
         function transformRunButton(type){
             btnRun.setCaption(type == "stop" ? "Stop" : "Run Tests");
             btnRun.setAttribute("command", type == "stop" ? "stoptest" : "runtest");
-        }
-        
-        function findFileNode(node){
-            while (node.type != "file") node = node.parent;
-            return node;
         }
         
         /***** Lifecycle *****/

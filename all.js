@@ -42,7 +42,29 @@ define(function(require, exports, module) {
         });
         var emit = plugin.getEmitter();
         
-        var tree, wsNode, rmtNode, stopping, menuContext, running;
+        var tree, stopping, menuContext, running;
+        
+        var wsNode = new Node({
+            label: "workspace",
+            isOpen: true,
+            className: "heading",
+            status: "loaded",
+            noSelect: true,
+            $sorted: true,
+        });
+        var rmtNode = new Node({
+            label: "remote",
+            isOpen: true,
+            className: "heading",
+            status: "loaded",
+            noSelect: true,
+            $sorted: true
+        });
+        var rootNode = new Node({
+            label: "root",
+            tree: tree,
+            items: [wsNode]
+        });
         
         function load() {
             panels.on("afterAnimate", function(){
@@ -75,6 +97,31 @@ define(function(require, exports, module) {
                     }
                 }
             }, plugin);
+            
+            // Save hooks
+            save.on("afterSave", function(e){
+                var runOnSave = settings.getBool("user/test/@runonsave");
+                
+                rootNode.findAllNodes("file").some(function(n){
+                    if (n.path == e.path) {
+                        
+                        // Notify runners of change event and refresh tree 
+                        if (n.emit("change", e.value))
+                            tree && tree.refresh();
+                            
+                        // Re-run test on save
+                        if (runOnSave) run([n], function(){});
+                            
+                        return true;
+                    }
+                });
+            }, plugin);
+            
+            // Initiate test runners
+            test.on("register", function(e){ init(e.runner) }, plugin);
+            test.on("unregister", function(e){ deinit(e.runner) }, plugin);
+            
+            test.runners.forEach(init);
             
             test.focussedPanel = plugin;
         }
@@ -157,28 +204,7 @@ define(function(require, exports, module) {
             tree.container.style.bottom = "0";
             tree.container.style.height = "";
             
-            wsNode = new Node({
-                label: "workspace",
-                isOpen: true,
-                className: "heading",
-                status: "loaded",
-                noSelect: true,
-                $sorted: true,
-            });
-            rmtNode = new Node({
-                label: "remote",
-                isOpen: true,
-                className: "heading",
-                status: "loaded",
-                noSelect: true,
-                $sorted: true
-            });
-            
-            tree.setRoot(new Node({
-                label: "root",
-                tree: tree,
-                items: [wsNode]
-            }));
+            tree.setRoot(rootNode);
             
             tree.commands.bindKey("Space", function(e) {
                 openTestFile();
@@ -208,7 +234,7 @@ define(function(require, exports, module) {
             // Hook opening of known files
             tabManager.on("open", function(e){
                 var node, tab = e.tab;
-                if (tree.root.findAllNodes("file").some(function(n){
+                if (rootNode.findAllNodes("file").some(function(n){
                     node = n;
                     return n.path == tab.path;
                 })) {
@@ -230,32 +256,6 @@ define(function(require, exports, module) {
             ] }, plugin);
             opts.aml.setAttribute("contextmenu", menuContext.aml);
             
-            // Save hooks (TODO: move to load and get list from plugins at startup)
-            save.on("afterSave", function(e){
-                var runOnSave = settings.getBool("user/test/@runonsave");
-                
-                tree.root.findAllNodes("file").some(function(n){
-                    if (n.path == e.path) {
-                        
-                        // Notify runners of change event and refresh tree 
-                        if (n.emit("change", e.value))
-                            tree.refresh();
-                            
-                        // Re-run test on save
-                        if (runOnSave) run([n], function(){});
-                            
-                        return true;
-                    }
-                });
-            }, plugin);
-            
-            // Initiate test runners
-            test.on("register", function(e){ init(e.runner) }, plugin);
-            test.on("unregister", function(e){ deinit(e.runner) }, plugin);
-            
-            test.runners.forEach(init);
-            tree.resize();
-            
             settings.on("read", function(){
                 test.settingsMenu.append(new MenuItem({ 
                     caption: "Show Inline Test Results", 
@@ -269,12 +269,14 @@ define(function(require, exports, module) {
                 if (!value)
                     clearAllDecorations();
                 else
-                    tree.root.findAllNodes("file").forEach(function(fileNode){
+                    rootNode.findAllNodes("file").forEach(function(fileNode){
                         if (fileNode.passed === undefined) return;
                         var tab = tabManager.findTab(fileNode.path);
                         if (tab) decorate(fileNode, tab);
                     });
             }, plugin);
+            
+            tree.resize();
         }
         
         /***** Helper Methods *****/
@@ -303,7 +305,7 @@ define(function(require, exports, module) {
             runner.init(runner.root, function(err){
                 if (err) return console.error(err); // TODO
                 
-                tree.open(runner.root);
+                runner.root.isOpen = true;
                 updateStatus(runner.root, "loaded");
                 
                 runner.root.fixParents();
@@ -374,10 +376,12 @@ define(function(require, exports, module) {
                                 ace.getSession().getSelection().selectToPosition({ row: pos.el - 1, column: pos.ec });
                         };
                         
-                        if (ace.session.doc.$lines.length)
-                            scroll();
-                        else
+                        if (!ace.session.doc.$lines.length)
                             ace.once("changeSession", scroll);
+                        else if (!ace.renderer.$cursorLayer.config)
+                            ace.once("afterRender", scroll);
+                        else
+                            scroll();
                     });
                 }
             });
@@ -401,6 +405,8 @@ define(function(require, exports, module) {
                 ? settings.getBool("shared/test/@parallel")
                 : options.parallel; // TODO have a setting per runner
             
+            var withCodeCoverage = options && options.withCodeCoverage;
+            
             var list = [], found = {};
             nodes.forEach(function(n){
                 if (n.type == "all" || n.type == "root")
@@ -408,7 +414,7 @@ define(function(require, exports, module) {
                         list.push(n); 
                         found[n.path] = true;
                     });
-                else if (options.withCodeCoverage) {
+                else if (withCodeCoverage) {
                     var fileNode = n.findFileNode();
                     if (!found[fileNode.path])
                         list.push(fileNode);
@@ -462,7 +468,7 @@ define(function(require, exports, module) {
                     }
                     else if (j.items) recur(j.items);
                 }
-            })(tree.root.items);
+            })(rootNode.items);
         }
         
         function _run(node, options, callback){
@@ -485,7 +491,8 @@ define(function(require, exports, module) {
         
         function refreshTree(node){
             while (node && !node.tree) node = node.parent;
-            (node && node.tree || tree).refresh();
+            var tree = node && node.tree || tree;
+            if (tree) tree.refresh();
         }
         
         function updateStatus(node, s){
@@ -531,14 +538,14 @@ define(function(require, exports, module) {
         
         function clear(node){
             if (!node) 
-                node = tree.root;
+                node = rootNode;
             
             node.items.forEach(function(n){
-                delete n.passed;
+                n.passed = undefined;
                 if (n.items) clear(n);
             });
             
-            if (node == tree.root) 
+            if (node == rootNode) 
                 tree.refresh();
             
             clearAllDecorations();
@@ -787,6 +794,11 @@ define(function(require, exports, module) {
              * 
              */
             get contextMenu() { return menuContext },
+            
+            /**
+             * 
+             */
+            get root() { return rootNode; },
             
             /**
              * 
