@@ -12,7 +12,7 @@ define(function(require, exports, module) {
     }
     
     Node.prototype = new Data(
-        ["passed", "type", "runner", "index"], 
+        ["passed", "type", "runner", "index", "tree"], 
         ["items"]
     );
     

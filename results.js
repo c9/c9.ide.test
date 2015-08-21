@@ -187,7 +187,8 @@ define(function(require, exports, module) {
             });
             
             tree.setRoot(rootNode = new Node({
-                label: "root"
+                label: "root",
+                tree: tree
             }));
             
             tree.commands.bindKey("Space", function(e) {
@@ -362,6 +363,7 @@ define(function(require, exports, module) {
                         var cachedNode = state[name + " " + groupNode.label];
                         if (cachedNode && cachedNode.passed != groupNode.passed) {
                             do {
+                                if (!cachedNode.parent) break;
                                 cachedNode.parent.items.remove(cachedNode);
                                 cachedNode = cachedNode.parent;
                             } while(!cachedNode.items.length && cachedNode.type != "result");
@@ -379,10 +381,17 @@ define(function(require, exports, module) {
             }
         }
         
-        function run(nodes, parallel, callback){
-            if (!nodes) nodes = tree.selectedNodes;
+        function run(nodes, options, callback){
+            if (nodes && !Array.isArray(nodes))
+                callback = options, options = nodes, nodes = null;
             
-            all.run(nodes, parallel, callback);
+            if (typeof options == "function")
+                callback = options, options = null;
+            
+            if (!nodes)
+                nodes = tree.selectedNodes;
+            
+            all.run(nodes, options, callback);
         }
         
         /***** Lifecycle *****/

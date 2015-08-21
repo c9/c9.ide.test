@@ -37,21 +37,9 @@ define(function(require, exports, module) {
             TODO:
             
             RESULTS VIEW
-                - Run tests from results
-                    - use event in all to update loading state
-                    - gather set of tests and find them in all and send to run (either full test set or individuals)
-                - Add stop() method
             LATER:
                 - Fix border (move to theme) of results
             
-            REFACTOR TO USE DATA OBJECTS
-                - Update outline when typing in file that has outline open in all view
-                - Listen:
-                    - change event and create updateOutline
-                    - rename a file | Mocha is doing this itself by refetching. is that optimal?
-                    - delete a file | Mocha is doing this itself by refetching. is that optimal?
-                - Instead of .stackTrace do .annotations = {<linenr>: <message>}
-                
             ALL VIEW
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
@@ -91,11 +79,10 @@ define(function(require, exports, module) {
             - Should test results be kept in state?
             - Should test output be kept in state?
             
-            ACE
+            ACE (Harutyun)
             - Coverage
                 - Move gutterDecorations and markers when typing
                 - Mark changed lines as yellow
-                - Update coverage when typing
             - Horizontal scrolling with line widgets https://github.com/ajaxorg/ace/blob/master/lib/ace/virtual_renderer.js#L951
             - Make line widgets an ace plugin
             - Fix ace-tree height issue of results
@@ -112,6 +99,11 @@ define(function(require, exports, module) {
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
             
             *** LATER ***
+            
+            REFACTOR TO USE DATA OBJECTS
+                - Listen:
+                    - rename a file | Mocha is doing this itself by refetching. is that optimal?
+                    - delete a file | Mocha is doing this itself by refetching. is that optimal?
             
             CODE COVERAGE PANEL
                 - Add toolbar with dropdown to select to view coverage of only 1 test (or test type)

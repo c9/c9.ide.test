@@ -45,6 +45,7 @@ define(function(require, exports, module) {
                         tabManager.focusTab(tab);
                     }
                     else {
+                        console.show();
                         tabManager.open({
                             editorType: "coverageview", 
                             focus: true, 

@@ -176,6 +176,7 @@ define(function(require, exports, module) {
             
             tree.setRoot(new Node({
                 label: "root",
+                tree: tree,
                 items: [wsNode]
             }));
             
@@ -400,10 +401,18 @@ define(function(require, exports, module) {
                 ? settings.getBool("shared/test/@parallel")
                 : options.parallel; // TODO have a setting per runner
             
-            var list = [];
+            var list = [], found = {};
             nodes.forEach(function(n){
                 if (n.type == "all" || n.type == "root")
-                    n.findAllNodes("file").forEach(function(n){ list.push(n); });
+                    n.findAllNodes("file").forEach(function(n){ 
+                        list.push(n); 
+                        found[n.path] = true;
+                    });
+                else if (options.withCodeCoverage) {
+                    var fileNode = n.findFileNode();
+                    if (!found[fileNode.path])
+                        list.push(fileNode);
+                }
                 else
                     list.push(n);
             });
@@ -474,6 +483,11 @@ define(function(require, exports, module) {
             });
         }
         
+        function refreshTree(node){
+            while (node && !node.tree) node = node.parent;
+            (node && node.tree || tree).refresh();
+        }
+        
         function updateStatus(node, s){
             // TODO make this more efficient by trusting the child nodes
             if (node.type == "file" || node.type == "testset") {
@@ -491,7 +505,7 @@ define(function(require, exports, module) {
                 node.status = st || "loaded";
             }
             else if (node.type == "root") {
-                tree.refresh();
+                refreshTree(node);
                 return;
             }
             else {
@@ -499,7 +513,7 @@ define(function(require, exports, module) {
             }
             
             if (node.parent) updateStatus(node.parent, s);
-            else tree.refresh();
+            else refreshTree(node);
         }
         
         function stop(callback){
@@ -575,7 +589,7 @@ define(function(require, exports, module) {
                     session.addGutterDecoration(node.pos.sl - 1, "test-" + node.passed);
                     (session.$markers || (session.$markers = [])).push([node.pos.sl - 1, "test-" + node.passed]);
                 }
-                if (node.stackTrace)
+                if (node.annotations)
                     createStackWidget(editor, session, node);
                 if (node.output)
                     createOutputWidget(editor, session, node);
@@ -651,9 +665,11 @@ define(function(require, exports, module) {
                 editor.container.addEventListener("mousedown", onMouseDown, true);
             }
             
-            session.lineAnnotations[node.stackTrace[0].lineNumber - 1] = { 
-                message: node.stackTrace.message.trim() 
-            };
+            for (var line in node.annotations) {
+                session.lineAnnotations[line - 1] = { 
+                    message: node.annotations[line].trim()
+                };
+            }
         }
         
         var updateLines = function(e, renderer) {

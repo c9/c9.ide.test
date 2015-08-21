@@ -132,7 +132,12 @@ define(function(require, exports, module) {
         else {
             (function recur(myItems, newItems){
                 var map = {};
-                myItems.forEach(function(n){ map[n.label] = n; });
+                (function _(items){ 
+                    items.forEach(function(n){ 
+                        map[n.label] = n; 
+                        if (n.items) _(n.items);
+                    });
+                })(myItems);
                 myItems.length = 0;
                 
                 for (var n, m, i = 0; i < newItems.length; i++) {
