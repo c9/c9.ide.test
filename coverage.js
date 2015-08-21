@@ -297,9 +297,9 @@ define(function(require, exports, module) {
             var fileNode = findFileNode(node);
             
             if (!tests[fileNode.path])
-                tests[fileNode.path] = { all: node.coverage };
+                tests[fileNode.path] = { all: node.coverage.files };
             
-            node.coverage.forEach(function(coverage){
+            node.coverage.files.forEach(function(coverage){
                 var path = coverage.file.replace(reWs, "");
                 var tab;
                 

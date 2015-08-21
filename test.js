@@ -18,6 +18,12 @@ define(function(require, exports, module) {
         var MenuItem = imports.MenuItem;
         var Divider = imports.Divider;
         
+        var Coverage = require("./data/coverage");
+        var File = require("./data/file");
+        var TestSet = require("./data/testset");
+        var Test = require("./data/test");
+        var Node = require("./data/node");
+        
         /*
             TODO:
             
@@ -36,14 +42,15 @@ define(function(require, exports, module) {
                 - Update outline when typing in file that has outline open in all view
                 
             ALL VIEW
-                - Tests should be able to run without test panel open
-                    - Test panel shouldnt open when running tests
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
                 - Error state for failed tests
                     - Timed out tests
                     - Broken mid-run
                     - Terminated (stop button)
+                
+                - Tests should be able to run without test panel open
+                    - Test panel shouldnt open when running tests
                 - Deal with content overflow of inline widgets
                 - Add split button back
                     - Add menu and allow runners to give settings in form format
@@ -329,6 +336,12 @@ define(function(require, exports, module) {
          * 
          */
         plugin.freezePublicAPI({
+            Coverage: Coverage,
+            File: File,
+            TestSet: TestSet,
+            Test: Test,
+            Node: Node,
+            
             /**
              * 
              */

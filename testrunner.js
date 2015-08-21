@@ -6,6 +6,8 @@ define(function(require, module, exports) {
     function main(options, imports, register) {
         var Plugin = imports.Plugin;
         var test = imports.test;
+        
+        var Node = test.Node;
 
         function TestRunner(developer, deps, options) {
             var plugin = new Plugin(developer, deps);
@@ -13,19 +15,6 @@ define(function(require, module, exports) {
 
             var caption = options.caption;
             var index = options.index || 100;
-            var root = {
-                label: caption,
-                runner: plugin,
-                // isOpen: true,
-                type: "root",
-                items: []
-            }
-            var all = {
-                type: "all",
-                label: "All Tests",
-                items: []
-            }
-            // root.items.push(all);
             
             plugin.on("load", function(){
                 test.register(plugin);
@@ -48,16 +37,14 @@ define(function(require, module, exports) {
                 get caption(){ return caption; },
                 
                 /**
-                 * @property {Number} height
-                 */
-                get index(){ return index; },
-                set index(v){ /* TODO */ },
-                
-                /**
                  * @property {Object} root
                  */
-                root: root,
-                all: all
+                root: new Node({
+                    label: caption,
+                    index: index,
+                    runner: plugin,
+                    type: "root"
+                })
             });
 
             return plugin;

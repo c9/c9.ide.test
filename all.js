@@ -21,6 +21,8 @@ define(function(require, exports, module) {
         var save = imports.save;
         var prefs = imports.preferences;
         
+        var Node = test.Node;
+        
         var async = require("async");
         var basename = require("path").basename;
         var dirname = require("path").dirname;
@@ -43,21 +45,10 @@ define(function(require, exports, module) {
         var tree, wsNode, rmtNode, stopping, menuContext, running;
         
         function load() {
-            // plugin.setCommand({
-            //     name: "test",
-            //     hint: "search for a command and execute it",
-            //     bindKey: { mac: "Command-.", win: "Ctrl-." }
-            // });
-            
             panels.on("afterAnimate", function(){
                 if (panels.isActive("test"))
                     tree && tree.resize();
             });
-            
-            // Menus
-            // menus.addItemByPath("Run/Test", new ui.item({ 
-            //     command: "commands" 
-            // }), 250, plugin);
             
             settings.on("read", function(){
                 settings.setDefaults("user/test", [
@@ -107,10 +98,7 @@ define(function(require, exports, module) {
                         return basename(path) + "/" + basename(node.label) 
                             + "<span class='extrainfo'> - " + dirname(path) + "</span>";
                    }
-                   else if (node.type == "all") {
-                       return escapeHTML(node.label) + " (" + node.items.length + ")";
-                   }
-                   else if (node.type == "describe") {
+                   else if (node.type == "testset") {
                        return "<span style='opacity:0.5;'>" + escapeHTML(node.label) + "</span>";
                    }
                    else if (node.kind == "it") {
@@ -130,7 +118,7 @@ define(function(require, exports, module) {
                     else if (node.passed === 2) icon = "test-error";
                     else if (node.passed === 3) icon = "test-terminated";
                     else if (node.passed === 4) icon = "test-ignored";
-                    else if (node.type == "describe") icon = "folder";
+                    else if (node.type == "testset") icon = "folder";
                     else if (node.type == "test") icon = "test-notran";
                     
                     return "<span class='ace_tree-icon " + icon + "'></span>";
@@ -169,31 +157,27 @@ define(function(require, exports, module) {
             tree.container.style.bottom = "0";
             tree.container.style.height = "";
             
-            wsNode = {
+            wsNode = new Node({
                 label: "workspace",
                 isOpen: true,
                 className: "heading",
                 status: "loaded",
                 noSelect: true,
                 $sorted: true,
-                
-                items: []
-            };
-            rmtNode = {
+            });
+            rmtNode = new Node({
                 label: "remote",
                 isOpen: true,
                 className: "heading",
                 status: "loaded",
                 noSelect: true,
-                $sorted: true,
-                
-                items: []
-            };
-            
-            tree.setRoot({
-                label: "root",
-                items: [wsNode] //, rmtNode]
+                $sorted: true
             });
+            
+            tree.setRoot(new Node({
+                label: "root",
+                items: [wsNode]
+            }));
             
             tree.commands.bindKey("Space", function(e) {
                 openTestFile();
@@ -517,8 +501,8 @@ define(function(require, exports, module) {
         
         function updateStatus(node, s){
             // TODO make this more efficient by trusting the child nodes
-            if (node.type == "file" || node.type == "describe") {
-                var tests = getAllNodes(node, /test|prepare/);
+            if (node.type == "file" || node.type == "testset") {
+                var tests = getAllNodes(node, /^(test|prepare)$/);
                 
                 var st, p = [];
                 tests.forEach(function(test){
@@ -531,7 +515,7 @@ define(function(require, exports, module) {
                 node.passed = p[3] ? 3 : (p[2] ? 2 : p[0] ? 0 : (p[1] ? 1 : undefined));
                 node.status = st || "loaded";
             }
-            else if (node.type == "all" && node.type == "root") {
+            else if (node.type == "root") {
                 tree.refresh();
                 return;
             }
@@ -624,7 +608,7 @@ define(function(require, exports, module) {
             
             clearDecoration(session);
             
-            var nodes = getAllNodes(fileNode, /test|prepare/);
+            var nodes = getAllNodes(fileNode, /^(test|prepare)$/);
             nodes.forEach(function(node){
                 if (node.passed !== undefined) {
                     session.addGutterDecoration(node.pos.sl - 1, "test-" + node.passed);

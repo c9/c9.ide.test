@@ -21,6 +21,8 @@ define(function(require, exports, module) {
         var Divider = imports.Divider;
         var all = imports["test.all"];
         
+        var Node = test.Node;
+        
         // var async = require("async");
         var basename = require("path").basename;
         var dirname = require("path").dirname;
@@ -94,7 +96,7 @@ define(function(require, exports, module) {
                    else if (node.type == "all") {
                        return escapeHTML(node.label) + " (" + node.items.length + ")";
                    }
-                   else if (node.type == "describe") {
+                   else if (node.type == "testset") {
                        return "<span style='opacity:0.5;'>" + escapeHTML(node.label) + "</span>";
                    }
                    else if (node.kind == "it") {
@@ -118,7 +120,7 @@ define(function(require, exports, module) {
                     else if (node.passed === 2) icon = "test-error";
                     else if (node.passed === 3) icon = "test-terminated";
                     else if (node.passed === -1) icon = "test-ignored";
-                    else if (node.type == "describe") icon = "folder";
+                    else if (node.type == "testset") icon = "folder";
                     else if (node.type == "test") icon = "test-notran";
                     
                     return "<span class='ace_tree-icon " + icon + "'></span>";
@@ -147,7 +149,7 @@ define(function(require, exports, module) {
             tree.container.style.bottom = "0";
             tree.container.style.height = "";
             
-            failNode = {
+            failNode = new Node({
                 label: "failed",
                 isOpen: true,
                 passed: 0,
@@ -155,43 +157,38 @@ define(function(require, exports, module) {
                 className: "heading",
                 noSelect: true,
                 $sorted: true,
-                items: []
-            };
-            passNode = {
+            });
+            passNode = new Node({
                 label: "passed",
                 isOpen: true,
                 passed: 1,
                 type: "result",
                 className: "heading",
                 noSelect: true,
-                $sorted: true,
-                items: []
-            };
-            skipNode = {
+                $sorted: true
+            });
+            skipNode = new Node({
                 label: "skipped",
                 isOpen: true,
                 passed: 4,
                 type: "result",
                 className: "heading",
                 noSelect: true,
-                $sorted: true,
-                items: []
-            };
-            errNode = {
+                $sorted: true
+            });
+            errNode = new Node({
                 label: "error",
                 isOpen: true,
                 passed: 2,
                 type: "result",
                 className: "heading",
                 noSelect: true,
-                $sorted: true,
-                items: []
-            };
-            
-            tree.setRoot(rootNode = {
-                label: "root",
-                items: []
+                $sorted: true
             });
+            
+            tree.setRoot(rootNode = new Node({
+                label: "root"
+            }));
             
             tree.commands.bindKey("Space", function(e) {
                 openTestFile();
@@ -333,7 +330,7 @@ define(function(require, exports, module) {
                             return true;
                         }
                     })) {
-                        groupNode = util.cloneObject(pNode, true);
+                        groupNode = pNode.clone();
                         
                         if (groupNode.type == "file") {
                             group.unshift(groupNode);
@@ -351,14 +348,14 @@ define(function(require, exports, module) {
                     else {
                         var items = groupNode.items;
                         var isOpen = groupNode.isOpen;
-                        util.extend(groupNode, pNode);
+                        util.extend(groupNode.data, pNode.data);
                         
                         groupNode.isOpen = isOpen;
                         groupNode.children = 
                         groupNode.items = items;
                     }
                     
-                    delete groupNode.isSelected;
+                    // delete groupNode.isSelected;
                     groupNode.passed = node.passed;
                     
                     if (groupNode.type == "test" || groupNode.type == "prepare") {
