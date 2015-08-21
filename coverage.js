@@ -68,7 +68,7 @@ define(function(require, exports, module) {
                 group: "Test",
                 exec: function(editor, args){
                     var tree = test.focussedPanel.tree;
-                    var fileNode = findFileNode(tree.selectedNode);
+                    var fileNode = tree.selectedNode.findFileNode();
                     
                     if (tests[fileNode.path]) {
                         tests[fileNode.path].all.forEach(function(coverage){
@@ -80,7 +80,7 @@ define(function(require, exports, module) {
                 isAvailable: function(){
                     var tree = test.focussedPanel.tree;
                     if (!tree.selectedNode) return false;
-                    var fileNode = findFileNode(tree.selectedNode);
+                    var fileNode = tree.selectedNode.findFileNode();
                     return tests[fileNode.path] ? true : false;
                 }
             }, plugin);
@@ -288,13 +288,8 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function findFileNode(node){
-            while (node.type != "file") node = node.parent;
-            return node;
-        }
-        
         function addToLibrary(node){
-            var fileNode = findFileNode(node);
+            var fileNode = node.findFileNode();
             
             if (!tests[fileNode.path])
                 tests[fileNode.path] = { all: node.coverage.files };

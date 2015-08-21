@@ -150,7 +150,7 @@ define(function(require, exports, module) {
                 layout.on("themeChange", setTheme, doc);
                 setTheme({ theme: settings.get("user/general/@skin") });
                 
-                doc.tab.title = "Code Coverage"
+                doc.tab.title = "Code Coverage";
             });
             
             plugin.on("documentActivate", function(e) {

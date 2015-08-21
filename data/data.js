@@ -52,11 +52,78 @@ define(function(require, exports, module) {
             return this.data[prop];
         });
         Data.prototype.__defineSetter__(prop, function(v) { 
-            if (prop == "isOpen" && window.z == 1 & !v && this.data.label == "plugins/c9.analytics/analytics_test.js") debugger;
             this.data[prop] = v;
         });
     });
-
+    
+    Data.prototype.findNextTest = function(){
+        return (function recur(node, down){
+            if (!node.parent) return false;
+            
+            var i, items;
+            if (down) {
+                items = node.items;
+                i = 0;
+            }
+            else {
+                i = node.parent.items.indexOf(node) + 1;
+                node = node.parent;
+                items = node.items;
+            }
+            
+            for (var j; i < items.length; i++) {
+                j = items[i];
+                
+                if (j.type == "test" || j.type == "prepare")
+                    return j;
+                
+                if (j.items) {
+                    var found = recur(j, true);
+                    if (found) return found;
+                }
+            }
+            
+            return recur(node);
+        })(this, this.type != "test");
+    }
+    
+    Data.prototype.findFileNode = function(){
+        var node = this;
+        while (node.type != "file") node = node.parent;
+        return node;
+    }
+    
+    Data.prototype.findAllNodes = function(type){
+        var nodes = [], node = this;
+        type = new RegExp("^(" + type + ")$");
+        
+        (function recur(items){
+            for (var j, i = 0; i < items.length; i++) {
+                j = items[i];
+                if ((j.type || "").match(type)) nodes.push(j);
+                else if (j.items) recur(j.items);
+            }
+        })([node]);
+        
+        return nodes;
+    }
+    
+    Data.prototype.findRunner = function(){
+        var node = this;
+        while (!node.runner) node = node.parent;
+        return node.runner;
+    }
+    
+    Data.prototype.fixParents = function fixParents(node){
+        if (!node) node = this;
+        if (!node.items) return;
+        
+        node.items.forEach(function(n){
+            if (!n.parent) n.parent = node;
+            if (n.items) fixParents(n);
+        });
+    }
+    
     module.exports = Data;
     
 });

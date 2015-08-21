@@ -38,7 +38,7 @@ define(function(require, exports, module) {
         });
         // var emit = plugin.getEmitter();
         
-        var tree, failNode, passNode, skipNode, errNode, rootNode, menuContext;
+        var tree, failNode, passNode, skipNode, errNode, rootNode;
         var state = {};
         
         function load() {

@@ -207,7 +207,7 @@ define(function(require, exports, module) {
             // Hook opening of known files
             tabManager.on("open", function(e){
                 var node, tab = e.tab;
-                if (getAllNodes(tree.root, "file").some(function(n){
+                if (tree.root.findAllNodes("file").some(function(n){
                     node = n;
                     return n.path == tab.path;
                 })) {
@@ -234,7 +234,7 @@ define(function(require, exports, module) {
                 if (!settings.getBool("user/test/@runonsave"))
                     return;
                 
-                getAllNodes(tree.root, "file").some(function(n){
+                tree.root.findAllNodes("file").some(function(n){
                     if (n.path == e.path) {
                         run([n], function(){});
                         return true;
@@ -262,7 +262,7 @@ define(function(require, exports, module) {
                 if (!value)
                     clearAllDecorations();
                 else
-                    getAllNodes(tree.root, "file").forEach(function(fileNode){
+                    tree.root.findAllNodes("file").forEach(function(fileNode){
                         if (fileNode.passed === undefined) return;
                         var tab = tabManager.findTab(fileNode.path);
                         if (tab) decorate(fileNode, tab);
@@ -273,7 +273,7 @@ define(function(require, exports, module) {
         /***** Helper Methods *****/
         
         function populate(node, callback){
-            var runner = findRunner(node);
+            var runner = node.findRunner();
             
             updateStatus(node, "loading");
             
@@ -281,15 +281,10 @@ define(function(require, exports, module) {
                 if (err) return callback(err); // TODO
                 
                 updateStatus(node, "loaded");
-                fixParents(node);
+                node.fixParents();
                 
                 callback();
             });
-        }
-        
-        function findRunner(node){
-            while (!node.runner) node = node.parent;
-            return node.runner;
         }
         
         function init(runner){
@@ -304,7 +299,7 @@ define(function(require, exports, module) {
                 tree.open(runner.root);
                 updateStatus(runner.root, "loaded");
                 
-                fixParents(runner.root);
+                runner.root.fixParents();
             });
         }
         
@@ -315,11 +310,6 @@ define(function(require, exports, module) {
             }
             
             tree.refresh();
-        }
-        
-        function findFileNode(node){
-            while (node.type != "file") node = node.parent;
-            return node;
         }
         
         // TODO export to ace editor and add loading detection
@@ -349,7 +339,7 @@ define(function(require, exports, module) {
                     tabManager.openFile(n.path, true, function(){});
                 }
                 else if (n.pos) {
-                    var fileNode = findFileNode(n);
+                    var fileNode = n.findFileNode();
                     if (onlyWhenOpen) {
                         tab = tabManager.findTab(fileNode.path);
                         if (!tab || !tab.isActive())
@@ -375,7 +365,7 @@ define(function(require, exports, module) {
                             ace.moveCursorTo(pos.sl - 1, pos.sc);
                             if (select)
                                 ace.getSession().getSelection().selectToPosition({ row: pos.el - 1, column: pos.ec });
-                        }
+                        };
                         
                         if (ace.session.doc.$lines.length)
                             scroll();
@@ -386,21 +376,12 @@ define(function(require, exports, module) {
             });
         }
         
-        function fixParents(node){
-            if (!node.items) return;
-            
-            node.items.forEach(function(n){
-                if (!n.parent) n.parent = node;
-                if (n.items) fixParents(n);
-            });
-        }
-        
         /***** Methods *****/
         
         function run(nodes, options, callback){
             running = true;
             
-            if (nodes && typeof nodes != "array")
+            if (nodes && !Array.isArray(nodes))
                 callback = options, options = nodes, nodes = null;
             
             if (typeof options == "function")
@@ -416,7 +397,7 @@ define(function(require, exports, module) {
             var list = [];
             nodes.forEach(function(n){
                 if (n.type == "all" || n.type == "root")
-                    getAllNodes(n, "file").forEach(function(n){ list.push(n); });
+                    n.findAllNodes("file").forEach(function(n){ list.push(n); });
                 else
                     list.push(n);
             });
@@ -427,11 +408,12 @@ define(function(require, exports, module) {
             async[parallel ? "each" : "eachSeries"](list, function(node, callback){
                 if (stopping) return callback(new Error("Terminated"));
                 
-                if (node.status == "pending") // TODO do this lazily
+                if (node.status == "pending") { // TODO do this lazily
                     return populate(node, function(err){
                         if (err) return callback(err);
                         _run(node, options, callback);
                     });
+                }
                 
                 _run(node, options, callback);
             }, function(err){
@@ -454,7 +436,7 @@ define(function(require, exports, module) {
             end: function(node){
                 updateStatus(node, "loaded");
             }
-        }
+        };
         
         function findTest(path){
             return (function recur(items){
@@ -469,8 +451,8 @@ define(function(require, exports, module) {
         }
         
         function _run(node, options, callback){
-            var runner = findRunner(node);
-            var fileNode = findFileNode(node);
+            var runner = node.findRunner();
+            var fileNode = node.findFileNode();
             
             fileNode.fullOutput = ""; // Reset output
             updateStatus(node, "running");
@@ -486,23 +468,10 @@ define(function(require, exports, module) {
             });
         }
         
-        function getAllNodes(node, type){
-            var nodes = [];
-            (function recur(items){
-                for (var j, i = 0; i < items.length; i++) {
-                    j = items[i];
-                    if ((j.type || "").match(type)) nodes.push(j);
-                    else if (j.items) recur(j.items);
-                }
-            })([node]);
-            
-            return nodes;
-        }
-        
         function updateStatus(node, s){
             // TODO make this more efficient by trusting the child nodes
             if (node.type == "file" || node.type == "testset") {
-                var tests = getAllNodes(node, /^(test|prepare)$/);
+                var tests = node.findAllNodes("test|prepare");
                 
                 var st, p = [];
                 tests.forEach(function(test){
@@ -608,7 +577,7 @@ define(function(require, exports, module) {
             
             clearDecoration(session);
             
-            var nodes = getAllNodes(fileNode, /^(test|prepare)$/);
+            var nodes = fileNode.findAllNodes("test|prepare");
             nodes.forEach(function(node){
                 if (node.passed !== undefined) {
                     session.addGutterDecoration(node.pos.sl - 1, "test-" + node.passed);
@@ -619,7 +588,7 @@ define(function(require, exports, module) {
                 if (node.output)
                     createOutputWidget(editor, session, node);
             });
-        };
+        }
         
         function createOutputWidget(editor, session, node){
             // editor.session.unfold(pos.row);
@@ -681,13 +650,13 @@ define(function(require, exports, module) {
         
         function createStackWidget(editor, session, node){
             if (!editor.decorated) {
-                editor.renderer.on("afterRender", updateLines)
+                editor.renderer.on("afterRender", updateLines);
                 var onMouseDown = function(e) {
                     if (e.target.classList.contains("widget")) {
                         e.stopPropagation();
                     }
-                }
-                editor.container.addEventListener("mousedown", onMouseDown, true)
+                };
+                editor.container.addEventListener("mousedown", onMouseDown, true);
             }
             
             session.lineAnnotations[node.stackTrace[0].lineNumber - 1] = { 
@@ -696,7 +665,7 @@ define(function(require, exports, module) {
         }
         
         var updateLines = function(e, renderer) {
-            var textLayer = renderer.$textLayer
+            var textLayer = renderer.$textLayer;
             var config = textLayer.config;
             var session = textLayer.session;
             
@@ -727,16 +696,16 @@ define(function(require, exports, module) {
                     if (!session.lineAnnotations[row].element) {
                         widget = document.createElement("span");
                         widget.textContent = session.lineAnnotations[row].message;
-                        widget.className = "widget stack-message"
+                        widget.className = "widget stack-message";
                         session.lineAnnotations[row].element = widget;
                     }
                     else widget = session.lineAnnotations[row].element;
                     
-                    lineElement.appendChild(widget)
+                    lineElement.appendChild(widget);
                 }
                 row++;
             }
-        }
+        };
         
         function clearAllDecorations() {
             tabManager.getTabs().forEach(function(tab){
