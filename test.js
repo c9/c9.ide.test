@@ -41,9 +41,7 @@ define(function(require, exports, module) {
                 - Fix border (move to theme) of results
             
             ALL VIEW
-                Inline Test Decorations:
-                - Moving a tab to a different pane
-                
+                - Mocha: Add configure settings for loading files
                 - skip test (temporary exclusion)
                 - remove test (permanent exclusion)
                 - Error state for failed tests
@@ -85,11 +83,13 @@ define(function(require, exports, module) {
             - Fix ace-tree height issue of results
             - When line is deleted all widgets should go
             - Cannot select inside widget
+            - Moving a tab to a different pane
+            - When wrap mode is on, the inline widgets don't render well (over the next line)
+            - Ace needs a mode where the line widgets are the full scroll width of ace
             - [Not Needed] Different row heights:
             https://github.com/c9/newclient/blob/master/node_modules/ace_tree/lib/ace_tree/data_provider.js#L392
             
             MOCHA
-            - Add configure settings for loading files
             - Add setting for debug mode
             - other test formats (not bdd)
             - Address anomaly for writer-test not being able to execute single test
