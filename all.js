@@ -231,12 +231,18 @@ define(function(require, exports, module) {
             
             // Save hooks (TODO: move to load and get list from plugins at startup)
             save.on("afterSave", function(e){
-                if (!settings.getBool("user/test/@runonsave"))
-                    return;
+                var runOnSave = settings.getBool("user/test/@runonsave");
                 
                 tree.root.findAllNodes("file").some(function(n){
                     if (n.path == e.path) {
-                        run([n], function(){});
+                        
+                        // Notify runners of change event and refresh tree 
+                        if (n.emit("change", e.value))
+                            tree.refresh();
+                            
+                        // Re-run test on save
+                        if (runOnSave) run([n], function(){});
+                            
                         return true;
                     }
                 });
@@ -544,20 +550,6 @@ define(function(require, exports, module) {
         // }
         
         // TODO: Think about moving this to a separate plugin
-        /*
-            TODO:
-            - Moving a tab to a different pane
-            - When line is deleted all widgets should go
-            - Cannot select inside widget
-            - Increase scroll width:
-                https://github.com/ajaxorg/ace/blob/master/lib/ace/virtual_renderer.js#L951
-            - Set width of line widget to full scroll width
-            - We can add onchange listener and update decorations array
-                - line annotations should move as well
-            
-            - When writing in a certain test, invalidate those resuls
-                - On save, only execute those tests that are changed
-        */
         function decorate(fileNode, tab) {
             if (!settings.getBool("user/test/@inlineresults")) return;
             

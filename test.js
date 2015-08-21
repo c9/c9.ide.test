@@ -23,6 +23,15 @@ define(function(require, exports, module) {
         var TestSet = require("./data/testset");
         var Test = require("./data/test");
         var Node = require("./data/node");
+        var Data = require("./data/data");
+        
+        // Destructive conversion process
+        Data.fromJSON = function(list){
+            return list.map(function(node){
+                if (node.items) node.items = Data.fromJSON(node.items);
+                return node.type == "testset" ? new TestSet(node) : new Test(node);
+            });
+        };
         
         /*
             TODO:
@@ -36,10 +45,12 @@ define(function(require, exports, module) {
                 - Fix border (move to theme) of results
             
             REFACTOR TO USE DATA OBJECTS
-                    - Start using data objects (emitter based, tree walker to find certain node types)
-                    - Implement change event and create updateOutline
-                    - Instead of .stackTrace do .annotations = {<linenr>: <message>}
                 - Update outline when typing in file that has outline open in all view
+                - Listen:
+                    - change event and create updateOutline
+                    - rename a file | Mocha is doing this itself by refetching. is that optimal?
+                    - delete a file | Mocha is doing this itself by refetching. is that optimal?
+                - Instead of .stackTrace do .annotations = {<linenr>: <message>}
                 
             ALL VIEW
                 - skip test (temporary exclusion)
@@ -55,6 +66,12 @@ define(function(require, exports, module) {
                 - Add split button back
                     - Add menu and allow runners to give settings in form format
                     - Pass settings to run()
+                
+                Inline Test Decorations:
+                - Moving a tab to a different pane
+                
+                - When writing in a certain test, invalidate those resuls
+                    - On save, only execute those tests that are changed
             LATER: 
                 - Better icons
                 - Icons for play/stop button
@@ -79,9 +96,11 @@ define(function(require, exports, module) {
                 - Move gutterDecorations and markers when typing
                 - Mark changed lines as yellow
                 - Update coverage when typing
-            - Horizontal scrolling with line widgets
+            - Horizontal scrolling with line widgets https://github.com/ajaxorg/ace/blob/master/lib/ace/virtual_renderer.js#L951
             - Make line widgets an ace plugin
             - Fix ace-tree height issue of results
+            - When line is deleted all widgets should go
+            - Cannot select inside widget
             - [Not Needed] Different row heights:
             https://github.com/c9/newclient/blob/master/node_modules/ace_tree/lib/ace_tree/data_provider.js#L392
             

@@ -85,13 +85,13 @@ define(function(require, exports, module) {
             
             return recur(node);
         })(this, this.type != "test");
-    }
+    };
     
     Data.prototype.findFileNode = function(){
         var node = this;
         while (node.type != "file") node = node.parent;
         return node;
-    }
+    };
     
     Data.prototype.findAllNodes = function(type){
         var nodes = [], node = this;
@@ -106,13 +106,13 @@ define(function(require, exports, module) {
         })([node]);
         
         return nodes;
-    }
+    };
     
     Data.prototype.findRunner = function(){
         var node = this;
         while (!node.runner) node = node.parent;
         return node.runner;
-    }
+    };
     
     Data.prototype.fixParents = function fixParents(node){
         if (!node) node = this;
@@ -122,7 +122,41 @@ define(function(require, exports, module) {
             if (!n.parent) n.parent = node;
             if (n.items) fixParents(n);
         });
-    }
+    };
+    
+    Data.prototype.importItems = function(items){
+        var node = this;
+        
+        if (!node.items.length)
+            node.items = Data.fromJSON(items);
+        else {
+            (function recur(myItems, newItems){
+                var map = {};
+                myItems.forEach(function(n){ map[n.label] = n; });
+                myItems.length = 0;
+                
+                for (var n, m, i = 0; i < newItems.length; i++) {
+                    n = map[(m = newItems[i]).label];
+                    
+                    // Update Existing
+                    if (n) {
+                        for (var prop in m) {
+                            if (prop == "items") 
+                                recur(n.items, m.items);
+                            else n.data[prop] = m[prop];
+                        }
+                        delete map[m.label];
+                    }
+                    // Create a new node
+                    else {
+                        n = Data.fromJSON([m])[0];
+                    }
+                    
+                    myItems.push(n);
+                }
+            })(node.items, items);
+        }
+    };
     
     module.exports = Data;
     
