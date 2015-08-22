@@ -79,8 +79,9 @@ define(function(require, exports, module) {
                         EXCLUDED = {};
                         SKIPPED = {};
                     }
+                    data = "";
                     // TODO Retry
-                    return;
+                    // return;
                 }
                 
                 var current;
@@ -438,33 +439,21 @@ define(function(require, exports, module) {
                             return;
                     }
                     
-                    var pos = n.selpos || n.pos;
-                    var select = n.selpos ? {
-                        row: n.selpos.el,
-                        column: n.selpos.ec
-                    } : undefined;
+                    var pos = n.pos || n.selpos;
+                    var jump = {
+                        row: pos.sl,
+                        column: pos.sc,
+                        select: n.selpos && {
+                            row: n.selpos.el,
+                            column: n.selpos.ec
+                        }
+                    };
                     
                     tabManager.open({
                         path: fileNode.path,
-                        active: true
+                        active: true,
+                        document: { ace: { jump: jump } }
                     }, function(err, tab){
-                        var ace = tab.editor.ace;
-                        
-                        var scroll = function(){
-                            ace.selection.clearSelection();
-                            scrollToDefinition(ace, n.pos.sl, n.pos.el);
-                            
-                            ace.moveCursorTo(pos.sl - 1, pos.sc);
-                            if (select)
-                                ace.getSession().getSelection().selectToPosition({ row: pos.el - 1, column: pos.ec });
-                        };
-                        
-                        if (!ace.session.doc.$lines.length)
-                            ace.once("changeSession", scroll);
-                        else if (!ace.renderer.$cursorLayer.config)
-                            ace.once("afterRender", scroll);
-                        else
-                            scroll();
                     });
                 }
             });
