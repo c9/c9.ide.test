@@ -10,7 +10,7 @@ define(function(require, exports, module) {
     }
     
     Test.prototype = new Data(
-        ["passed", "type", "output", "kind"],
+        ["passed", "type", "output", "kind", "skip"],
         ["annotations"],
         ["pos", "selpos"]
     );

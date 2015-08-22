@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test",
-        "Menu", "MenuItem", "Divider", "tabManager", "save", "preferences"
+        "Menu", "MenuItem", "Divider", "tabManager", "save", "preferences", "fs"
     ];
     main.provides = ["test.all"];
     return main;
@@ -19,6 +19,7 @@ define(function(require, exports, module) {
         var Divider = imports.Divider;
         var tabManager = imports.tabManager;
         var save = imports.save;
+        var fs = imports.fs;
         var prefs = imports.preferences;
         
         var Node = test.Node;
@@ -31,6 +32,10 @@ define(function(require, exports, module) {
         var LineWidgets = require("ace/line_widgets").LineWidgets;
         var dom = require("ace/lib/dom");
         // var Range = require("../range").Range;
+        
+        var EXCLUDED;
+        var SKIPPED;
+        var ready;
 
         /***** Initialization *****/
 
@@ -67,6 +72,31 @@ define(function(require, exports, module) {
         });
         
         function load() {
+            fs.readFile("/.c9/tests.exclude", function(err, data){
+                if (err) {
+                    if (err.code == "ENOENT") {
+                        EXCLUDED = {};
+                        SKIPPED = {};
+                    }
+                    // TODO Retry
+                    return;
+                }
+                
+                var current;
+                data.split("\n").forEach(function(line){
+                    line = line.trim();
+                    if (line == "# SKIPPED")
+                        current = SKIPPED = {};
+                    else if (line == "# EXCLUDED")
+                        current = EXCLUDED = {};
+                    else if (line)
+                        current[line] = true;
+                });
+                
+                ready = true;
+                emit.sticky("ready");
+            });
+            
             panels.on("afterAnimate", function(){
                 if (panels.isActive("test"))
                     tree && tree.resize();
@@ -164,7 +194,7 @@ define(function(require, exports, module) {
                     else if (node.passed === 0) icon = "test-failed";
                     else if (node.passed === 2) icon = "test-error";
                     else if (node.passed === 3) icon = "test-terminated";
-                    else if (node.passed === 4) icon = "test-ignored";
+                    else if (node.skip) icon = "test-ignored";
                     else if (node.type == "testset") icon = "folder";
                     else if (node.type == "test") icon = "test-notran";
                     
@@ -251,8 +281,8 @@ define(function(require, exports, module) {
                 new MenuItem({ caption: "Open Related Files", command: "openrelatedtestfiles" }), // TODO move to coverage plugin
                 new MenuItem({ caption: "Open Raw Test Output", command: "opentestoutput" }),
                 new Divider(),
-                new MenuItem({ caption: "Skip" }),
-                new MenuItem({ caption: "Remove" })
+                new MenuItem({ caption: "Skip", command: "skiptest" }),
+                new MenuItem({ caption: "Remove", command: "removetest" })
             ] }, plugin);
             opts.aml.setAttribute("contextmenu", menuContext.aml);
             
@@ -296,13 +326,19 @@ define(function(require, exports, module) {
             });
         }
         
+        function filter(path){
+            return EXCLUDED[path];
+        }
+        
         function init(runner){
+            if (!ready) return plugin.on("ready", init.bind(this, runner));
+            
             var parent = runner.remote ? rmtNode : wsNode;
             parent.items.push(runner.root);
             
             updateStatus(runner.root, "loading");
             
-            runner.init(runner.root, function(err){
+            runner.init(filter, function(err){
                 if (err) return console.error(err); // TODO
                 
                 runner.root.isOpen = true;
@@ -411,6 +447,7 @@ define(function(require, exports, module) {
             nodes.forEach(function(n){
                 if (n.type == "all" || n.type == "root")
                     n.findAllNodes("file").forEach(function(n){ 
+                        if (n.skip) return;
                         list.push(n); 
                         found[n.path] = true;
                     });
@@ -549,6 +586,66 @@ define(function(require, exports, module) {
                 tree.refresh();
             
             clearAllDecorations();
+        }
+        
+        function skip(nodes, callback) {
+            if (typeof nodes == "function")
+                callback = nodes, nodes = null;
+            
+            if (!nodes) nodes = tree.selectedNodes;
+            
+            nodes.forEach(function(fileNode){
+                if (fileNode.type != "file") return;
+                
+                if (!SKIPPED[fileNode.path]) {
+                    fileNode.skip = !fileNode.skip;
+                    
+                    if (fileNode.skip)
+                        SKIPPED[fileNode.path] = true;
+                    else
+                        delete SKIPPED[fileNode.path];
+                        
+                    fileNode.findAllNodes("test").forEach(function(n){
+                        n.skip = fileNode.skip;
+                    });
+                }
+            });
+            
+            writeExcludeFile(function(err){
+                tree.refresh();
+                callback(err);
+            });
+        }
+        
+        function remove(nodes, callback) {
+            if (typeof nodes == "function")
+                callback = nodes, nodes = null;
+            
+            if (!nodes) nodes = tree.selectedNodes;
+            
+            nodes.forEach(function(fileNode){
+                if (fileNode.type != "file") return;
+                
+                if (!EXCLUDED[fileNode.path]) {
+                    fileNode.parent.children.remove(fileNode);
+                    fileNode.parent.items.remove(fileNode);
+                    EXCLUDED[fileNode.path] = true;
+                }
+            });
+            
+            writeExcludeFile(function(err){
+                tree.refresh();
+                callback(err);
+            });
+        }
+        
+        function writeExcludeFile(callback){
+            var contents = "# SKIPPED\n"
+                + Object.keys(SKIPPED).join("\n")
+                + "\n# EXCLUDED\n"
+                + Object.keys(EXCLUDED).join("\n");
+            
+            fs.writeFile("/.c9/tests.exclude", contents, callback);
         }
         
         // function applyFilter() {
@@ -830,6 +927,16 @@ define(function(require, exports, module) {
              * 
              */
             stop: stop,
+            
+            /**
+             * 
+             */
+            skip: skip,
+            
+            /**
+             * 
+             */
+            remove: remove,
             
             /**
              *

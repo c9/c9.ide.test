@@ -208,6 +208,38 @@ define(function(require, exports, module) {
             }, plugin);
             
             commands.addCommand({
+                name: "skiptest",
+                // hint: "runs the selected test(s) in the test panel",
+                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
+                group: "Test",
+                exec: function(){
+                    focussedPanel.skip(function(err){});
+                },
+                isAvailable: function(){
+                    return focussedPanel.tree 
+                      && focussedPanel.tree.selectedNodes.some(function(n){
+                        if (n.type == "file") return true;
+                    });
+                }
+            }, plugin);
+            
+            commands.addCommand({
+                name: "removetest",
+                // hint: "runs the selected test(s) in the test panel",
+                // bindKey: { mac: "Command-O", win: "Ctrl-O" },
+                group: "Test",
+                exec: function(){
+                    focussedPanel.remove(function(err){});
+                },
+                isAvailable: function(){
+                    return focussedPanel.tree 
+                      && focussedPanel.tree.selectedNodes.some(function(n){
+                        if (n.type == "file") return true;
+                    });
+                }
+            }, plugin);
+            
+            commands.addCommand({
                 name: "opentestoutput",
                 // hint: "runs the selected test(s) in the test panel",
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },

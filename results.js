@@ -119,7 +119,7 @@ define(function(require, exports, module) {
                     else if (node.passed === 0) icon = "test-failed";
                     else if (node.passed === 2) icon = "test-error";
                     else if (node.passed === 3) icon = "test-terminated";
-                    else if (node.passed === -1) icon = "test-ignored";
+                    else if (node.skip) icon = "test-ignored";
                     else if (node.type == "testset") icon = "folder";
                     else if (node.type == "test") icon = "test-notran";
                     
