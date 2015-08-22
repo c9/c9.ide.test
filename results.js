@@ -260,6 +260,24 @@ define(function(require, exports, module) {
             all.openTestFile(nodes || tree.selectedNodes, onlyWhenOpen);
         }
         
+        function skip(nodes, callback){
+            if (typeof nodes == "function")
+                callback = nodes, nodes = null;
+            
+            if (!nodes) nodes = tree.selectedNodes;
+            
+            all.skip(nodes, callback);
+        }
+        
+        function remove(nodes, callback){
+            if (typeof nodes == "function")
+                callback = nodes, nodes = null;
+            
+            if (!nodes) nodes = tree.selectedNodes;
+            
+            all.remove(nodes, callback);
+        }
+        
         function clear(){
             plugin.hide();
             
@@ -448,7 +466,22 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            run: run
+            run: run,
+            
+            /**
+             * 
+             */
+            clear: clear,
+            
+            /**
+             * 
+             */
+            skip: skip,
+            
+            /**
+             * 
+             */
+            remove: remove
         });
         
         register(null, {

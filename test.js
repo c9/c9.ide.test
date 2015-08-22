@@ -339,6 +339,11 @@ define(function(require, exports, module) {
             btnRun.setAttribute("command", type == "stop" ? "stoptest" : "runtest");
         }
         
+        function refresh(){
+            emit("update");
+            emit("afterUpdate");
+        }
+        
         /***** Lifecycle *****/
         
         plugin.on("load", function() {
@@ -392,6 +397,11 @@ define(function(require, exports, module) {
              */
             get focussedPanel(){ return focussedPanel; },
             set focussedPanel(v){ focussedPanel = v; },
+            
+            /**
+             * 
+             */
+            refresh: refresh,
             
             /**
              * 

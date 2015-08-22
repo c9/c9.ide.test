@@ -33,6 +33,7 @@ define(function(require, exports, module) {
         var dom = require("ace/lib/dom");
         // var Range = require("../range").Range;
         
+        var TEST_EXCLUDE_PATH = "/.c9/tests.exclude";
         var EXCLUDED;
         var SKIPPED;
         var ready;
@@ -72,7 +73,7 @@ define(function(require, exports, module) {
         });
         
         function load() {
-            fs.readFile("/.c9/tests.exclude", function(err, data){
+            fs.readFile(TEST_EXCLUDE_PATH, function(err, data){
                 if (err) {
                     if (err.code == "ENOENT") {
                         EXCLUDED = {};
@@ -123,9 +124,39 @@ define(function(require, exports, module) {
                             type: "checkbox",
                             position: 100,
                             setting: "user/test/@inlineresults"
-                        }
+                        },
+                        "Exclude These Files" : {
+                           name: "txtTestExclude",
+                           type: "textarea",
+                           width: 300,
+                           height: 130,
+                           rowheight: 155,
+                           position: 1000
+                       },
                     }
                 }
+            }, plugin);
+            
+            plugin.getElement("txtTestExclude", function(txtTestExclude) {
+                var ta = txtTestExclude.lastChild;
+                
+                ta.on("blur", function(e) {
+                    EXCLUDED = {};
+                    this.value.split("\n").forEach(function(path){
+                        EXCLUDED[path] = true;
+                    });
+                    writeExcludeFile(function(){
+                        // Trigger a refetch for all runners
+                        test.refresh();
+                    });
+                });
+                
+                plugin.on("ready", function(){
+                    ta.setValue(Object.keys(EXCLUDED).join("\n"));
+                });
+                plugin.on("updateExclude", function(){
+                    ta.setValue(Object.keys(EXCLUDED).join("\n"));
+                });
             }, plugin);
             
             // Save hooks
@@ -150,6 +181,7 @@ define(function(require, exports, module) {
             // Initiate test runners
             test.on("register", function(e){ init(e.runner) }, plugin);
             test.on("unregister", function(e){ deinit(e.runner) }, plugin);
+            test.on("afterUpdate", function(){ tree && tree.refresh(); });
             
             test.runners.forEach(init);
             
@@ -636,6 +668,7 @@ define(function(require, exports, module) {
             writeExcludeFile(function(err){
                 tree.refresh();
                 callback(err);
+                emit("updateExclude");
             });
         }
         
@@ -645,7 +678,7 @@ define(function(require, exports, module) {
                 + "\n# EXCLUDED\n"
                 + Object.keys(EXCLUDED).join("\n");
             
-            fs.writeFile("/.c9/tests.exclude", contents, callback);
+            fs.writeFile(TEST_EXCLUDE_PATH, contents, callback);
         }
         
         // function applyFilter() {

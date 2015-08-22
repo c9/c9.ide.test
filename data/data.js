@@ -35,6 +35,8 @@ define(function(require, exports, module) {
                 return this.data[prop];
             });
             _self.__defineSetter__(prop, function(v) { 
+                if (prop == "items")
+                    this.children = v;
                 this.data[prop] = v;
             });
         });
