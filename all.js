@@ -354,6 +354,12 @@ define(function(require, exports, module) {
                 updateStatus(node, "loaded");
                 node.fixParents();
                 
+                if (node.skip) {
+                    node.findAllNodes("test").forEach(function(n){
+                        n.skip = true;
+                    });
+                }
+                
                 callback();
             });
         }
@@ -375,6 +381,15 @@ define(function(require, exports, module) {
                 
                 runner.root.isOpen = true;
                 updateStatus(runner.root, "loaded");
+                
+                runner.root.findAllNodes("file").forEach(function(node){
+                    if (!SKIPPED[node.path]) return;
+                    
+                    node.skip = true;
+                    node.findAllNodes("test").forEach(function(n){
+                        n.skip = true;
+                    });
+                });
                 
                 runner.root.fixParents();
             });
@@ -626,10 +641,11 @@ define(function(require, exports, module) {
             
             if (!nodes) nodes = tree.selectedNodes;
             
+            var map = {};
             nodes.forEach(function(fileNode){
                 if (fileNode.type != "file") return;
                 
-                if (!SKIPPED[fileNode.path]) {
+                if (!map[fileNode.path]) {
                     fileNode.skip = !fileNode.skip;
                     
                     if (fileNode.skip)
@@ -640,6 +656,8 @@ define(function(require, exports, module) {
                     fileNode.findAllNodes("test").forEach(function(n){
                         n.skip = fileNode.skip;
                     });
+                    
+                    map[fileNode.path] = true;
                 }
             });
             
