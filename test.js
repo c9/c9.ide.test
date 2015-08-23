@@ -43,10 +43,6 @@ define(function(require, exports, module) {
                 - Fix border (move to theme) of results
             
             ALL VIEW
-                - Add split button back
-                    - Add menu and allow runners to give settings in form format
-                    - Pass settings to run()
-                
                 - On re-fetch show loader
             
                 - Error state for failed tests
