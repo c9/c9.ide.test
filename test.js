@@ -82,7 +82,7 @@ define(function(require, exports, module) {
             - Fix ace-tree height issue of results
             - When line is deleted all widgets should go
             + Cannot select inside widget 
-            - Moving a tab to a different pane
+            + Moving a tab to a different pane
             - When wrap mode is on, the inline widgets don't render well (over the next line)
             - Ace needs a mode where the line widgets are the full scroll width of ace
             - [Not Needed] Different row heights:

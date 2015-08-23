@@ -704,12 +704,22 @@ define(function(require, exports, module) {
             
             var editor = tab.editor.ace;
             var session = (tab.document.getSession() || 0).session;
+
             if (!session || !tab.isActive()) {
                 tab.once("activate", function(){
                     setTimeout(function(){ decorate(fileNode, tab); });
                 });
                 return;
             }
+            
+            session.on("changeEditor", function(e){
+                if (e.oldEditor) {
+                    // TODO cleanup
+                }
+                if (e.editor) {
+                    decorateEditor(e.editor); 
+                }
+            });
             
             if (!session.widgetManager) {
                 session.widgetManager = new LineWidgets(session);
