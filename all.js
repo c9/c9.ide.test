@@ -73,10 +73,10 @@ define(function(require, exports, module) {
             }, plugin);
             
             test.on("ready", function(){
-                if (!test.config.excluded) {
+                if (!test.config.excluded)
                     test.config.excluded = {};
+                if (!test.config.skipped)
                     test.config.skipped = {};
-                }
             }, plugin);
             
             settings.on("read", function(){
@@ -188,6 +188,13 @@ define(function(require, exports, module) {
                    }
                    else if (node.kind == "it") {
                        return "it " + escapeHTML(node.label);
+                   }
+                   else if (node.type == "runner") {
+                       return escapeHTML(node.label) + " (" 
+                          + (node.status == "loading" 
+                            ? "loading" 
+                            : node.items.length) 
+                          + ")";
                    }
                    
                    return escapeHTML(node.label);
