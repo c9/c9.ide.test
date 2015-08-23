@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "Panel", "ui", "settings", "panels", "menus", "commands", "Menu", 
-        "MenuItem", "Divider", "tabManager"
+        "MenuItem", "Divider", "tabManager", "fs", "dialog.error"
     ];
     main.provides = ["test"];
     return main;
@@ -17,6 +17,8 @@ define(function(require, exports, module) {
         var Menu = imports.Menu;
         var MenuItem = imports.MenuItem;
         var Divider = imports.Divider;
+        var fs = imports.fs;
+        var showError = imports["dialog.error"].show;
         
         var Coverage = require("./data/coverage");
         var File = require("./data/file");
@@ -130,6 +132,9 @@ define(function(require, exports, module) {
             where: options.where || "left"
         });
         var emit = plugin.getEmitter();
+        
+        var configPath = options.configPath || "/.c9/test.settings.yml";
+        var config, ready;
         
         var runners = [];
         var toolbar, container, btnRun, btnClear, focussedPanel;
@@ -265,6 +270,20 @@ define(function(require, exports, module) {
                     });
                 }
             }, plugin);
+            
+            fs.readFile(configPath, function(err, data){
+                if (err && err.code != "ENOENT")
+                    return showError("Could not load " + configPath 
+                        + ". The test panel is disabled. Please restart " 
+                        + "Cloud9 to retry.");
+                
+                parse(data || "");
+                
+                // TODO add watcher for the config
+                
+                ready = true;
+                emit.sticky("ready");
+            });
         }
         
         var drawn = false;
@@ -339,6 +358,74 @@ define(function(require, exports, module) {
             btnRun.setAttribute("command", type == "stop" ? "stoptest" : "runtest");
         }
         
+        function parse(data){
+            if (!config) config = {};
+            
+            var keepNewline, stack = [config], top = config, name, create;
+                
+            data.split("\n").forEach(function(line){
+                // line = line.trim();
+                
+                if (line.match(/^\s*([\w-_ ]*):(\s?[|>]?)$/)) {
+                    if (stack.pop() == -1) 
+                        top[name] = top[name].substr(0, top[name].length - 1); // Remove last \n of strings
+                        
+                    name = RegExp.$1;
+                    create = true;
+                    // keepNewline = RegExp.$2 == "|";  // Not used
+                }
+                else if (line.match(/^\s*- (.*)$/)) { console.log(name, create)
+                    if (create) {
+                        stack.push(top = top[name] = {});
+                        create = false;
+                    }
+                    
+                    top[RegExp.$1] = true; // Not according to spec, but more useful
+                }
+                else if (line.match(/ {2}(.*)/)) {
+                    if (create) {
+                        top[name] = "";
+                        stack.push(-1);
+                        create = false;
+                    }
+                    
+                    top[name] += RegExp.$1 += "\n";
+                }
+            });
+            
+            if (stack.pop() == -1) 
+                top[name] = top[name].substr(0, top[name].length - 1); // Remove last \n of strings
+            
+            return config;
+        }
+        
+        function saveConfig(callback){
+            var contents = "";
+            
+            var item;
+            for (var prop in config) {
+                contents += prop + ":";
+                
+                item = config[prop];
+                if (typeof item == "object") {
+                    contents += "\n";
+                    for (var name in item) {
+                        contents += "  - " + name + "\n";
+                    }
+                }
+                else {
+                    contents += " |\n";
+                    contents += "  " + item.toString().split("\n").join("\n  ");
+                }
+                
+                contents += "\n";
+            }
+            
+            fs.writeFile(configPath, contents, callback);
+            
+            emit("updateConfig");
+        }
+        
         function refresh(){
             emit("update");
             emit("afterUpdate");
@@ -385,6 +472,16 @@ define(function(require, exports, module) {
             /**
              * 
              */
+            get ready(){ return ready; },
+            
+            /**
+             * 
+             */
+            get config(){ return config; },
+            
+            /**
+             * 
+             */
             get runners(){ return runners; },
             
             /**
@@ -397,6 +494,11 @@ define(function(require, exports, module) {
              */
             get focussedPanel(){ return focussedPanel; },
             set focussedPanel(v){ focussedPanel = v; },
+            
+            /**
+             * 
+             */
+            saveConfig: saveConfig,
             
             /**
              * 

@@ -19,7 +19,6 @@ define(function(require, exports, module) {
         var Divider = imports.Divider;
         var tabManager = imports.tabManager;
         var save = imports.save;
-        var fs = imports.fs;
         var prefs = imports.preferences;
         
         var Node = test.Node;
@@ -33,11 +32,6 @@ define(function(require, exports, module) {
         var dom = require("ace/lib/dom");
         // var Range = require("../range").Range;
         
-        var TEST_EXCLUDE_PATH = "/.c9/tests.exclude";
-        var EXCLUDED;
-        var SKIPPED;
-        var ready;
-
         /***** Initialization *****/
 
         var plugin = new TestPanel("Ajax.org", main.consumes, {
@@ -73,36 +67,17 @@ define(function(require, exports, module) {
         });
         
         function load() {
-            fs.readFile(TEST_EXCLUDE_PATH, function(err, data){
-                if (err) {
-                    if (err.code == "ENOENT") {
-                        EXCLUDED = {};
-                        SKIPPED = {};
-                    }
-                    data = "";
-                    // TODO Retry
-                    // return;
-                }
-                
-                var current;
-                data.split("\n").forEach(function(line){
-                    line = line.trim();
-                    if (line == "# SKIPPED")
-                        current = SKIPPED = {};
-                    else if (line == "# EXCLUDED")
-                        current = EXCLUDED = {};
-                    else if (line)
-                        current[line] = true;
-                });
-                
-                ready = true;
-                emit.sticky("ready");
-            });
-            
             panels.on("afterAnimate", function(){
                 if (panels.isActive("test"))
                     tree && tree.resize();
-            });
+            }, plugin);
+            
+            test.on("ready", function(){
+                if (!test.config.excluded) {
+                    test.config.excluded = {};
+                    test.config.skipped = {};
+                }
+            }, plugin);
             
             settings.on("read", function(){
                 settings.setDefaults("user/test", [
@@ -142,22 +117,22 @@ define(function(require, exports, module) {
                 var ta = txtTestExclude.lastChild;
                 
                 ta.on("blur", function(e) {
-                    EXCLUDED = {};
-                    this.value.split("\n").forEach(function(path){
-                        EXCLUDED[path] = true;
+                    test.config.excluded = {};
+                    ta.value.split("\n").forEach(function(path){
+                        test.config.excluded[path] = true;
                     });
-                    writeExcludeFile(function(){
+                    test.saveConfig(function(){
                         // Trigger a refetch for all runners
                         test.refresh();
                     });
                 });
                 
-                plugin.on("ready", function(){
-                    ta.setValue(Object.keys(EXCLUDED).join("\n"));
-                });
-                plugin.on("updateExclude", function(){
-                    ta.setValue(Object.keys(EXCLUDED).join("\n"));
-                });
+                test.on("ready", function(){
+                    ta.setValue(Object.keys(test.config.excluded).join("\n"));
+                }, plugin);
+                test.on("updateConfig", function(){
+                    ta.setValue(Object.keys(test.config.excluded).join("\n"));
+                }, plugin);
             }, plugin);
             
             // Save hooks
@@ -366,13 +341,14 @@ define(function(require, exports, module) {
         }
         
         function filter(path){
-            return EXCLUDED[path];
+            return test.config.excluded[path];
         }
         
         function init(runner){
-            if (!ready) return plugin.on("ready", init.bind(this, runner));
+            if (!test.ready) return test.on("ready", init.bind(this, runner));
             
             var parent = runner.remote ? rmtNode : wsNode;
+            runner.root.parent = parent;
             parent.items.push(runner.root);
             
             updateStatus(runner.root, "loading");
@@ -384,7 +360,7 @@ define(function(require, exports, module) {
                 updateStatus(runner.root, "loaded");
                 
                 runner.root.findAllNodes("file").forEach(function(node){
-                    if (!SKIPPED[node.path]) return;
+                    if (!test.config.skipped[node.path]) return;
                     
                     node.skip = true;
                     node.findAllNodes("test").forEach(function(n){
@@ -638,9 +614,9 @@ define(function(require, exports, module) {
                     fileNode.skip = !fileNode.skip;
                     
                     if (fileNode.skip)
-                        SKIPPED[fileNode.path] = true;
+                        test.config.skipped[fileNode.path] = true;
                     else
-                        delete SKIPPED[fileNode.path];
+                        delete test.config.skipped[fileNode.path];
                         
                     fileNode.findAllNodes("test").forEach(function(n){
                         n.skip = fileNode.skip;
@@ -650,7 +626,7 @@ define(function(require, exports, module) {
                 }
             });
             
-            writeExcludeFile(function(err){
+            test.saveConfig(function(err){
                 tree.refresh();
                 callback(err);
             });
@@ -665,27 +641,17 @@ define(function(require, exports, module) {
             nodes.forEach(function(fileNode){
                 if (fileNode.type != "file") return;
                 
-                if (!EXCLUDED[fileNode.path]) {
+                if (!test.config.excluded[fileNode.path]) {
                     fileNode.parent.children.remove(fileNode);
                     fileNode.parent.items.remove(fileNode);
-                    EXCLUDED[fileNode.path] = true;
+                    test.config.excluded[fileNode.path] = true;
                 }
             });
             
-            writeExcludeFile(function(err){
+            test.saveConfig(function(err){
                 tree.refresh();
                 callback(err);
-                emit("updateExclude");
             });
-        }
-        
-        function writeExcludeFile(callback){
-            var contents = "# SKIPPED\n"
-                + Object.keys(SKIPPED).join("\n")
-                + "\n# EXCLUDED\n"
-                + Object.keys(EXCLUDED).join("\n");
-            
-            fs.writeFile(TEST_EXCLUDE_PATH, contents, callback);
         }
         
         // function applyFilter() {

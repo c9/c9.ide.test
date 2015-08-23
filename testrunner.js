@@ -43,7 +43,7 @@ define(function(require, module, exports) {
                     label: caption,
                     index: index,
                     runner: plugin,
-                    type: "root"
+                    type: "runner"
                 })
             });
 
