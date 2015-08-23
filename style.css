@@ -95,3 +95,10 @@
     position: relative;
     box-shadow: @stats-button-active-box-shadow;
 }
+
+.runner-form-header{
+    font-size: 12px;
+    font-variant: small-caps;
+    padding: 0 10px 5px;
+    border-bottom: 1px solid whitesmoke;
+}

@@ -313,10 +313,53 @@ define(function(require, exports, module) {
             plugin.addElement(toolbar);
             
             // Run Menu
-            mnuRun = new ui.menu({
-                childNodes: [
-                    new ui.label({ caption: "No Settings "})
-                ]
+            var emptyLabel = new ui.label({ caption: "No Settings "});
+            mnuRun = new ui.menu({});
+            mnuRun.addEventListener("prop.visible", function(e){
+                if (!e.value) return;
+                
+                var runners = [], found = {};
+                
+                for (var i = mnuRun.childNodes.length - 1; i >= 0; i--) {
+                    mnuRun.removeChild(mnuRun.childNodes[i]);
+                }
+                
+                if (focussedPanel.tree.selectedNode) {
+                    focussedPanel.tree.selectedNodes.forEach(function(n){
+                        if (n.type == "all" || n.type == "root" || n.type == "runner") {
+                            n.findAllNodes("runner").forEach(function(n){
+                                var runner = n.runner;
+                                if (found[n.name]) return;
+                                found[n.name] = true;
+                                runners.push(runner);
+                            });
+                        }
+                        else {
+                            var runner = n.findRunner();
+                            if (found[runner.name]) return;
+                            found[runner.name] = true;
+                            runners.push(runner);
+                        }
+                    });
+                }
+                
+                if (!runners.length) {
+                    mnuRun.appendChild(emptyLabel);
+                    return;
+                }
+                
+                runners.forEach(function(runner){
+                    if (runner.form) {
+                        if (!runner.meta.$label) {
+                            runner.meta.$label = new ui.label({
+                                caption: runner.root.label,
+                                class: "runner-form-header"
+                            });
+                        }
+                        mnuRun.appendChild(runner.meta.$label);
+                        runner.form.attachTo(mnuRun);
+                    }
+                });
             });
             
             // Buttons

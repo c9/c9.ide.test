@@ -482,8 +482,8 @@ define(function(require, exports, module) {
             
             var list = [], found = {};
             nodes.forEach(function(n){
-                if (n.type == "all" || n.type == "root")
-                    n.findAllNodes("file").forEach(function(n){ 
+                if (n.type == "all" || n.type == "root" || n.type == "runner")
+                    n.findAllNodes("file").forEach(function(n){
                         if (n.skip) return;
                         list.push(n); 
                         found[n.path] = true;
@@ -496,9 +496,6 @@ define(function(require, exports, module) {
                 else
                     list.push(n);
             });
-            
-            // clear all previous states of list before running any
-            // clear();
             
             async[parallel ? "each" : "eachSeries"](list, function(node, callback){
                 if (stopping) return callback(new Error("Terminated"));
@@ -548,6 +545,9 @@ define(function(require, exports, module) {
         function _run(node, options, callback){
             var runner = node.findRunner();
             var fileNode = node.findFileNode();
+            
+            if (runner.form)
+                options = runner.form.toJson(null, options || {});
             
             fileNode.fullOutput = ""; // Reset output
             updateStatus(node, "running");
