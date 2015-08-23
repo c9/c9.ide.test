@@ -352,7 +352,7 @@ define(function(require, exports, module) {
                     if (runner.form) {
                         if (!runner.meta.$label) {
                             runner.meta.$label = new ui.label({
-                                caption: runner.root.label,
+                                caption: runner.root.label.toLowerCase(),
                                 class: "runner-form-header"
                             });
                         }
