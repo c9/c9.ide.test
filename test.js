@@ -43,10 +43,9 @@ define(function(require, exports, module) {
                 - Fix border (move to theme) of results
             
             ALL VIEW
-                - Mocha: Add configure settings for loading files
-                - skip test (temporary exclusion)
-                - remove test (permanent exclusion)
                 - Error state for failed tests
+                    - Error before test is started isn't shown
+                    - Stack trace before test is started isn't shown
                     - Timed out tests
                     - Broken mid-run
                     - Terminated (stop button)
@@ -271,6 +270,10 @@ define(function(require, exports, module) {
                 }
             }, plugin);
             
+            menus.addItemByPath("Cloud9/Open Your Test Configuration", new ui.item({
+                onclick: openTestConfigFile
+            }), 900, plugin);
+            
             fs.readFile(configPath, function(err, data){
                 if (err && err.code != "ENOENT")
                     return showError("Could not load " + configPath 
@@ -363,24 +366,22 @@ define(function(require, exports, module) {
             
             var keepNewline, stack = [config], top = config, name, create;
                 
-            data.split("\n").forEach(function(line){
+            data.split("\n").forEach(function(rawLine){
                 // line = line.trim();
+                var line = rawLine.split("#")[0].trimRight();
                 
                 if (line.match(/^\s*([\w-_ ]*):(\s?[|>]?)$/)) {
-                    if (stack.pop() == -1) 
-                        top[name] = top[name].substr(0, top[name].length - 1); // Remove last \n of strings
-                        
                     name = RegExp.$1;
                     create = true;
                     // keepNewline = RegExp.$2 == "|";  // Not used
                 }
-                else if (line.match(/^\s*- (.*)$/)) { console.log(name, create)
+                else if (line.match(/^\s*- (.*)$/)) {
                     if (create) {
                         stack.push(top = top[name] = {});
                         create = false;
                     }
                     
-                    top[RegExp.$1] = true; // Not according to spec, but more useful
+                    top[RegExp.$1] = rawLine.replace(/^\s*- /, ""); // Not according to spec, but more useful
                 }
                 else if (line.match(/ {2}(.*)/)) {
                     if (create) {
@@ -410,7 +411,9 @@ define(function(require, exports, module) {
                 if (typeof item == "object") {
                     contents += "\n";
                     for (var name in item) {
-                        contents += "  - " + name + "\n";
+                        contents += "  - " 
+                          + (typeof item[name] == "string" ? item[name] : name)
+                          + "\n";
                     }
                 }
                 else {
@@ -429,6 +432,10 @@ define(function(require, exports, module) {
         function refresh(){
             emit("update");
             emit("afterUpdate");
+        }
+        
+        function openTestConfigFile(){
+            tabManager.openFile(configPath, true, function(){});
         }
         
         /***** Lifecycle *****/

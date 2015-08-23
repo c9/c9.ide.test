@@ -103,10 +103,11 @@ define(function(require, exports, module) {
                         },
                         "Exclude These Files" : {
                            name: "txtTestExclude",
-                           type: "textarea",
-                           width: 300,
-                           height: 130,
-                           rowheight: 155,
+                           type: "textarea-row",
+                           fixedFont: true,
+                           width: 600,
+                           height: 200,
+                           rowheight: 250,
                            position: 1000
                        },
                     }
@@ -118,8 +119,9 @@ define(function(require, exports, module) {
                 
                 ta.on("blur", function(e) {
                     test.config.excluded = {};
-                    ta.value.split("\n").forEach(function(path){
-                        test.config.excluded[path] = true;
+                    ta.value.split("\n").forEach(function(rawLine){
+                        var path = rawLine.split("#")[0].trim();
+                        test.config.excluded[path] = rawLine;
                     });
                     test.saveConfig(function(){
                         // Trigger a refetch for all runners
@@ -127,12 +129,16 @@ define(function(require, exports, module) {
                     });
                 });
                 
-                test.on("ready", function(){
-                    ta.setValue(Object.keys(test.config.excluded).join("\n"));
-                }, plugin);
-                test.on("updateConfig", function(){
-                    ta.setValue(Object.keys(test.config.excluded).join("\n"));
-                }, plugin);
+                var update = function(){
+                    var str = [];
+                    for (var path in test.config.excluded) {
+                        str.push(test.config.excluded[path]);
+                    }
+                    ta.setValue(str.join("\n"));
+                };
+                
+                test.on("ready", update, plugin);
+                test.on("updateConfig", update, plugin);
             }, plugin);
             
             // Save hooks
