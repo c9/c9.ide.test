@@ -154,7 +154,7 @@ define(function(require, exports, module) {
             commands.addCommand({
                 name: "runtest",
                 hint: "runs the selected test(s) in the test panel",
-                bindKey: { mac: "F6", win: "F6" },
+                bindKey: { mac: "F6", win: "Ctrl-F5" },
                 group: "Test",
                 exec: function(editor, args){
                     if (settings.getBool("user/test/coverage/@alwayson"))
@@ -171,7 +171,7 @@ define(function(require, exports, module) {
             commands.addCommand({
                 name: "runtestwithcoverage",
                 hint: "runs the selected test(s) in the test panel with code coverage enabled",
-                bindKey: { mac: "Shift-F6", win: "Shift-F6" },
+                bindKey: { mac: "Shift-F6", win: "Ctrl-Shift-F5" },
                 group: "Test",
                 exec: function(editor, args){
                     transformRunButton("stop");
