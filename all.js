@@ -755,63 +755,51 @@ define(function(require, exports, module) {
             w.el.className = "error_widget_wrapper";
             el.style.whiteSpace = "pre";
             el.className = "error_widget " + extraClass;
-            el.innerHTML = node.output;
+            el.textContent = node.output;
             
             el.appendChild(dom.createElement("div"));
             
-            // var kb = function(_, hashId, keyString) {
-            //     if (hashId === 0 && (keyString === "esc" || keyString === "return")) {
-            //         w.destroy();
-            //         return {command: "null"};
-            //     }
-            // };
-            
-            // w.destroy = function() {
-            //     if (editor.$mouseHandler.isMousePressed)
-            //         return;
-            //     editor.keyBinding.removeKeyboardHandler(kb);
-            //     session.widgetManager.removeLineWidget(w);
-            //     editor.off("changeSelection", w.destroy);
-            //     editor.off("changeSession", w.destroy);
-            //     editor.off("mouseup", w.destroy);
-            //     editor.off("change", w.destroy);
-            // };
-            
-            // editor.keyBinding.addKeyboardHandler(kb);
-            // editor.on("changeSelection", w.destroy);
-            // editor.on("changeSession", w.destroy);
-            // editor.on("mouseup", w.destroy);
-            // editor.on("change", w.destroy);
+            w.destroy = function() {
+                session.widgetManager.removeLineWidget(w);
+            };
             
             session.widgetManager.addLineWidget(w);
             session.$lineWidgets.push(w);
             
-            w.el.onmousedown = editor.focus.bind(editor);
+            // w.el.onmousedown = editor.focus.bind(editor);
+            return w;
+        }
+        
+        function decorateEditor(editor) {
+            if (editor.decorated)
+                return;
+            editor.renderer.on("afterRender", updateLines);
+            var onMouseDown = function(e) {
+                var widget = e.target;
+                if (widget.classList.contains("widget")) {
+                    
+                    if (widget.annotation && widget.classList.contains("more")) {
+                        if (widget.output) {
+                            widget.output.destroy();
+                            widget.output = null;
+                        } else {
+                            var a = widget.annotation;
+                            widget.output = createOutputWidget(editor, a.session, {
+                                pos: { el: a.line, ec: a.column },
+                                passed: 0,
+                                output: a.more
+                            });
+                        }
+                    }
+                    e.stopPropagation();
+                }
+            };
+            editor.decorated = true;
+            editor.container.addEventListener("mousedown", onMouseDown, true);
         }
         
         function createStackWidget(editor, session, node){
-            if (!editor.decorated) {
-                editor.renderer.on("afterRender", updateLines);
-                var onMouseDown = function(e) {
-                    var widget = e.target;
-                    if (widget.annotation 
-                      && widget.classList.contains("widget") 
-                      && widget.classList.contains("more")) {
-                        var a = widget.annotation;
-                        createOutputWidget(editor, a.session, {
-                            pos: { el: a.line, ec: a.column },
-                            passed: 0,
-                            output: a.more
-                        });
-                        
-                        widget.classList.remove("more");
-                        widget.annotation = null;
-                        e.stopPropagation();
-                    }
-                };
-                editor.container.addEventListener("mousedown", onMouseDown, true);
-            }
-            
+            decorateEditor(editor);
             var m, d;
             node.annotations.forEach(function(item){
                 m = item.message.trim();
