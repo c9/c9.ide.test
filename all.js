@@ -408,7 +408,7 @@ define(function(require, exports, module) {
         }
         
         function openTestFile(nodes, onlyWhenOpen){
-            (nodes || tree.selectedNodes).forEach(function(n){
+            (nodes || test.focussedPanel.tree.selectedNodes).forEach(function(n){
                 var tab;
                 
                 if (n.type == "file") {

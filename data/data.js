@@ -91,8 +91,8 @@ define(function(require, exports, module) {
     
     Data.prototype.findFileNode = function(){
         var node = this;
-        while (node.type != "file") node = node.parent;
-        return node;
+        while (node && node.type != "file") node = node.parent;
+        return node || {};
     };
     
     Data.prototype.findAllNodes = function(type){
