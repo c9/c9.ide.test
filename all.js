@@ -88,7 +88,7 @@ define(function(require, exports, module) {
             
             prefs.add({
                 "Test" : {
-                    position: 1000,
+                    position: 2000,
                     "Test Runner" : {
                         position: 100,
                         "Run Tests On Save" : {
@@ -197,7 +197,7 @@ define(function(require, exports, module) {
                    }
                    else if (node.type == "runner") {
                        return escapeHTML(node.label) + " (" 
-                          + (node.status == "loading" 
+                          + (!node.items.length && node.status == "loading" 
                             ? "loading" 
                             : node.items.length) 
                           + ")";

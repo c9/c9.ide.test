@@ -43,16 +43,18 @@ define(function(require, exports, module) {
                 - Fix border (move to theme) of results
             
             ALL VIEW
+                - Add split button back
+                    - Add menu and allow runners to give settings in form format
+                    - Pass settings to run()
+                
+                - On re-fetch show loader
+            
                 - Error state for failed tests
                     - Error before test is started isn't shown
                     - Stack trace before test is started isn't shown
                     - Timed out tests
                     - Broken mid-run
                     - Terminated (stop button)
-                
-                - Add split button back
-                    - Add menu and allow runners to give settings in form format
-                    - Pass settings to run()
                 
                 - When writing in a certain test, invalidate those resuls
                     - On save, only execute those tests that are changed
@@ -91,12 +93,14 @@ define(function(require, exports, module) {
             https://github.com/c9/newclient/blob/master/node_modules/ace_tree/lib/ace_tree/data_provider.js#L392
             
             MOCHA
-            - Add setting for debug mode
-            - other test formats (not bdd)
             - Address anomaly for writer-test not being able to execute single test
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
             
             *** LATER ***
+            
+            MOCHA
+            - Add setting for debug mode
+            - other test formats (not bdd)
             
             REFACTOR TO USE DATA OBJECTS
                 - Listen:
@@ -136,7 +140,7 @@ define(function(require, exports, module) {
         var config, ready;
         
         var runners = [];
-        var toolbar, container, btnRun, btnClear, focussedPanel;
+        var toolbar, container, btnRun, btnClear, focussedPanel, mnuRun;
         var mnuSettings, btnSettings;
         
         function load() {
@@ -308,12 +312,20 @@ define(function(require, exports, module) {
             }));
             plugin.addElement(toolbar);
             
+            // Run Menu
+            mnuRun = new ui.menu({
+                childNodes: [
+                    new ui.label({ caption: "No Settings "})
+                ]
+            });
+            
             // Buttons
-            btnRun = ui.insertByIndex(toolbar, new ui.button({
+            btnRun = ui.insertByIndex(toolbar, new ui.splitbutton({
                 caption: "Run Tests",
                 skinset: "default",
                 skin: "c9-menu-btn",
-                command: "runtest"
+                command: "runtest",
+                submenu: mnuRun
             }), 100, plugin);
             
             btnClear = ui.insertByIndex(toolbar, new ui.button({
@@ -357,7 +369,7 @@ define(function(require, exports, module) {
         }
         
         function transformRunButton(type){
-            btnRun.setCaption(type == "stop" ? "Stop" : "Run Tests");
+            btnRun.setAttribute("caption", type == "stop" ? "Stop" : "Run Tests");
             btnRun.setAttribute("command", type == "stop" ? "stoptest" : "runtest");
         }
         
@@ -371,6 +383,9 @@ define(function(require, exports, module) {
                 var line = rawLine.split("#")[0].trimRight();
                 
                 if (line.match(/^\s*([\w-_ ]*):(\s?[|>]?)$/)) {
+                    // stack.pop(); top = stack[stack.length - 1];
+                    top = config; // Fucks use of stack, but will fix later
+                    
                     name = RegExp.$1;
                     create = true;
                     // keepNewline = RegExp.$2 == "|";  // Not used
