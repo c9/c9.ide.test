@@ -825,7 +825,7 @@ define(function(require, exports, module) {
             });
         }
         
-        var updateLines = function(e, renderer) {
+        function updateLines(e, renderer) {
             var textLayer = renderer.$textLayer;
             var config = textLayer.config;
             var session = textLayer.session;
@@ -842,6 +842,8 @@ define(function(require, exports, module) {
             var foldLine = session.getNextFoldLine(row);
             var foldStart = foldLine ? foldLine.start.row : Infinity;
             
+            var useGroups = textLayer.$useLineGroups();
+            
             while (true) {
                 if (row > foldStart) {
                     row = foldLine.end.row + 1;
@@ -853,6 +855,7 @@ define(function(require, exports, module) {
                 
                 var lineElement = lineElements[lineElementsIdx++];
                 if (lineElement && session.lineAnnotations[row]) {
+                    if (useGroups) lineElement = lineElement.lastChild;
                     var widget, a = session.lineAnnotations[row];
                     if (!a.element) {
                         widget = document.createElement("span");
