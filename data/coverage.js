@@ -38,7 +38,7 @@ define(function(require, exports, module) {
                     item.title = parts[1].trim();
                     break;
                 case 'SF':
-                    item.file = parts.slice(1).join(':').trim();
+                    item.file = parts.slice(1).join(':').trim().replace(/\\/g, "/");
                     break;
                 case 'FNF':
                     item.functions.found = Number(parts[1].trim());
