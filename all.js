@@ -229,7 +229,7 @@ define(function(require, exports, module) {
                 },
                 
                 getRowIndent: function(node) {
-                    return node.$depth ? node.$depth - 1 : 0;
+                    return node.$depth ? node.$depth : 0;
                 },
                 
                 // Tree Events
@@ -444,9 +444,9 @@ define(function(require, exports, module) {
                             ace.selection.clearSelection();
                             scrollToDefinition(ace, n.pos.sl, n.pos.el);
                             
-                            ace.moveCursorTo(pos.sl - 1, pos.sc);
+                            ace.moveCursorTo(pos.sl, pos.sc);
                             if (select)
-                                ace.getSession().getSelection().selectToPosition({ row: pos.el - 1, column: pos.ec });
+                                ace.getSession().getSelection().selectToPosition({ row: pos.el, column: pos.ec });
                         };
                         
                         if (!ace.session.doc.$lines.length)
@@ -731,8 +731,8 @@ define(function(require, exports, module) {
             var nodes = fileNode.findAllNodes("test|prepare");
             nodes.forEach(function(node){
                 if (node.passed !== undefined) {
-                    session.addGutterDecoration(node.pos.sl - 1, "test-" + node.passed);
-                    (session.$markers || (session.$markers = [])).push([node.pos.sl - 1, "test-" + node.passed]);
+                    session.addGutterDecoration(node.pos.sl, "test-" + node.passed);
+                    (session.$markers || (session.$markers = [])).push([node.pos.sl, "test-" + node.passed]);
                 }
                 if (node.annotations)
                     createStackWidget(editor, session, node);
@@ -746,7 +746,7 @@ define(function(require, exports, module) {
             // editor.selection.moveToPosition(pos);
             
             var w = {
-                row: node.pos.el - 1, 
+                row: node.pos.el, 
                 // fixedWidth: true,
                 // coverGutter: true,
                 // rowCount: 0,
@@ -759,8 +759,8 @@ define(function(require, exports, module) {
             arrow.className = "error_widget_arrow " + extraClass;
             
             var left = editor.renderer.$cursorLayer
-                .getPixelPosition({ column: node.pos.ec - 1 }).left;
-            arrow.style.left = left + editor.renderer.gutterWidth - 5 + "px";
+                .getPixelPosition({ row: node.pos.el, column: node.pos.ec }).left;
+            arrow.style.left = left /*+ editor.renderer.gutterWidth*/ - 5 + "px";
             
             w.el.className = "error_widget_wrapper";
             el.style.whiteSpace = "pre";
@@ -795,7 +795,7 @@ define(function(require, exports, module) {
                         } else {
                             var a = widget.annotation;
                             widget.output = createOutputWidget(editor, a.session, {
-                                pos: { el: a.line, ec: a.column },
+                                pos: { el: a.row, ec: a.column },
                                 passed: 0,
                                 output: a.more
                             });
@@ -817,7 +817,7 @@ define(function(require, exports, module) {
                 
                 session.lineAnnotations[item.line - 1] = { 
                     display: d,
-                    line: item.line,
+                    row: item.line - 1,
                     column: item.column,
                     more: m.length > 50 ? m : null,
                     session: session
