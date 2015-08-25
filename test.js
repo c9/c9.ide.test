@@ -39,8 +39,13 @@ define(function(require, exports, module) {
             TODO:
             
             RESULTS VIEW
-            LATER:
                 - Fix border (move to theme) of results
+            
+            SALESFORCE PLUGIN
+                - Fetch test files from filesystem (or see how the force cli does it)
+                - Parse the contents via outline
+                - Fetch the coverage data
+                - Parallel test execution
             
             ALL VIEW
                 - Error state for failed tests
@@ -49,27 +54,19 @@ define(function(require, exports, module) {
                     - Timed out tests
                     - Broken mid-run
                     - Terminated (stop button)
-                
-                - When writing in a certain test, invalidate those resuls
-                    - On save, only execute those tests that are changed
             LATER: 
                 - Better icons
                 - Icons for play/stop button
-                - Parallel test execution
             
             COVERAGE
                 - When code is run with coverage on, on save run with coverage again
                 - Don't clear file->test information
-            LATER:
-                - Clear all coverage from subnodes
             ISSUES:
                 - Clear coverage on re-execution without coverage
             
             STATE
             - Keep coverage data filename in state
             - Keep coverage totals in state (trigger "update" event)
-            - Should test results be kept in state?
-            - Should test output be kept in state?
             
             ACE (Harutyun)
             - Coverage
@@ -88,6 +85,10 @@ define(function(require, exports, module) {
             
             *** LATER ***
             
+            ALL VIEW
+                - When writing in a certain test, invalidate those resuls
+                    - On save, only execute those tests that are changed
+            
             MOCHA
             - other test formats (not bdd)
             
@@ -102,6 +103,13 @@ define(function(require, exports, module) {
             
             RAW LOG OUTPUT VIEWER
             - stream log output
+            
+            COVERAGE
+            - Clear all coverage from subnodes (might not be relevant anymore)
+            
+            OPTIMIZATIONS
+            - Should test results be kept in state?
+            - Should test output be kept in state?
             
             DOCS:
             - Update Tree documentation:
