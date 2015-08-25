@@ -257,15 +257,15 @@ define(function(require, exports, module) {
                     populate(node, callback);
                 },
                 
-                // sort: function(children) {
-                //     var compare = tree.model.alphanumCompare;
-                //     return children.sort(function(a, b) {
-                //         // TODO index sorting
-                //         // if (aIsSpecial && bIsSpecial) return a.index - b.index; 
+                sort: function(children) {
+                    var compare = tree.model.alphanumCompare;
+                    return children.sort(function(a, b) {
+                        // TODO index sorting
+                        // if (aIsSpecial && bIsSpecial) return a.index - b.index; 
                 
-                //         return compare(a.name + "", b.name + "");
-                //     });
-                // }
+                        return compare(a.path + "", b.path + "");
+                    });
+                }
             }, plugin);
             
             tree.container.style.position = "absolute";
@@ -390,9 +390,7 @@ define(function(require, exports, module) {
             parent.items.push(runner.root);
             
             if (wsNode.items.length == 1 && (!tree || !tree.selectedNode))
-                tree
-                    ? tree.select(runner.root)
-                    : (runner.root.isSelected = true);
+                plugin.once("draw", function(){ tree.select(runner.root); });
             
             updateStatus(runner.root, "loading");
             
