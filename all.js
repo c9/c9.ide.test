@@ -368,7 +368,10 @@ define(function(require, exports, module) {
         
         /***** Helper Methods *****/
         
-        function populate(node, callback){
+        function populate(node, callback, force){
+            if (!force && tree.filterKeyword)
+                return populate(findFileByPath(node.path), callback, true);
+            
             var runner = node.findRunner();
             
             updateStatus(node, "loading");
@@ -383,6 +386,11 @@ define(function(require, exports, module) {
                     node.findAllNodes("test").forEach(function(n){
                         n.skip = true;
                     });
+                }
+                
+                if (tree.filterKeyword) {
+                    node.isOpen = true;
+                    tree.filterKeyword = tree.filterKeyword;
                 }
                 
                 callback();
