@@ -44,7 +44,7 @@ define(function(require, exports, module) {
         });
         var emit = plugin.getEmitter();
         
-        var tree, stopping, menuContext, running;
+        var tree, stopping, menuContext, running, boxFilter;
         
         var wsNode = new Node({
             label: "workspace",
@@ -316,6 +316,17 @@ define(function(require, exports, module) {
                 })) {
                     decorate(node, tab);
                 }
+            });
+
+            // Filter
+            var toolbar = test.getElement("toolbar");
+            boxFilter = ui.insertByIndex(toolbar, new apf.codebox({
+                "initial-message": "Filter Tests",
+                "width": 100,
+                "style": "float:right;margin:1px 2px"
+            }), 1000, plugin);
+            boxFilter.ace.on("input", function(){
+                 tree.filterKeyword = boxFilter.ace.getValue();
             });
             
             // Menu
@@ -734,25 +745,6 @@ define(function(require, exports, module) {
             });
         }
         
-        // function applyFilter() {
-        //     model.keyword = filterbox && filterbox.getValue();
-
-        //     if (!model.keyword) {
-        //         model.reKeyword = null;
-        //         model.setRoot(model.cachedRoot);
-
-        //         // model.isOpen = function(node){ return node.isOpen; }
-        //     }
-        //     else {
-        //         model.reKeyword = new RegExp("("
-        //             + util.escapeRegExp(model.keyword) + ")", 'i');
-        //         var root = search.treeSearch(model.cachedRoot.items, model.keyword, true);
-        //         model.setRoot(root);
-
-        //         // model.isOpen = function(node){ return true; };
-        //     }
-        // }
-        
         // TODO: Think about moving this to a separate plugin
         function decorate(fileNode, tab) {
             if (!settings.getBool("user/test/@inlineresults")) return;
@@ -1006,9 +998,6 @@ define(function(require, exports, module) {
         /***** Register and define API *****/
         
         /**
-         * This is an example of an implementation of a plugin. Check out [the source](source/template.html)
-         * for more information.
-         * 
          * @class Template
          * @extends Plugin
          * @singleton
