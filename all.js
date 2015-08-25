@@ -277,6 +277,11 @@ define(function(require, exports, module) {
                 openTestFile([tree.selectedNode], true);
             });
             
+            tree.on("afterChoose",  function(){
+                if (!tree.model.hasChildren(tree.selectedNode))
+                    openTestFile([tree.selectedNode], false);
+            });
+            
             // Hook clear
             test.on("clear", function(){
                 clear();
