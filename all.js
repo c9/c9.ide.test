@@ -153,7 +153,8 @@ define(function(require, exports, module) {
                             tree && tree.refresh();
                             
                         // Re-run test on save
-                        if (runOnSave) run([n], function(){});
+                        if (runOnSave) 
+                            commands.exec("runtest", null, { nodes: [n] });
                             
                         return true;
                     }
@@ -163,7 +164,13 @@ define(function(require, exports, module) {
             // Initiate test runners
             test.on("register", function(e){ init(e.runner) }, plugin);
             test.on("unregister", function(e){ deinit(e.runner) }, plugin);
-            test.on("afterUpdate", function(){ tree && tree.refresh(); });
+            
+            test.on("update", function(){
+                test.runners.forEach(function(runner){
+                    updateStatus(runner.root, "loading");
+                    runner.update();
+                });
+            });
             
             test.runners.forEach(init);
             
@@ -303,7 +310,7 @@ define(function(require, exports, module) {
                 new MenuItem({ command: "runtest", caption: "Run", class: "strong" }),
                 new MenuItem({ command: "runtestwithcoverage", caption: "Run with Code Coverage" }),
                 new Divider(),
-                new MenuItem({ caption: "Open Test File", onclick: openTestFile }),
+                new MenuItem({ caption: "Open Test File", onclick: openTestFile, hotkey: "Space" }),
                 new MenuItem({ caption: "Open Related Files", command: "openrelatedtestfiles" }), // TODO move to coverage plugin
                 new MenuItem({ caption: "Open Raw Test Output", command: "opentestoutput" }),
                 new Divider(),

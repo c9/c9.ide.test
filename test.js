@@ -43,8 +43,6 @@ define(function(require, exports, module) {
                 - Fix border (move to theme) of results
             
             ALL VIEW
-                - On re-fetch show loader
-            
                 - Error state for failed tests
                     - Error before test is started isn't shown
                     - Stack trace before test is started isn't shown
@@ -81,12 +79,8 @@ define(function(require, exports, module) {
             - Make line widgets an ace plugin
             - Fix ace-tree height issue of results
             - When line is deleted all widgets should go
-            + Cannot select inside widget 
-            + Moving a tab to a different pane
-            + When wrap mode is on, the inline widgets don't render well (over the next line)
             - Ace needs a mode where the line widgets are the full scroll width of ace
-            - [Not Needed] Different row heights:
-            https://github.com/c9/newclient/blob/master/node_modules/ace_tree/lib/ace_tree/data_provider.js#L392
+            - Increase gutter to make room for both code coverage markings and fold widgets
             
             MOCHA
             - Address anomaly for writer-test not being able to execute single test
@@ -95,7 +89,6 @@ define(function(require, exports, module) {
             *** LATER ***
             
             MOCHA
-            - Add setting for debug mode
             - other test formats (not bdd)
             
             REFACTOR TO USE DATA OBJECTS
@@ -485,7 +478,6 @@ define(function(require, exports, module) {
         
         function refresh(){
             emit("update");
-            emit("afterUpdate");
         }
         
         function openTestConfigFile(){
