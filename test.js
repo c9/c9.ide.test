@@ -162,13 +162,29 @@ define(function(require, exports, module) {
                         return commands.exec("runtestwithcoverage", editor, args);
                     
                     transformRunButton("stop");
-                    focussedPanel.run(args.nodes || null, function(err){
+                    focussedPanel.run(args.nodes || null, {
+                        transformRun: args.transformRun
+                    }, function(err){
                         if (err) console.log(err);
                         transformRunButton("run");
                     });
                 }
             }, plugin);
-            
+
+            commands.addCommand({
+                name: "runfocussedtest",
+                // hint: "runs the selected test(s) in the test panel",
+                // bindKey: { mac: "F6", win: "Ctrl-F5" },
+                group: "Test",
+                exec: function(editor, args){
+                    var path = tabManager.focussedTab.path;
+                    return commands.exec("runtest", editor, { 
+                        nodes: path,
+                        transformRun: true
+                    });
+                }
+            }, plugin);
+
             commands.addCommand({
                 name: "runtestwithcoverage",
                 hint: "runs the selected test(s) in the test panel with code coverage enabled",

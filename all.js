@@ -1,7 +1,8 @@
 define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test",
-        "Menu", "MenuItem", "Divider", "tabManager", "save", "preferences", "fs"
+        "Menu", "MenuItem", "Divider", "tabManager", "save", "preferences", "fs",
+        "run.gui"
     ];
     main.provides = ["test.all"];
     return main;
@@ -20,6 +21,7 @@ define(function(require, exports, module) {
         var tabManager = imports.tabManager;
         var save = imports.save;
         var prefs = imports.preferences;
+        var runGui = imports["run.gui"];
         
         var Node = test.Node;
         
@@ -140,26 +142,37 @@ define(function(require, exports, module) {
                 test.on("ready", update, plugin);
                 test.on("updateConfig", update, plugin);
             }, plugin);
-            
+
             // Save hooks
             save.on("afterSave", function(e){
                 var runOnSave = settings.getBool("user/test/@runonsave");
                 
-                rootNode.findAllNodes("file").some(function(n){
-                    if (n.path == e.path) {
-                        
-                        // Notify runners of change event and refresh tree 
-                        if (n.emit("change", e.value))
-                            tree && tree.refresh();
-                            
-                        // Re-run test on save
-                        if (runOnSave) 
-                            commands.exec("runtest", null, { nodes: [n] });
-                            
-                        return true;
-                    }
-                });
+                var fileNode = findFileByPath(e.path);
+                if (!fileNode) return;
+
+                // Notify runners of change event and refresh tree 
+                if (fileNode.emit("change", e.value))
+                    tree && tree.refresh();
+                    
+                // Re-run test on save
+                if (runOnSave) 
+                    commands.exec("runtest", null, { nodes: [fileNode] });
             }, plugin);
+
+            // Run Button Hook
+            runGui.on("updateRunButton", function(e){
+                var fileNode = findFileByPath(e.path);
+                if (!fileNode) return;
+
+                var btnRun = e.button;
+                btnRun.enable();
+                btnRun.setAttribute("command", "runfocussedtest");
+                btnRun.setAttribute("caption", "Run Test");
+                btnRun.setAttribute("tooltip", "Run Test"
+                    + basename(e.path));
+
+                return false;
+            });
             
             // Initiate test runners
             test.on("register", function(e){ init(e.runner) }, plugin);
@@ -376,6 +389,11 @@ define(function(require, exports, module) {
             runner.root.parent = parent;
             parent.items.push(runner.root);
             
+            if (wsNode.items.length == 1 && (!tree || !tree.selectedNode))
+                tree
+                    ? tree.select(runner.root)
+                    : (runner.root.isSelected = true);
+            
             updateStatus(runner.root, "loading");
             
             runner.init(filter, function(err){
@@ -404,6 +422,17 @@ define(function(require, exports, module) {
             }
             
             tree.refresh();
+        }
+
+        function findFileByPath(path) {
+            var found = false;
+            rootNode.findAllNodes("file").some(function(n){
+                if (n.path == path) {
+                    found = n;
+                    return true;
+                }
+            });
+            return found;
         }
         
         // TODO export to ace editor and add loading detection
@@ -476,6 +505,11 @@ define(function(require, exports, module) {
         
         function run(nodes, options, callback){
             running = true;
+
+            if (typeof nodes == "string") {
+                nodes = [findFileByPath(nodes)];
+                if (!nodes[0]) return callback(new Error("File not found"));
+            }
             
             if (nodes && !Array.isArray(nodes))
                 callback = options, options = nodes, nodes = null;
@@ -483,14 +517,22 @@ define(function(require, exports, module) {
             if (typeof options == "function")
                 callback = options, options = null;
             
-            if (!nodes)
+            if (!nodes) {
                 nodes = tree.selectedNodes;
+                if (!nodes) return callback(new Error("Nothing to do"));
+            }
             
             var parallel = !options || options.parallel === undefined
                 ? settings.getBool("shared/test/@parallel")
                 : options.parallel; // TODO have a setting per runner
             
             var withCodeCoverage = options && options.withCodeCoverage;
+            var transformRun = options && options.transformRun;
+
+            if (transformRun) {
+                var button = runGui.transformButton("stop");
+                button.setAttribute("command", "stoptest");
+            }
             
             var list = [], found = {};
             nodes.forEach(function(n){
@@ -524,6 +566,9 @@ define(function(require, exports, module) {
                 emit("stop");
                 running = false;
                 delete progress.stop;
+
+                if (transformRun)
+                    runGui.transformButton();
                 
                 callback(err, list);
             });
