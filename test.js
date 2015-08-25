@@ -75,7 +75,7 @@ define(function(require, exports, module) {
             - Horizontal scrolling with line widgets https://github.com/ajaxorg/ace/blob/master/lib/ace/virtual_renderer.js#L951
             - Make line widgets an ace plugin
             - Fix ace-tree height issue of results
-            - When line is deleted all widgets should go
+
             - Ace needs a mode where the line widgets are the full scroll width of ace
             - Increase gutter to make room for both code coverage markings and fold widgets
             
