@@ -716,15 +716,39 @@ define(function(require, exports, module) {
                 });
                 return;
             }
+            if (!session.$testMarkers) {
+                session.$testMarkers = {};
+                session.on("changeEditor", function(e){
+                    if (e.oldEditor) {
+                        // TODO cleanup
+                    }
+                    if (e.editor) {
+                        decorateEditor(e.editor); 
+                    }
+                });
+                session.on("change", function(delta){
+                    console.log(delta);
+                    
+                    var inlineWidgets = session.lineAnnotations;
+                    var decorations = session.$decorations;
+                    if (!inlineWidgets) return;
+                    
+                    var startRow = delta.start.row;
+                    var len = delta.end.row - startRow;
             
-            session.on("changeEditor", function(e){
-                if (e.oldEditor) {
-                    // TODO cleanup
-                }
-                if (e.editor) {
-                    decorateEditor(e.editor); 
-                }
-            });
+                    if (len === 0) {
+                        // return
+                    } else if (delta.action == 'remove') {
+                        inlineWidgets.splice(startRow + 1, len);
+                        decorations.splice(startRow + 1, len);
+                    } else {
+                        var args = new Array(len);
+                        args.unshift(startRow, 0);
+                        inlineWidgets.splice.apply(inlineWidgets, args);
+                        decorations.splice.apply(decorations, args);
+                    }
+                });
+            }
             
             if (!session.widgetManager) {
                 session.widgetManager = new LineWidgets(session);
@@ -875,7 +899,7 @@ define(function(require, exports, module) {
                 }
                 row++;
             }
-        };
+        }
         
         function clearAllDecorations() {
             tabManager.getTabs().forEach(function(tab){
@@ -887,14 +911,15 @@ define(function(require, exports, module) {
         
         function clearDecoration(session){
             if (session.$markers) {
-                session.$markers.forEach(function(m){
-                    session.removeGutterDecoration(m[0], m[1]);
+                session.$decorations.forEach(function(m, i){
+                    if (m)
+                        session.$decorations[i] = m.replace(/ test-[01]/g, "");
                 });
             }
             if (session.lineAnnotations) {
                 session.lineAnnotations.forEach(function(item){
-                    if (item.element && item.element.parentNode)
-                        item.element.parentNode.removeChild(item.element);
+                    if (item && item.element && item.element.parentNode)
+                        item.element.remove();
                 });
             }
             if (session.$lineWidgets) {
