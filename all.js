@@ -261,7 +261,7 @@ define(function(require, exports, module) {
                 },
                 
                 sort: function(children) {
-                    if (children[0].type != "file")
+                    if (!children.length || children[0].type != "file")
                         return;
                     
                     var compare = tree.model.alphanumCompare;
@@ -382,7 +382,7 @@ define(function(require, exports, module) {
         
         function populate(node, callback, force){
             if (!force && tree.filterKeyword)
-                return populate(findFileByPath(node.path), callback, true);
+                return populate(findFileByPath(node.path), callback, node.isSelected ? 2 : 1);
             
             var runner = node.findRunner();
             
@@ -402,6 +402,7 @@ define(function(require, exports, module) {
                 
                 if (tree.filterKeyword) {
                     node.isOpen = true;
+                    node.isSelected = force === 2;
                     tree.filterKeyword = tree.filterKeyword;
                 }
                 
@@ -644,6 +645,8 @@ define(function(require, exports, module) {
             
             var runner = node.findRunner();
             var fileNode = node.findFileNode();
+            
+            if (!runner) runner = findFileByPath(fileNode.path).findRunner();
             
             if (runner.form)
                 options = runner.form.toJson(null, options || {});

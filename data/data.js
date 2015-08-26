@@ -112,8 +112,8 @@ define(function(require, exports, module) {
     
     Data.prototype.findRunner = function(){
         var node = this;
-        while (!node.runner) node = node.parent;
-        return node.runner;
+        while (node && !node.runner) node = node.parent;
+        return node && node.runner || false;
     };
     
     Data.prototype.fixParents = function fixParents(node){
