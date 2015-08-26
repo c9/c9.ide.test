@@ -60,12 +60,6 @@ define(function(require, exports, module) {
                 - Better icons
                 - Icons for play/stop button
             
-            COVERAGE
-                - When code is run with coverage on, on save run with coverage again
-                - Don't clear file->test information
-            ISSUES:
-                - Clear coverage on re-execution without coverage
-            
             STATE
             - Keep coverage data filename in state
             - Keep coverage totals in state (trigger "update" event)

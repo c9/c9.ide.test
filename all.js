@@ -145,8 +145,6 @@ define(function(require, exports, module) {
 
             // Save hooks
             save.on("afterSave", function(e){
-                var runOnSave = settings.getBool("user/test/@runonsave");
-                
                 var fileNode = findFileByPath(e.path);
                 if (!fileNode) return;
 
@@ -155,8 +153,10 @@ define(function(require, exports, module) {
                     tree && tree.refresh();
                     
                 // Re-run test on save
-                if (runOnSave) 
-                    commands.exec("runtest", null, { nodes: [fileNode] });
+                if (settings.getBool("user/test/@runonsave")) {
+                    var cmd = fileNode.coverage ? "runtestwithcoverage" : "runtest";
+                    commands.exec(cmd, null, { nodes: [fileNode] });
+                }
             }, plugin);
 
             // Run Button Hook
@@ -172,7 +172,7 @@ define(function(require, exports, module) {
                     + basename(e.path));
 
                 return false;
-            });
+            }, plugin);
             
             // Initiate test runners
             test.on("register", function(e){ init(e.runner) }, plugin);
@@ -183,7 +183,7 @@ define(function(require, exports, module) {
                     updateStatus(runner.root, "loading");
                     runner.update();
                 });
-            });
+            }, plugin);
             
             test.runners.forEach(init);
             
@@ -316,7 +316,7 @@ define(function(require, exports, module) {
                 })) {
                     decorate(node, tab);
                 }
-            });
+            }, plugin);
 
             // Filter
             var toolbar = test.getElement("toolbar");

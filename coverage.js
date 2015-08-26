@@ -247,7 +247,9 @@ define(function(require, exports, module) {
                 var tests = Object.keys(files[e.path].coverage).map(function(path){
                     return all.findTest(path);
                 });
-                commands.exec("runtest", null, { nodes: tests });
+                
+                var cmd = files[e.path].coverage ? "runtestwithcoverage" : "runtest";
+                commands.exec(cmd, null, { nodes: tests });
             }, plugin);
         }
         
