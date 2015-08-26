@@ -206,8 +206,8 @@ define(function(require, exports, module) {
                 getCaptionHTML: function(node) {
                    if (node.type == "file") {
                         var path = dirname(node.label);
-                        return basename(path) + "/" + basename(node.label) 
-                            + "<span class='extrainfo'> - " + dirname(path) + "</span>";
+                        return escapeHTML(basename(path) + "/" + basename(node.label)) 
+                            + "<span class='extrainfo'> - " + escapeHTML(dirname(path)) + "</span>";
                    }
                    else if (node.type == "testset") {
                        return "<span style='opacity:0.5;'>" + escapeHTML(node.label) + "</span>";
@@ -790,8 +790,6 @@ define(function(require, exports, module) {
                     }
                 });
                 session.on("change", function(delta){
-                    console.log(delta);
-                    
                     var inlineWidgets = session.lineAnnotations;
                     var decorations = session.$decorations;
                     if (!inlineWidgets) return;

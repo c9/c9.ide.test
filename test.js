@@ -54,6 +54,8 @@ define(function(require, exports, module) {
                     - Timed out tests
                     - Broken mid-run
                     - Terminated (stop button)
+                    - Syntax errors causing 0 tests to be found by outline
+                    - replace test file with a single character < (trying syntax error scenario)
             LATER: 
                 - Better icons
                 - Icons for play/stop button
