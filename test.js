@@ -38,14 +38,14 @@ define(function(require, exports, module) {
         /*
             TODO:
             
-            RESULTS VIEW
-                - Fix border (move to theme) of results
-            
             SALESFORCE PLUGIN
                 - Fetch test files from filesystem (or see how the force cli does it)
                 - Parse the contents via outline
                 - Fetch the coverage data
                 - Parallel test execution
+            
+            RESULTS VIEW
+                - Fix border (move to theme) of results
             
             ALL VIEW
                 - Error state for failed tests

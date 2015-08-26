@@ -1,25 +1,16 @@
 /* .image-2x("@{icon-path}/@{tree-folder-icon}", @tree-folder-icon-width, @tree-folder-icon-height); */
-.test-in-progress{
-    background-image: url("@{icon-path}/testInProgress1.png");
-}
-.test-passed{
-    background-image: url("@{icon-path}/testPassed.png");
-}
-.test-failed{
-    background-image: url("@{icon-path}/testFailed.png");
-}
-.test-error{
-    background-image: url("@{icon-path}/testError.png");
-}
-.test-terminated{
-    background-image: url("@{icon-path}/testTerminated.png");
-}
-.test-ignored{
-    background-image: url("@{icon-path}/testIgnored.png");
-}
-.test-notran{
-    background-image: url("@{icon-path}/testNotRan.png");
-}
+.test-in-progress{ background-image: url("@{icon-path}/testInProgress1.png"); }
+.test-notran{ background-image: url("@{icon-path}/testNotRan.png"); }
+
+.test-failed, .test-0 { background-image: url("@{icon-path}/testFailed.png"); }
+.test-passed, .test-1 { background-image: url("@{icon-path}/testPassed.png"); }
+.test-error, .test-2 { background-image: url("@{icon-path}/testError.png"); }
+.test-terminated, .test-3 { background-image: url("@{icon-path}/testTerminated.png"); }
+.test-ignored, .test-4 { background-image: url("@{icon-path}/testIgnored.png"); }
+
+.test-prepare { background-image: url("@{icon-path}/testPrepare.png"); }
+.test-set { background-image: url("@{icon-path}/testPrepare.png"); }
+.test-file { background-image: url("@{icon-path}/testFile.png"); }
 
 .stack-message{
     border-radius: 4px;
@@ -36,12 +27,6 @@
 .stack-message.more{
     cursor:pointer;
 }
-
-.test-0 { background-image: url("@{icon-path}/testFailed.png"); }
-.test-1 { background-image: url("@{icon-path}/testPassed.png"); }
-.test-2 { background-image: url("@{icon-path}/testError.png"); }
-.test-3 { background-image: url("@{icon-path}/testTerminated.png"); }
-.test-4 { background-image: url("@{icon-path}/testIgnored.png"); }
 
 .test-covered { position: absolute; background: rgba(0, 128, 0, 0.1); }
 .test-uncovered { position: absolute; background: rgba(128, 0, 0, 0.1); }
