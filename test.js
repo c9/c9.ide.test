@@ -60,10 +60,6 @@ define(function(require, exports, module) {
                 - Better icons
                 - Icons for play/stop button
             
-            STATE
-            - Keep coverage data filename in state
-            - Keep coverage totals in state (trigger "update" event)
-            
             ACE (Harutyun)
             - Coverage
                 - Move gutterDecorations and markers when typing
