@@ -111,7 +111,7 @@ define(function(require, exports, module) {
             - Should test output be kept in state?
             
             ACE
-            - Make line widgets an ace plugin
+            - Make line annotation an ace plugin
             
             DOCS:
             - Update Tree documentation:
