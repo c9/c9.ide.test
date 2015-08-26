@@ -56,6 +56,9 @@ define(function(require, exports, module) {
                     - Terminated (stop button)
                     - Syntax errors causing 0 tests to be found by outline
                     - replace test file with a single character < (trying syntax error scenario)
+                    - Mocha not installed:
+                        - Raw output shows (nothing in file): execvp(3) failed.: No such file or directory
+                    - Test same for istanbul not installed
             LATER: 
                 - Better icons
                 - Icons for play/stop button
@@ -129,8 +132,7 @@ define(function(require, exports, module) {
         var config, ready;
         
         var runners = [];
-        var toolbar, container, btnRun, btnClear, focussedPanel, mnuRun;
-        var mnuSettings, btnSettings;
+        var toolbar, container, btnRun, focussedPanel, mnuRun, mnuSettings;
         
         function load() {
             // plugin.setCommand({
@@ -381,7 +383,7 @@ define(function(require, exports, module) {
                 submenu: mnuRun
             }), 100, plugin);
             
-            btnClear = ui.insertByIndex(toolbar, new ui.button({
+            ui.insertByIndex(toolbar, new ui.button({
                 caption: "Clear",
                 skinset: "default",
                 skin: "c9-menu-btn",
@@ -389,10 +391,11 @@ define(function(require, exports, module) {
             }), 100, plugin);
             
             mnuSettings = new Menu({ items: [
-                
+                new MenuItem({ caption: "Refresh", onclick: refresh }),
+                new Divider()
             ]}, plugin);
             
-            btnSettings = opts.aml.appendChild(new ui.button({
+            opts.aml.appendChild(new ui.button({
                 skin: "header-btn",
                 class: "panel-settings",
                 style: "top:46px",

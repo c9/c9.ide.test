@@ -255,16 +255,16 @@ define(function(require, exports, module) {
                 // Tree Events
                 loadChildren: function(node, callback){
                     populate(node, callback);
-                },
+                // },
                 
-                sort: function(children) {
-                    var compare = tree.model.alphanumCompare;
-                    return children.sort(function(a, b) {
-                        // TODO index sorting
-                        // if (aIsSpecial && bIsSpecial) return a.index - b.index; 
+                // sort: function(children) {
+                //     var compare = tree.model.alphanumCompare;
+                //     return children.sort(function(a, b) {
+                //         // TODO index sorting
+                //         // if (aIsSpecial && bIsSpecial) return a.index - b.index; 
                 
-                        return compare(a.path + "", b.path + "");
-                    });
+                //         return compare(a.path + "", b.path + "");
+                //     });
                 }
             }, plugin);
             
@@ -298,7 +298,8 @@ define(function(require, exports, module) {
             });
             
             tree.on("afterChoose",  function(){
-                if (!tree.model.hasChildren(tree.selectedNode))
+                if (tree.selectedNode.status != "pending" 
+                  && !tree.model.hasChildren(tree.selectedNode))
                     openTestFile([tree.selectedNode], false);
             });
             
