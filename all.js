@@ -327,10 +327,12 @@ define(function(require, exports, module) {
 
             // Filter
             var toolbar = test.getElement("toolbar");
+            ui.insertByIndex(toolbar, new ui.filler(), 900, plugin);
             boxFilter = ui.insertByIndex(toolbar, new apf.codebox({
                 "initial-message": "Filter Tests",
                 "width": 100,
-                "style": "float:right;margin:1px 2px"
+                "style": "flex:10; max-width:150px"
+                // "style": "float:right;margin:1px 2px"
             }), 1000, plugin);
             boxFilter.ace.on("input", function(){
                  tree.filterKeyword = boxFilter.ace.getValue();

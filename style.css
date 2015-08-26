@@ -89,7 +89,7 @@
     font-size: 12px;
     font-variant: small-caps;
     padding: 0 10px 5px;
-    border-bottom: 1px solid whitesmoke;
+    border-bottom: 1px solid @border-highlight;
 }
 
 .top-test-panel{

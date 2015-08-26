@@ -321,11 +321,15 @@ define(function(require, exports, module) {
             }));
             
             // Toolbar
-            toolbar = vbox.appendChild(new ui.bar({
+            toolbar = vbox.appendChild(new ui.hbox({
                 id: "toolbar",
-                skin: "toolbar-top",
-                class: "fakehbox aligncenter debugger_buttons basic",
-                style: "white-space:nowrap !important;"
+                class: "toolbar-top",
+                align: "center",
+                edge: "0 2 0 0",
+                // padding: 3
+                // class: "fakehbox aligncenter debugger_buttons basic",
+                // style: "white-space:nowrap !important;"
+                style: "border-top:0"
             }));
             plugin.addElement(toolbar);
             
