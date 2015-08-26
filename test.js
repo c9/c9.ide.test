@@ -502,7 +502,12 @@ define(function(require, exports, module) {
         }
         
         function openTestConfigFile(){
-            tabManager.openFile(configPath, true, function(){});
+            tabManager.open({
+                path: configPath,
+                newOnError: true,
+                value: "excluded:\n  - \n\nskipped:\n  - \n",
+                focus: true
+            }, function(){});
         }
         
         /***** Lifecycle *****/
