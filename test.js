@@ -78,6 +78,11 @@ define(function(require, exports, module) {
             - Address anomaly for writer-test not being able to execute single test
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
             
+            TESTS
+            - Fix failing tests
+                - Harutyun: configs/client-config_test.js
+            - Write tests for at least mocha.js plugin
+            
             *** LATER ***
             
             ALL VIEW
