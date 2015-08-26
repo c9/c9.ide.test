@@ -13,9 +13,15 @@ define(function(require, exports, module) {
     }
     
     File.prototype = new Data(
-        ["path", "coverage", "passed", "fullOutput"], 
+        ["path", "coverage", "passed", "fullOutput", "output", "ownPassed"], 
         ["items"]
     );
+    
+    File.prototype.__defineGetter__("passed", function(){ 
+        return typeof this.data.ownPassed == "number"
+            ? this.data.ownPassed
+            : this.data.passed;
+    });
     
     File.prototype.equals = function(file) {
         return this.data.label == file.label;

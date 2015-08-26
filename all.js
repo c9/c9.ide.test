@@ -482,7 +482,7 @@ define(function(require, exports, module) {
             (nodes || test.focussedPanel.tree.selectedNodes).forEach(function(n){
                 var tab;
                 
-                if (n.type == "file") {
+                if (n.type == "file" && !n.ownPassed) {
                     if (onlyWhenOpen) {
                         tab = tabManager.findTab(n.path);
                         if (!tab || !tab.isActive())
@@ -491,7 +491,7 @@ define(function(require, exports, module) {
                     
                     tabManager.openFile(n.path, true, function(){});
                 }
-                else if (n.pos) {
+                else if (n.type == "file" || n.pos) {
                     var fileNode = n.findFileNode();
                     if (onlyWhenOpen) {
                         tab = tabManager.findTab(fileNode.path);
@@ -509,15 +509,20 @@ define(function(require, exports, module) {
                         path: fileNode.path,
                         active: true
                     }, function(err, tab){
-                        var ace = tab.editor.ace;
+                        if (err) return console.error(err);
                         
+                        var ace = tab.editor.ace;
                         var scroll = function(){
                             ace.selection.clearSelection();
-                            scrollToDefinition(ace, n.pos.sl, n.pos.el);
                             
-                            ace.moveCursorTo(pos.sl, pos.sc);
+                            var sl = n.pos ? n.pos.sl : 0;
+                            var el = n.pos ? n.pos.el : 0;
+                            scrollToDefinition(ace, sl, el);
+                            
+                            ace.moveCursorTo(pos ? pos.sl : 0, pos ? pos.sc : 0);
                             if (select)
-                                ace.getSession().getSelection().selectToPosition({ row: pos.el, column: pos.ec });
+                                ace.getSession().getSelection()
+                                    .selectToPosition({ row: pos.el, column: pos.ec });
                         };
                         
                         if (!ace.session.doc.$lines.length)
@@ -675,7 +680,6 @@ define(function(require, exports, module) {
             // TODO make this more efficient by trusting the child nodes
             if (node.type == "file" || node.type == "testset") {
                 var tests = node.findAllNodes("test|prepare");
-                
                 var st, p = [];
                 tests.forEach(function(test){
                     if (st === undefined && test.status != "loaded")
@@ -835,10 +839,13 @@ define(function(require, exports, module) {
             clearDecoration(session);
             
             var nodes = fileNode.findAllNodes("test|prepare");
+            if (fileNode.ownPassed) nodes.push(fileNode);
             nodes.forEach(function(node){
                 if (node.passed !== undefined) {
-                    session.addGutterDecoration(node.pos.sl, "test-" + node.passed);
-                    (session.$markers || (session.$markers = [])).push([node.pos.sl, "test-" + node.passed]);
+                    var pos = node.pos ? node.pos.sl : 0;
+                    session.addGutterDecoration(pos, "test-" + node.passed);
+                    (session.$markers || (session.$markers = []))
+                        .push([pos, "test-" + node.passed]);
                 }
                 if (node.annotations)
                     createStackWidget(editor, session, node);
@@ -852,7 +859,7 @@ define(function(require, exports, module) {
             // editor.selection.moveToPosition(pos);
             
             var w = {
-                row: node.pos.el, 
+                row: node.pos && node.pos.el || 0, 
                 // fixedWidth: true,
                 // coverGutter: true,
                 // rowCount: 0,
@@ -864,8 +871,10 @@ define(function(require, exports, module) {
             var arrow = w.el.appendChild(dom.createElement("div"));
             arrow.className = "error_widget_arrow " + extraClass;
             
-            var left = editor.renderer.$cursorLayer
-                .getPixelPosition({ row: node.pos.el, column: node.pos.ec }).left;
+            var pos = node.pos 
+                ? { row: node.pos.el, column: node.pos.ec }
+                : { row: 0, column: 0};
+            var left = editor.renderer.$cursorLayer.getPixelPosition(pos).left;
             arrow.style.left = left /*+ editor.renderer.gutterWidth*/ - 5 + "px";
             
             w.el.className = "error_widget_wrapper";
@@ -990,7 +999,7 @@ define(function(require, exports, module) {
             if (session.$markers) {
                 session.$decorations.forEach(function(m, i){
                     if (m)
-                        session.$decorations[i] = m.replace(/ test-[01]/g, "");
+                        session.$decorations[i] = m.replace(/ test-[01234]/g, "");
                 });
             }
             if (session.lineAnnotations) {
