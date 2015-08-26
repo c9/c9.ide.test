@@ -330,6 +330,9 @@ define(function(require, exports, module) {
             ui.insertByIndex(toolbar, new ui.filler(), 900, plugin);
             boxFilter = ui.insertByIndex(toolbar, new apf.codebox({
                 "initial-message": "Filter Tests",
+                "clearbutton": true,
+                "focusselect": true,
+                "singleline": true,
                 "width": 100,
                 "style": "flex:10; max-width:150px"
                 // "style": "float:right;margin:1px 2px"
