@@ -798,7 +798,8 @@ define(function(require, exports, module) {
                     var len = delta.end.row - startRow;
             
                     if (len === 0) {
-                        // return
+                        if (inlineWidgets[startRow])
+                            inlineWidgets[startRow] = undefined;
                     } else if (delta.action == 'remove') {
                         inlineWidgets.splice(startRow + 1, len);
                         decorations.splice(startRow + 1, len);
