@@ -79,8 +79,6 @@ define(function(require, exports, module) {
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
             
             TESTS
-            - Fix failing tests
-                - Harutyun: configs/client-config_test.js
             - Write tests for at least mocha.js plugin
             
             *** LATER ***
@@ -121,6 +119,9 @@ define(function(require, exports, module) {
             BUGS:
             - tab.once("activate", function(){ setTimeout(function(){ decorateFile(tab); }); });
             - in Editor: e.htmlNode is inconsistent e.html, e.aml is consistent
+            - run test button doesn't work if test panel.draw wasn't called
+            - mocha fetch is too slow and is called too often
+            
         */
         
         /***** Initialization *****/
