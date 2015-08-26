@@ -325,7 +325,7 @@ define(function(require, exports, module) {
                 id: "toolbar",
                 skin: "toolbar-top",
                 class: "fakehbox aligncenter debugger_buttons basic",
-                style: "white-space:nowrap !important; height:32px;"
+                style: "white-space:nowrap !important;"
             }));
             plugin.addElement(toolbar);
             

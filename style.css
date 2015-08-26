@@ -91,3 +91,9 @@
     padding: 0 10px 5px;
     border-bottom: 1px solid whitesmoke;
 }
+
+.top-test-panel{
+    border-bottom: 1px solid rgb(0,0,0);
+    box-shadow: 0 1px @border-highlight;
+    overflow: auto;
+}

@@ -34,7 +34,7 @@ define(function(require, exports, module) {
             caption: "Test Results",
             index: 100,
             height: 150,
-            style: "border-bottom:1px solid #DDD;overflow:auto" // TODO
+            class: "top-test-panel"
         });
         // var emit = plugin.getEmitter();
         

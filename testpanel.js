@@ -31,12 +31,13 @@ define(function(require, module, exports) {
                 amlFrame = showTitle ? ui.frame({
                     buttons: "min",
                     activetitle: "min",
-                    "class"     : "absframe",
+                    "class"     : "absframe " + options.class,
                     style: "position:relative;" + (style || ""),
                     textselect: options.textselect,
                     // height      : height,
                     caption: caption
                 }) : ui.bar({
+                    "class": options.class,
                     style: "position:relative;" + (style || ""),
                     textselect: options.textselect
                 });
