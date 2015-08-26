@@ -48,6 +48,9 @@ define(function(require, exports, module) {
                 - Fix border (move to theme) of results
             
             ALL VIEW
+                - Running filtered individual test is broken
+                - Opening filtered item removes selection
+                
                 - Error state for failed tests
                     - Error before test is started isn't shown
                     - Stack trace before test is started isn't shown
