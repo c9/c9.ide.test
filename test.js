@@ -44,9 +44,6 @@ define(function(require, exports, module) {
                 - Fetch the coverage data
                 - Parallel test execution
             
-            RESULTS VIEW
-                - Fix border (move to theme) of results
-            
             ALL VIEW
                 - Error state for failed tests
                     - Error before test is started isn't shown
@@ -59,16 +56,12 @@ define(function(require, exports, module) {
                     - Mocha not installed:
                         - Raw output shows (nothing in file): execvp(3) failed.: No such file or directory
                     - Test same for istanbul not installed
-            LATER: 
-                - Better icons
-                - Icons for play/stop button
             
             ACE (Harutyun)
             - Coverage
                 - Move gutterDecorations and markers when typing
                 - Mark changed lines as yellow
             - Horizontal scrolling with line widgets https://github.com/ajaxorg/ace/blob/master/lib/ace/virtual_renderer.js#L951
-            - Make line widgets an ace plugin
             - Fix ace-tree height issue of results
 
             - Ace needs a mode where the line widgets are the full scroll width of ace
@@ -79,11 +72,16 @@ define(function(require, exports, module) {
                     - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
             
             TESTS
+            - Manually: One problem with test panel is that it can throw errors 
+                in save and tab open listeners, breaking rest of the ide
+                we need to carefully review this parts before merging
             - Write tests for at least mocha.js plugin
             
             *** LATER ***
             
             ALL VIEW
+                - Better icons
+                - Maybe: Icons for play/stop button
                 - When writing in a certain test, invalidate those resuls
                     - On save, only execute those tests that are changed
             
@@ -109,6 +107,9 @@ define(function(require, exports, module) {
             - Should test results be kept in state?
             - Should test output be kept in state?
             
+            ACE
+            - Make line widgets an ace plugin
+            
             DOCS:
             - Update Tree documentation:
                 - Expand/Collapse using .isOpen = true/false + tree.refresh
@@ -117,11 +118,11 @@ define(function(require, exports, module) {
                 - afterChoose is not documented (it says choose event)
             
             BUGS:
+            - duplicate favorite gives an error
             - tab.once("activate", function(){ setTimeout(function(){ decorateFile(tab); }); });
             - in Editor: e.htmlNode is inconsistent e.html, e.aml is consistent
             - run test button doesn't work if test panel.draw wasn't called
             - mocha fetch is too slow and is called too often
-            
         */
         
         /***** Initialization *****/
@@ -146,11 +147,6 @@ define(function(require, exports, module) {
             //     hint: "search for a command and execute it",
             //     bindKey: { mac: "Command-.", win: "Ctrl-." }
             // });
-            
-            // Menus
-            // menus.addItemByPath("Run/Test", new ui.item({ 
-            //     command: "commands" 
-            // }), 250, plugin);
             
             commands.addCommand({
                 name: "runtest",
@@ -547,6 +543,13 @@ define(function(require, exports, module) {
             drawn = false;
             toolbar = null;
             container = null;
+            config = null;
+            ready = null;
+            runners = [];
+            btnRun = null;
+            focussedPanel = null;
+            mnuRun = null;
+            mnuSettings = null;
         });
         
         /***** Register and define API *****/

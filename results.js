@@ -120,7 +120,10 @@ define(function(require, exports, module) {
                     else if (node.passed === 2) icon = "test-error";
                     else if (node.passed === 3) icon = "test-terminated";
                     else if (node.skip) icon = "test-ignored";
-                    else if (node.type == "testset") icon = "folder";
+                    else if (node.type == "testset") icon = "test-set";
+                    else if (node.type == "file") icon = "test-file";
+                    else if (node.type == "runner") icon = "test-file";
+                    else if (node.type == "prepare") icon = "test-prepare";
                     else if (node.type == "test") icon = "test-notran";
                     
                     return "<span class='ace_tree-icon " + icon + "'></span>";

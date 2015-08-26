@@ -256,7 +256,7 @@ define(function(require, exports, module) {
                 },
                 
                 // Tree Events
-                loadChildren: function(node, callback){
+                loadChildren: function(node, callback) {
                     populate(node, callback);
                 },
                 
