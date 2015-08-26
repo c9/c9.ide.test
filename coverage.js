@@ -39,11 +39,12 @@ define(function(require, exports, module) {
         
         function load() {
             test.on("coverage", function(e){
-                var node = e.node;
-                addToLibrary(node);
-                
+                addToLibrary(e.node);
                 if (!showCoverage)
                     commands.exec("togglecoverage");
+            }, plugin);
+            test.on("clearCoverage", function(e){
+                removeFromLibrary(e.node);
             }, plugin);
             
             test.on("clear", function(){
@@ -71,9 +72,8 @@ define(function(require, exports, module) {
                     var fileNode = tree.selectedNode.findFileNode();
                     
                     if (tests[fileNode.path]) {
-                        tests[fileNode.path].all.forEach(function(coverage){
-                            tabManager.openFile(coverage.file.replace(reWs, ""), 
-                                true, function(){});
+                        tests[fileNode.path].paths.forEach(function(path){
+                            tabManager.openFile(path, true, function(){});
                         });
                     }
                 },
@@ -109,7 +109,9 @@ define(function(require, exports, module) {
                     }
                 },
                 isAvailable: function(){
-                    for (var prop in tests) { return true; }
+                    for (var path in tests) { 
+                        if (tests[path].all) return true; 
+                    }
                     return false;
                 }
             }, plugin);
@@ -123,7 +125,9 @@ define(function(require, exports, module) {
                     clear();
                 },
                 isAvailable: function(){
-                    for (var prop in tests) { return true; }
+                    for (var path in tests) { 
+                        if (tests[path].all) return true; 
+                    }
                     return false;
                 }
             }, plugin);
@@ -290,11 +294,18 @@ define(function(require, exports, module) {
         
         function addToLibrary(node){
             var fileNode = node.findFileNode();
+            var coverageFiles = node.coverage.files;
             
-            if (!tests[fileNode.path])
-                tests[fileNode.path] = { all: node.coverage.files };
+            if (!tests[fileNode.path] || !tests[fileNode.path].all) {
+                tests[fileNode.path] = { 
+                    paths: coverageFiles.map(function(coverage){
+                        return coverage.file.replace(reWs, "");
+                    }), 
+                    all: coverageFiles 
+                };
+            }
             
-            node.coverage.files.forEach(function(coverage){
+            coverageFiles.forEach(function(coverage){
                 var path = coverage.file.replace(reWs, "");
                 var tab;
                 
@@ -304,8 +315,19 @@ define(function(require, exports, module) {
                     if (tab) decorateTest(tab);
                 }
                 else {
-                    var fInfo = files[path] || (files[path] = { coverage: {}, lines: {}, coveredLines: 0 });
+                    var fInfo = files[path];
+                    if (!fInfo || !fInfo.coverage) {
+                        fInfo = files[path] = { 
+                            coverage: {}, 
+                            lines: {}, 
+                            paths: [],
+                            coveredLines: 0
+                        };
+                    }
+                    
                     var isNew = fInfo.coverage[fileNode.path] ? false : true;
+                    if (!fInfo.coverage[fileNode.path])
+                        fInfo.paths.push(fileNode.path);
                     fInfo.coverage[fileNode.path] = coverage;
                     fInfo.totalLines = coverage.lines.found;
                     
@@ -339,7 +361,39 @@ define(function(require, exports, module) {
                 }
             });
             
+            // Store in settings
+            
             updateGlobalCoverage();
+            
+            emit("update");
+        }
+        
+        function removeFromLibrary(node){
+            var path = typeof node == "string" ? node : node.findFileNode().path;
+            
+            if (!tests[path]) return;
+            
+            var all = tests[path].all;
+            delete tests[path].own;
+            delete tests[path].all;
+            
+            if (!all) return; // Already cleared
+            
+            all.forEach(function(coverage){
+                var path = coverage.file.replace(reWs, "");
+                var tab;
+                
+                if (files[path]) {
+                    var fInfo = files[path];
+                    delete fInfo.coverage; 
+                    delete fInfo.lines;
+                }
+                
+                tab = tabManager.findTab(path);
+                if (tab) clearDecoration(tab);
+            });
+            
+            // updateGlobalCoverage();
             
             emit("update");
         }
@@ -413,6 +467,11 @@ define(function(require, exports, module) {
         }
         
         function clearDecoration(session){
+            if (session.document) {
+                session = session.document.getSession().session;
+                if (!session) return;
+            }
+            
             if (session.coverageLines) {
                 session.coverageLines.forEach(function(i){
                     if (i.marker) session.removeMarker(i.marker);
@@ -434,14 +493,15 @@ define(function(require, exports, module) {
         }
         
         function clear(){
-            files = {};
-            tests = {};
-            settings.set("state/test/coverage/@total", "");
-            
-            if (drawn) {
-                button.hide();
-                clearAllDecorations();
+            for (var path in tests) {
+                removeFromLibrary(path);
             }
+            
+            // settings.set("state/test/coverage/@total", "");
+            // if (drawn) {
+            //     button.hide();
+            //     clearAllDecorations();
+            // }
             
             emit("update");
         }

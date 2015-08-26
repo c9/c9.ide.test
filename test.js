@@ -164,9 +164,15 @@ define(function(require, exports, module) {
                     transformRunButton("stop");
                     focussedPanel.run(args.nodes || null, {
                         transformRun: args.transformRun
-                    }, function(err){
-                        if (err) console.log(err);
+                    }, function(err, nodes){
                         transformRunButton("run");
+                        if (err) return console.log(err);
+                        
+                        if (nodes) {
+                            nodes.forEach(function(node){
+                                emit("clearCoverage", { node: node });
+                            });
+                        }
                     });
                 }
             }, plugin);
@@ -200,8 +206,7 @@ define(function(require, exports, module) {
                         
                         if (nodes) {
                             nodes.forEach(function(node){
-                                if (node.coverage)
-                                    emit("coverage", { node: node });
+                                emit("coverage", { node: node });
                             });
                         }
                     });

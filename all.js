@@ -617,6 +617,19 @@ define(function(require, exports, module) {
         }
         
         function _run(node, options, callback){
+            if (tree.filterKeyword) {
+                if (node.type == "file")
+                    node = findFileByPath(node.path);
+                else {
+                    node.parent.findAllNodes(node.type).some(function(n){
+                        if (n.label == node.label) {
+                            node = n;
+                            return true;
+                        }
+                    });
+                }
+            }
+            
             var runner = node.findRunner();
             var fileNode = node.findFileNode();
             
