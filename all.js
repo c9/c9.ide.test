@@ -202,6 +202,7 @@ define(function(require, exports, module) {
             tree = new Tree({
                 container: opts.html,
                 scrollMargin: [10, 0],
+                theme: "filetree",
             
                 getCaptionHTML: function(node) {
                    if (node.type == "file") {
@@ -242,7 +243,7 @@ define(function(require, exports, module) {
                     else if (node.type == "prepare") icon = "test-prepare";
                     else if (node.type == "test") icon = "test-notran";
                     
-                    return "<span class='ace_tree-icon " + icon + "'></span>";
+                    return "<span class='ace_tree-icon filetree-icon " + icon + "'></span>";
                 },
                 
                 getClassName: function(node) {
@@ -255,7 +256,11 @@ define(function(require, exports, module) {
                     return node.$depth ? node.$depth : 0;
                 },
                 
-                // Tree Events
+                hasChildren: function(node) {
+                    return node.status === "pending"
+                        || node.items && node.items.length;
+                },
+                
                 loadChildren: function(node, callback) {
                     populate(node, callback);
                 },
@@ -275,7 +280,7 @@ define(function(require, exports, module) {
             }, plugin);
             
             tree.container.style.position = "absolute";
-            tree.container.style.left = "10px";
+            tree.container.style.left = "0";
             tree.container.style.top = "0";
             tree.container.style.right = "10px";
             tree.container.style.bottom = "0";
@@ -381,10 +386,7 @@ define(function(require, exports, module) {
         /***** Helper Methods *****/
         
         function populate(node, callback, force){
-            if (!force && tree.filterKeyword)
-                return populate(findFileByPath(node.path), callback, node.isSelected ? 2 : 1);
-            
-            var runner = node.findRunner();
+            var runner = node.findRunner() || findFileByPath(node.path).findRunner();
             
             updateStatus(node, "loading");
             
@@ -398,12 +400,6 @@ define(function(require, exports, module) {
                     node.findAllNodes("test").forEach(function(n){
                         n.skip = true;
                     });
-                }
-                
-                if (tree.filterKeyword) {
-                    node.isOpen = true;
-                    node.isSelected = force === 2;
-                    tree.filterKeyword = tree.filterKeyword;
                 }
                 
                 callback();
@@ -482,7 +478,7 @@ define(function(require, exports, module) {
             (nodes || test.focussedPanel.tree.selectedNodes).forEach(function(n){
                 var tab;
                 
-                if (n.type == "file" && !n.ownPassed) {
+                if (n.type == "file" && (!n.ownPassed || !n.output)) {
                     if (onlyWhenOpen) {
                         tab = tabManager.findTab(n.path);
                         if (!tab || !tab.isActive())
@@ -571,6 +567,9 @@ define(function(require, exports, module) {
             
             var list = [], found = {};
             nodes.forEach(function(n){
+                if (n.type == "prepare")
+                    n = n.findFileNode(); // Weak solution. It should be able to run part of a test set without knowing tests
+                    
                 if (n.type == "all" || n.type == "root" || n.type == "runner")
                     n.findAllNodes("file").forEach(function(n){
                         if (n.skip) return;
@@ -739,13 +738,17 @@ define(function(require, exports, module) {
             
             node.items.forEach(function(n){
                 n.passed = undefined;
+                n.ownPassed = null;
                 n.output = "";
                 n.annotations = [];
                 if (n.items) clear(n, true);
             });
             
-            if (node == rootNode) 
-                tree.refresh();
+            if (node == rootNode) {
+                if (tree.filterKeyword)
+                    tree.filterKeyword = tree.filterKeyword;
+                else tree.refresh();
+            }
             
             if (!onlyNodes)
                 clearAllDecorations();
@@ -861,7 +864,7 @@ define(function(require, exports, module) {
             var nodes = fileNode.findAllNodes("test|prepare");
             if (fileNode.ownPassed) nodes.push(fileNode);
             nodes.forEach(function(node){
-                if (node.passed !== undefined) {
+                if (node.passed !== undefined && (node.type == "test" || node.output)) {
                     var pos = node.pos ? node.pos.sl : 0;
                     session.addGutterDecoration(pos, "test-" + node.passed);
                     (session.$markers || (session.$markers = []))

@@ -27,13 +27,13 @@ define(function(require, exports, module) {
         return this.data.label == file.label;
     };
     
-    File.prototype.clone = function(){
-        var clone = new File();
-        for (var prop in this.data) {
-            clone.data[prop] = this.data[prop];
-        }
-        return clone;
-    }
+    // File.prototype.clone = function(){
+    //     var clone = new File();
+    //     for (var prop in this.data) {
+    //         clone.data[prop] = this.data[prop];
+    //     }
+    //     return clone;
+    // }
     
     module.exports = File;
 });

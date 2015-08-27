@@ -86,6 +86,7 @@ define(function(require, exports, module) {
                 container: opts.html,
                 maxLines: 50,
                 scrollMargin: [10, 0],
+                theme: "filetree",
             
                 getCaptionHTML: function(node) {
                    if (node.type == "file") {
@@ -126,7 +127,7 @@ define(function(require, exports, module) {
                     else if (node.type == "prepare") icon = "test-prepare";
                     else if (node.type == "test") icon = "test-notran";
                     
-                    return "<span class='ace_tree-icon " + icon + "'></span>";
+                    return "<span class='ace_tree-icon filetree-icon " + icon + "'></span>";
                 },
                 
                 getClassName: function(node) {
@@ -138,15 +139,10 @@ define(function(require, exports, module) {
                 getRowIndent: function(node) {
                     return node.$depth ? node.$depth - 1 : 0;
                 }
-                
-                // // Tree Events
-                // loadChildren: function(node, callback){
-                //     populate(node, callback);
-                // },
             }, plugin);
             
             tree.container.style.position = "absolute";
-            tree.container.style.left = "10px";
+            tree.container.style.left = "0";
             tree.container.style.top = "0";
             tree.container.style.right = "10px";
             tree.container.style.bottom = "0";
@@ -398,7 +394,7 @@ define(function(require, exports, module) {
                             return true;
                         }
                     })) {
-                        groupNode = pNode.clone();
+                        groupNode = pNode.clone(true);
                         
                         if (groupNode.type == "file") {
                             group.unshift(groupNode);

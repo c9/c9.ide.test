@@ -44,9 +44,8 @@ define(function(require, exports, module) {
                 - Fetch the coverage data
                 - Parallel test execution
             
-            BUGS:
+            BUGS
             - mocha fetch is too slow and is called too often
-            - filter, run test, stop test, no terminated indicator
             
             ACE (Harutyun)
             - Coverage
@@ -125,6 +124,10 @@ define(function(require, exports, module) {
             - tab.once("activate", function(){ setTimeout(function(){ decorateFile(tab); }); });
             - in Editor: e.htmlNode is inconsistent e.html, e.aml is consistent
             - run test button doesn't work if test panel.draw wasn't called
+            - [Can't reproduce] when filtering the client-config test cannot be found
+            - [Can't reproduce] when filtering too early, filtering yield no results
+            - [Can't reproduce] results window throws error when loop cannot find parents (line 385)
+            - Running closed items in result window will close them again. they should stay open
         */
         
         /***** Initialization *****/

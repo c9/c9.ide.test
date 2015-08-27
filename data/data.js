@@ -165,6 +165,47 @@ define(function(require, exports, module) {
         }
     };
     
+    Data.prototype.clone = function(forResults){
+        var _ = function(){}
+        _.prototype = this;
+        var clone = new _();
+        var items, parent, passed, isSelected, isOpen;
+        
+        clone.__defineGetter__("children", function(){ return this.items; });
+        clone.__defineGetter__("map", function(){ return this.map; });
+        
+        clone.__defineGetter__("parent", function(){ return parent; });
+        clone.__defineSetter__("parent", function(v){ parent = v; });
+        
+        if (!forResults) isSelected = this.isSelected;
+        clone.__defineGetter__("isSelected", function(){ return isSelected; });
+        clone.__defineSetter__("isSelected", function(v){ isSelected = v; });
+        
+        if (forResults) {
+            isOpen = this.isOpen;
+            clone.__defineGetter__("isOpen", function(){ return isOpen; });
+            clone.__defineSetter__("isOpen", function(v){ isOpen = v; });
+        }
+        
+        if (this.type == "file") {
+            clone.keepChildren = true;
+            if (forResults) {
+                passed = this.passed;
+                clone.__defineGetter__("passed", function(){ return passed; });
+                clone.__defineSetter__("passed", function(v){ passed = v; });
+            }
+        }
+        if (forResults || this.type == "runner" || this.type == "root") {
+            if (this.items) items = this.items.slice(0);
+            clone.__defineGetter__("items", function(){ return items; });
+            clone.__defineSetter__("items", function(v){ items = v; });
+        }
+        
+        clone.clone = this.clone.bind(this);
+        
+        return clone;
+    }
+    
     module.exports = Data;
     
 });
