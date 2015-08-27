@@ -2,7 +2,7 @@ define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test",
         "Menu", "MenuItem", "Divider", "tabManager", "save", "preferences", "fs",
-        "run.gui"
+        "run.gui", "layout"
     ];
     main.provides = ["test.all"];
     return main;
@@ -20,6 +20,7 @@ define(function(require, exports, module) {
         var Divider = imports.Divider;
         var tabManager = imports.tabManager;
         var save = imports.save;
+        var layout = imports.layout;
         var prefs = imports.preferences;
         var runGui = imports["run.gui"];
         
@@ -312,6 +313,14 @@ define(function(require, exports, module) {
                 if (tree.selectedNode.status != "pending" 
                   && !tree.model.hasChildren(tree.selectedNode))
                     openTestFile([tree.selectedNode], false);
+            });
+            
+            layout.on("eachTheme", function(e){
+                var height = parseInt(ui.getStyleRule(".filetree .tree-row", "height"), 10) || 22;
+                tree.rowHeightInner = height;
+                tree.rowHeight = height + 1;
+                
+                if (e.changed && tree) tree.resize(true);
             });
             
             // Hook clear

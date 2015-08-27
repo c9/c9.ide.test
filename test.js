@@ -46,6 +46,8 @@ define(function(require, exports, module) {
             
             BUGS
             - mocha fetch is too slow and is called too often
+            - resize issues
+                - results size (also needs 1px extra height @nightwing thoughts?)
             
             ACE (Harutyun)
             - Coverage

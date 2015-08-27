@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test.all",
-        "util", "test", "Menu", "MenuItem", "Divider", "preferences"
+        "util", "test", "Menu", "MenuItem", "Divider", "preferences", "layout"
     ];
     main.provides = ["test.results"];
     return main;
@@ -16,6 +16,7 @@ define(function(require, exports, module) {
         var Tree = imports.Tree;
         var test = imports.test;
         var commands = imports.commands;
+        var layout = imports.layout;
         var Menu = imports.Menu;
         var MenuItem = imports.MenuItem;
         var Divider = imports.Divider;
@@ -221,6 +222,14 @@ define(function(require, exports, module) {
             });
             
             tree.on("afterRender", recalc);
+            
+            layout.on("eachTheme", function(e){
+                var height = parseInt(ui.getStyleRule(".filetree .tree-row", "height"), 10) || 22;
+                tree.rowHeightInner = height;
+                tree.rowHeight = height + 1;
+                
+                if (e.changed && tree) tree.resize(true);
+            });
             
             all.on("draw", function(){
                 // Menu
