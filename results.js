@@ -226,7 +226,7 @@ define(function(require, exports, module) {
             layout.on("eachTheme", function(e){
                 var height = parseInt(ui.getStyleRule(".filetree .tree-row", "height"), 10) || 22;
                 tree.rowHeightInner = height;
-                tree.rowHeight = height + 1;
+                tree.rowHeight = height;
                 
                 if (e.changed && tree) tree.resize(true);
             });
