@@ -49,7 +49,7 @@ define(function(require, exports, module) {
                     * Error before test is started isn't shown
                     * Stack trace before test is started isn't shown
                     * Timed out tests
-                    - Broken mid-run
+                    * Broken mid-run
                     - Terminated (stop button)
                     * Test file is only executed when it has parsed tests
                     * Syntax errors causing 0 tests to be found by outline

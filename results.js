@@ -38,7 +38,7 @@ define(function(require, exports, module) {
         });
         // var emit = plugin.getEmitter();
         
-        var tree, failNode, passNode, skipNode, errNode, rootNode;
+        var tree, failNode, passNode, skipNode, errNode, rootNode, termNode;
         var state = {};
         
         function load() {
@@ -170,6 +170,15 @@ define(function(require, exports, module) {
                 noSelect: true,
                 $sorted: true
             });
+            termNode = new Node({
+                label: "terminated",
+                isOpen: true,
+                passed: 3,
+                type: "result",
+                className: "heading",
+                noSelect: true,
+                $sorted: true
+            });
             skipNode = new Node({
                 label: "skipped",
                 isOpen: true,
@@ -230,9 +239,8 @@ define(function(require, exports, module) {
             plugin.hide();
             
             // Process Result
-            all.on("result", function(e){
-                handleResult(e.node);
-            }, plugin);
+            all.on("result", function(e){ handleResult(e.node); }, plugin);
+            all.on("clearResult", function(e){ clearResult(e.node); }, plugin);
             
             (function _(node){
                 node.items.forEach(function(node){
@@ -325,17 +333,32 @@ define(function(require, exports, module) {
             return found;
         }
         
+        function clearResult(node){
+            (function _(items){
+                for (var i = items.length - 1; i >= 0; i--) {
+                    if (items[i].label == node.label)
+                        items.splice(i, 1);
+                    else if (items[i].items)
+                        _(items[i].items);
+                }
+            })(tree.root.items);
+            
+            tree.refresh();
+        }
+        
         function handleResult(node){
-            var nodes = [failNode, passNode, errNode, null, skipNode];
-            var results = [failNode.items, passNode.items, errNode.items, [], skipNode.items];
+            var nodes = [failNode, passNode, errNode, termNode, skipNode];
+            var results = [failNode.items, passNode.items, errNode.items, termNode.items, skipNode.items];
             
             node.fixParents();
+            
+            clearResult(node);
             importResultsToTree(node, results);
             
             var hasFail = results[0].length || results[2].length;
             
             rootNode.items.length = 0;
-            [0,2,1,4].forEach(function(i){
+            [0,2,3,1,4].forEach(function(i){
                 if (results[i].length) {
                     rootNode.items.push(nodes[i]);
                     
@@ -351,11 +374,13 @@ define(function(require, exports, module) {
         }
         
         function importResultsToTree(node, results) {
+            if (!results.found) results.found = 0;
+            
             if (node.type == "test" || node.type == "prepare") {
                 if (node.passed === undefined) return;
                 
                 var group = results[node.passed];
-                if (!group) debugger;
+                results.found++;
                 
                 var loop = node, parentList = [node];
                 do {
@@ -436,6 +461,10 @@ define(function(require, exports, module) {
             all.run(nodes, options, callback);
         }
         
+        function stop(callback){
+            all.stop(callback);
+        }
+        
         /***** Lifecycle *****/
         
         plugin.on("load", function() {
@@ -477,6 +506,11 @@ define(function(require, exports, module) {
              * 
              */
             run: run,
+            
+            /**
+             * 
+             */
+            stop: stop,
             
             /**
              * 

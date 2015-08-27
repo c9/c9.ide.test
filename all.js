@@ -598,7 +598,7 @@ define(function(require, exports, module) {
                 
                 _run(node, options, callback);
             }, function(err){
-                emit("stop");
+                emit("stop", { nodes: list });
                 running = false;
                 delete progress.stop;
 
@@ -659,14 +659,19 @@ define(function(require, exports, module) {
             fileNode.fullOutput = ""; // Reset output
             updateStatus(node, "running");
             
+            // Clear previous run information
+            clear(node, true);
+            // emit("clearResult", { node: node });
+            
             progress.stop = runner.run(node, progress, options, function(err){
                 updateStatus(node, "loaded");
-                emit("result", { node: node });
                 
                 var tab = tabManager.findTab(fileNode.path);
                 if (tab) decorate(fileNode, tab);
                 
                 callback(err, node);
+                
+                emit("result", { node: node });
             });
         }
         
@@ -707,7 +712,19 @@ define(function(require, exports, module) {
             if (!running) return callback(new Error("Not Running"));
             
             stopping = true;
-            plugin.once("stop", function(){
+            plugin.once("stop", function(e){
+                
+                (function _(items, first){
+                    items.forEach(function(node){ 
+                        if (node.items)
+                            _(node.items);
+                        else if (typeof node.passed != "number")
+                            node.passed = 3;
+                        
+                        if (first) updateStatus(node, "loaded");
+                    });
+                })(e.nodes, true);
+                
                 stopping = false;
                 callback();
             });
@@ -716,19 +733,22 @@ define(function(require, exports, module) {
                 progress.stop();
         }
         
-        function clear(node){
+        function clear(node, onlyNodes){
             if (!node) 
                 node = rootNode;
             
             node.items.forEach(function(n){
                 n.passed = undefined;
-                if (n.items) clear(n);
+                n.output = "";
+                n.annotations = [];
+                if (n.items) clear(n, true);
             });
             
             if (node == rootNode) 
                 tree.refresh();
             
-            clearAllDecorations();
+            if (!onlyNodes)
+                clearAllDecorations();
         }
         
         function skip(nodes, callback) {
