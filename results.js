@@ -378,20 +378,20 @@ define(function(require, exports, module) {
             tree.refresh();
         }
         
-        function importResultsToTree(node, results) {
+        function importResultsToTree(node, results, force) {
             if (!results.found) results.found = 0;
             
-            if (node.type == "test" || node.type == "prepare") {
+            if (node.type == "test" || node.type == "prepare" || force) {
                 if (node.passed === undefined) return;
                 
                 var group = results[node.passed];
                 results.found++;
                 
                 var loop = node, parentList = [node];
-                do {
+                while (loop.type != "file") {
                     loop = loop.parent;
                     parentList.push(loop);
-                } while (loop.type != "file");
+                }
                 
                 (function recur(pNode, group, name){
                     if (!pNode) return;
@@ -450,6 +450,9 @@ define(function(require, exports, module) {
                 node.items.forEach(function(n){
                     importResultsToTree(n, results);
                 });
+                
+                if (node.type == "file" && node.ownPassed && !results.found)
+                    importResultsToTree(node, results, true);
             }
         }
         
