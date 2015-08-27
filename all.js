@@ -379,14 +379,11 @@ define(function(require, exports, module) {
             }, plugin);
             
             settings.on("user/test/@inlineresults", function(value){
-                if (!value)
-                    clearAllDecorations();
-                else
-                    rootNode.findAllNodes("file").forEach(function(fileNode){
-                        if (fileNode.passed === undefined) return;
-                        var tab = tabManager.findTab(fileNode.path);
-                        if (tab) decorate(fileNode, tab);
-                    });
+                rootNode.findAllNodes("file").forEach(function(fileNode){
+                    if (fileNode.passed === undefined) return;
+                    var tab = tabManager.findTab(fileNode.path);
+                    if (tab) decorate(fileNode, tab);
+                });
             }, plugin);
             
             tree.resize();
@@ -818,8 +815,6 @@ define(function(require, exports, module) {
         
         // TODO: Think about moving this to a separate plugin
         function decorate(fileNode, tab) {
-            if (!settings.getBool("user/test/@inlineresults")) return;
-            
             var editor = tab.editor.ace;
             var session = (tab.document.getSession() || 0).session;
 
@@ -869,6 +864,8 @@ define(function(require, exports, module) {
             
             clearDecoration(session);
             
+            var showInline = settings.getBool("user/test/@inlineresults");
+            
             var nodes = fileNode.findAllNodes("test|prepare");
             if (fileNode.ownPassed) nodes.push(fileNode);
             nodes.forEach(function(node){
@@ -878,10 +875,12 @@ define(function(require, exports, module) {
                     (session.$markers || (session.$markers = []))
                         .push([pos, "test-" + node.passed]);
                 }
-                if (node.annotations)
-                    createStackWidget(editor, session, node);
-                if (node.output)
-                    createOutputWidget(editor, session, node);
+                if (showInline) {
+                    if (node.annotations)
+                        createStackWidget(editor, session, node);
+                    if (node.output)
+                        createOutputWidget(editor, session, node);
+                }
             });
         }
         
