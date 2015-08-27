@@ -328,6 +328,8 @@ define(function(require, exports, module) {
         function handleResult(node){
             var nodes = [failNode, passNode, errNode, null, skipNode];
             var results = [failNode.items, passNode.items, errNode.items, [], skipNode.items];
+            
+            node.fixParents();
             importResultsToTree(node, results);
             
             var hasFail = results[0].length || results[2].length;
