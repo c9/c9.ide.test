@@ -44,19 +44,9 @@ define(function(require, exports, module) {
                 - Fetch the coverage data
                 - Parallel test execution
             
-            ALL VIEW
-                - Error state for failed tests
-                    * Error before test is started isn't shown
-                    * Stack trace before test is started isn't shown
-                    * Timed out tests
-                    * Broken mid-run
-                    - Terminated (stop button)
-                    * Test file is only executed when it has parsed tests
-                    * Syntax errors causing 0 tests to be found by outline
-                    * replace test file with a single character < (trying syntax error scenario)
-                    * Mocha not installed:
-                        * Raw output shows (nothing in file): execvp(3) failed.: No such file or directory
-                    * Test same for istanbul not installed
+            BUGS:
+            - mocha fetch is too slow and is called too often
+            - filter, run test, stop test, no terminated indicator
             
             ACE (Harutyun)
             - Coverage
@@ -77,6 +67,18 @@ define(function(require, exports, module) {
                 in save and tab open listeners, breaking rest of the ide
                 we need to carefully review this parts before merging
             - Write tests for at least mocha.js plugin
+                - Error state for failed tests
+                    - Error before test is started isn't shown
+                    - Stack trace before test is started isn't shown
+                    - Timed out tests
+                    - Broken mid-run
+                    - Terminated (stop button)
+                    - Test file is only executed when it has parsed tests
+                    - Syntax errors causing 0 tests to be found by outline
+                    - replace test file with a single character < (trying syntax error scenario)
+                    - Mocha not installed:
+                        - Raw output shows (nothing in file): execvp(3) failed.: No such file or directory
+                    - Test same for istanbul not installed
             
             *** LATER ***
             
@@ -123,7 +125,6 @@ define(function(require, exports, module) {
             - tab.once("activate", function(){ setTimeout(function(){ decorateFile(tab); }); });
             - in Editor: e.htmlNode is inconsistent e.html, e.aml is consistent
             - run test button doesn't work if test panel.draw wasn't called
-            - mocha fetch is too slow and is called too often
         */
         
         /***** Initialization *****/
