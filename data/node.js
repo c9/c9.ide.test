@@ -20,13 +20,5 @@ define(function(require, exports, module) {
         return this.data.label == node.label;
     };
     
-    // Node.prototype.clone = function(){
-    //     var clone = new Node();
-    //     for (var prop in this.data) {
-    //         clone.data[prop] = this.data[prop];
-    //     }
-    //     return clone;
-    // }
-    
     module.exports = Node;
 });

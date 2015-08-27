@@ -19,13 +19,5 @@ define(function(require, exports, module) {
         return this.data.label == frame.label;
     };
     
-    // Test.prototype.clone = function(){
-    //     var clone = new Test();
-    //     for (var prop in this.data) {
-    //         clone.data[prop] = this.data[prop];
-    //     }
-    //     return clone;
-    // }
-    
     module.exports = Test;
 });
