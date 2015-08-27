@@ -668,7 +668,7 @@ define(function(require, exports, module) {
             updateStatus(node, "running");
             
             // Clear previous run information
-            clear(node, true);
+            clear([node], true);
             // emit("clearResult", { node: node });
             
             progress.stop = runner.run(node, progress, options, function(err){
@@ -741,26 +741,25 @@ define(function(require, exports, module) {
                 progress.stop();
         }
         
-        function clear(node, onlyNodes){
-            if (!node) 
-                node = rootNode;
+        function clear(nodes, onlyNodes){
+            if (!nodes) 
+                nodes = rootNode.items;
             
-            node.items.forEach(function(n){
+            nodes.forEach(function(n){
                 n.passed = undefined;
                 n.ownPassed = null;
                 n.output = "";
                 n.annotations = [];
-                if (n.items) clear(n, true);
+                if (n.items) clear(n.items, true);
             });
             
-            if (node == rootNode) {
-                if (tree.filterKeyword)
-                    tree.filterKeyword = tree.filterKeyword;
-                else tree.refresh();
-            }
+            if (onlyNodes) return;
             
-            if (!onlyNodes)
-                clearAllDecorations();
+            if (tree.filterKeyword)
+                tree.filterKeyword = tree.filterKeyword;
+            else tree.refresh();
+            
+            clearAllDecorations();
         }
         
         function skip(nodes, callback) {

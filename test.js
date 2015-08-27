@@ -122,6 +122,11 @@ define(function(require, exports, module) {
                 - afterChoose is not documented (it says choose event)
             
             BUGS:
+            - Running closed items in result window will close them again. they should stay open
+            - result window loses focus when running
+            -----
+            - normal outline has wrong color on selection (of filtered text)
+            - test outline should highlight filtered text
             - duplicate favorite gives an error
             - tab.once("activate", function(){ setTimeout(function(){ decorateFile(tab); }); });
             - in Editor: e.htmlNode is inconsistent e.html, e.aml is consistent
@@ -129,7 +134,7 @@ define(function(require, exports, module) {
             - [Can't reproduce] when filtering the client-config test cannot be found
             - [Can't reproduce] when filtering too early, filtering yield no results
             - [Can't reproduce] results window throws error when loop cannot find parents (line 385)
-            - Running closed items in result window will close them again. they should stay open
+            - Move rowheight change code to widget?
         */
         
         /***** Initialization *****/
