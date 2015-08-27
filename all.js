@@ -45,7 +45,7 @@ define(function(require, exports, module) {
         });
         var emit = plugin.getEmitter();
         
-        var tree, stopping, menuContext, running, boxFilter;
+        var tree, stopping, menuContext, running, boxFilter, menuInlineContext;
         
         var wsNode = new Node({
             label: "workspace",
@@ -368,6 +368,15 @@ define(function(require, exports, module) {
                 new MenuItem({ caption: "Remove", command: "removetest" })
             ] }, plugin);
             opts.aml.setAttribute("contextmenu", menuContext.aml);
+            
+            menuInlineContext = new Menu({ items: [
+                new MenuItem({ 
+                    caption: "Show Inline Test Results", 
+                    checked: "user/test/@inlineresults",
+                    type: "check",
+                    position: 100
+                })
+            ] }, plugin);
             
             settings.on("read", function(){
                 test.settingsMenu.append(new MenuItem({ 
@@ -911,6 +920,15 @@ define(function(require, exports, module) {
             el.style.whiteSpace = "pre";
             el.className = "error_widget " + extraClass;
             el.textContent = node.output;
+            
+            w.el.addEventListener("contextmenu", function(e){
+                if (e.which == 2 || e.which == 3) {
+                    menuInlineContext.show(e.x, e.y);
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return false;
+                }
+            }, false);
             
             el.appendChild(dom.createElement("div"));
             
