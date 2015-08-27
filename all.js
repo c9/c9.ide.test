@@ -923,7 +923,7 @@ define(function(require, exports, module) {
             
             w.el.addEventListener("contextmenu", function(e){
                 if (e.which == 2 || e.which == 3) {
-                    menuInlineContext.show(e.x, e.y);
+                    menuInlineContext.show(e.x + 1, e.y + 1);
                     e.stopPropagation();
                     e.preventDefault();
                     return false;
@@ -1038,7 +1038,7 @@ define(function(require, exports, module) {
         function clearAllDecorations() {
             tabManager.getTabs().forEach(function(tab){
                 if (tab.editorType != "ace") return;
-                var session = tab.document.getSession().session;
+                var session = (tab.document.getSession() || 0).session;
                 if (session) clearDecoration(session);
             });
         }
