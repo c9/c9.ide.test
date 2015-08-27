@@ -48,7 +48,7 @@ define(function(require, exports, module) {
                 - Error state for failed tests
                     * Error before test is started isn't shown
                     * Stack trace before test is started isn't shown
-                    - Timed out tests
+                    * Timed out tests
                     - Broken mid-run
                     - Terminated (stop button)
                     * Test file is only executed when it has parsed tests
