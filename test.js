@@ -443,6 +443,7 @@ define(function(require, exports, module) {
         }
         
         function transformRunButton(type){
+            if (!drawn) return;
             btnRun.setAttribute("caption", type == "stop" ? "Stop" : "Run Tests");
             btnRun.setAttribute("command", type == "stop" ? "stoptest" : "runtest");
         }

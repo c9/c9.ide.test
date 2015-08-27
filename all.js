@@ -643,7 +643,7 @@ define(function(require, exports, module) {
         }
         
         function _run(node, options, callback){
-            if (tree.filterKeyword) {
+            if (tree && tree.filterKeyword) {
                 if (node.type == "file")
                     node = findFileByPath(node.path);
                 else {
