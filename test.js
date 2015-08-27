@@ -53,9 +53,9 @@ define(function(require, exports, module) {
                     - Terminated (stop button)
                     - Syntax errors causing 0 tests to be found by outline
                     - replace test file with a single character < (trying syntax error scenario)
-                    - Mocha not installed:
-                        - Raw output shows (nothing in file): execvp(3) failed.: No such file or directory
-                    - Test same for istanbul not installed
+                    * Mocha not installed:
+                        * Raw output shows (nothing in file): execvp(3) failed.: No such file or directory
+                    * Test same for istanbul not installed
             
             ACE (Harutyun)
             - Coverage
