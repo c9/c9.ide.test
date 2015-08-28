@@ -551,6 +551,8 @@ define(function(require, exports, module) {
         /***** Methods *****/
         
         function run(nodes, options, callback){
+            if (running) return stop(run.bind(this, nodes, options, callback));
+            
             running = true;
 
             if (typeof nodes == "string") {

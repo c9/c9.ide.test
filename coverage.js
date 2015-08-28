@@ -79,7 +79,7 @@ define(function(require, exports, module) {
                 },
                 isAvailable: function(){
                     var tree = test.focussedPanel.tree;
-                    if (!tree.selectedNode) return false;
+                    if (!tree || !tree.selectedNode) return false;
                     var fileNode = tree.selectedNode.findFileNode();
                     return tests[fileNode.path] ? true : false;
                 }

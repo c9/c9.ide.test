@@ -43,6 +43,8 @@ define(function(require, exports, module) {
                 - Add uncovered lines
                 - stacktrace parsing need to find entry that is not top one
                     - make stack paths links 
+                - Allow plugin to set global coverage
+                - filtering can filter beyond files. This shouldn't be possible
             
             BUGS
             - mocha fetch is too slow and is called too often
