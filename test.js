@@ -39,13 +39,8 @@ define(function(require, exports, module) {
             TODO:
             
             SALESFORCE PLUGIN
-                * stacktrace parsing need to find entry that is not top one
-                    * make stack paths links 
-                    * make links clickable (css + action)
-                - filtering can filter beyond files. This shouldn't be possible
-                - Filtering is not working after first filter
                 - Raw Test is empty (not even ace) after refresh
-                
+                - Wait for upload before running test
                 - Parallel test execution
                 - Allow plugin to set global coverage
                 - [Can't Reproduce] Clear is broken

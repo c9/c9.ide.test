@@ -188,14 +188,13 @@ define(function(require, exports, module) {
         }
         
         if (this.type == "file" || this.type == "testset") {
-            clone.keepChildren = true;
             if (forResults) {
                 passed = this.passed;
                 clone.__defineGetter__("passed", function(){ return passed; });
                 clone.__defineSetter__("passed", function(v){ passed = v; });
             }
         }
-        if (forResults || this.type == "runner" || this.type == "root") {
+        if (forResults || this.type == "runner" || this.type == "root" || this.type == "node") {
             if (this.items) items = this.items.slice(0);
             clone.__defineGetter__("items", function(){ return items; });
             clone.__defineSetter__("items", function(v){ items = v; });

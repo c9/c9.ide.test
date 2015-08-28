@@ -10,6 +10,7 @@ define(function(require, exports, module) {
         if (!this.data.status)
             this.data.status = "pending";
         this.type = "file";
+        this.keepChildren = true;
     }
     
     File.prototype = new Data(

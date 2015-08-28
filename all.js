@@ -204,6 +204,7 @@ define(function(require, exports, module) {
                 container: opts.html,
                 scrollMargin: [10, 0],
                 theme: "filetree",
+                emptyMessage: "No tests found",
             
                 getCaptionHTML: function(node) {
                    if (node.type == "file") {

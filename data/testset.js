@@ -8,6 +8,7 @@ define(function(require, exports, module) {
         if (!this.data.items)
             this.data.items = [];
         this.type = "testset";
+        this.keepChildren = true;
     }
     
     TestSet.prototype = new Data(
