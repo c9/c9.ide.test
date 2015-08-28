@@ -48,7 +48,12 @@ define(function(require, exports, module) {
             - mocha fetch is too slow and is called too often
             - resize issues
                 - results size (also needs 1px extra height @nightwing thoughts?)
-            
+            - output from mocha can come in differently combined chunks, 
+                sometimes there is output from several test in one chunk
+                sometimes only half of output, ending in the middle of stacktrace
+                for combined output mocha only shows results of the first test
+            - global coverage marker is too large in dark theme
+                
             ACE (Harutyun)
             - Coverage
                 - Move gutterDecorations and markers when typing
