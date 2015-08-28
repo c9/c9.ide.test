@@ -41,8 +41,6 @@ define(function(require, exports, module) {
             - Feature flag to disable test panel
             
             BUGS
-            - global coverage marker is too large in dark theme
-            - Add timeout to stop button, forcing stopped state
             - resize issues
                 - results size (also needs 1px extra height @nightwing thoughts?)
             - output from mocha can come in differently combined chunks, 

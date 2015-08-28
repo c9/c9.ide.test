@@ -761,8 +761,10 @@ define(function(require, exports, module) {
         function stop(callback){
             if (!running) return callback(new Error("Not Running"));
             
-            stopping = true;
+            var timer;
+            stopping = Date.now();
             plugin.once("stop", function(e){
+                clearTimeout(timer)
                 
                 (function _(items, first){
                     items.forEach(function(node){ 
@@ -781,6 +783,10 @@ define(function(require, exports, module) {
             
             if (progress.stop)
                 progress.stop();
+            
+            timer = setTimeout(function(){
+                emit("stop", { nodes: [] }); // It was probably not running anymore
+            }, 5000);
         }
         
         function clear(nodes, onlyNodes){
