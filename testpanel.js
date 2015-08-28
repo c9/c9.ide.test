@@ -84,15 +84,16 @@ define(function(require, module, exports) {
             /***** Methods *****/
 
             function show(){
-                // test.show();
                 if (amlFrame) {
                     if (amlFrame.restore) amlFrame.restore();
                     else amlFrame.show();
+                    emit("show");
                 }
             }
 
             function hide(){
                 amlFrame.hide();
+                emit("hide");
             }
 
             /***** Register and define API *****/

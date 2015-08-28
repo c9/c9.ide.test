@@ -575,6 +575,10 @@ define(function(require, exports, module) {
             emit("updateConfig");
         }
         
+        function resize(){
+            emit("resize");
+        }
+        
         function refresh(){
             emit("update");
         }
@@ -670,6 +674,11 @@ define(function(require, exports, module) {
              * 
              */
             saveConfig: saveConfig,
+            
+            /**
+             * 
+             */
+            resize: resize,
             
             /**
              * 

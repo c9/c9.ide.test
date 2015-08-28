@@ -196,6 +196,10 @@ define(function(require, exports, module) {
                 });
             }, plugin);
             
+            test.on("resize", function(){
+                tree && tree.resize();
+            }, plugin);
+            
             test.runners.forEach(init);
             
             test.focussedPanel = plugin;

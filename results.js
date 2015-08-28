@@ -315,7 +315,14 @@ define(function(require, exports, module) {
         function recalc() {
             var maxHeight = Math.round(test.aml.getHeight() * 0.6);
             var cells = tree.container.querySelector(".ace_tree_cells").lastChild;
-            plugin.height = Math.min(maxHeight, cells.scrollHeight + tree.container.parentNode.offsetTop + 20);
+            
+            var newHeight = Math.min(maxHeight, cells.scrollHeight 
+                + tree.container.parentNode.offsetTop + 20);
+            
+            if (newHeight != plugin.height) {
+                plugin.height = newHeight;
+                test.resize();
+            }
         }
         
         // Calculate the index of the 
@@ -483,12 +490,10 @@ define(function(require, exports, module) {
             draw(e);
         });
         plugin.on("show", function(e) {
-            // txtFilter.focus();
-            // txtFilter.select();
+            test.resize();
         });
         plugin.on("hide", function(e) {
-            // Cancel Preview
-            // tabs.preview({ cancel: true });
+            test.resize();
         });
         plugin.on("unload", function(){
             drawn = false;
