@@ -376,7 +376,27 @@ define(function(require, exports, module) {
                     checked: "user/test/@inlineresults",
                     type: "check",
                     position: 100
-                })
+                }),
+                new Divider(),
+                new MenuItem({ 
+                    caption: "Open Raw Test Output", 
+                    onclick: function() {
+                        var path = tabManager.focussedTab.path;
+                        var test = findTest(path);
+                        if (test)
+                            commands.exec("opentestoutput", null, {nodes: [test]});
+                    },
+                    position: 300
+                }),
+                new MenuItem({ 
+                    caption: "Clear Test Results", 
+                    onclick: function() {
+                        var editor = tabManager.focussedTab.editor;
+                        if (editor.ace)
+                            clearDecoration(editor.ace.session);
+                    },
+                    position: 400
+                }),
             ] }, plugin);
             
             settings.on("read", function(){
@@ -648,7 +668,7 @@ define(function(require, exports, module) {
                     if (j.type == "file") {
                         if (j.path == path) return j;
                     }
-                    else if (j.items) recur(j.items);
+                    else if (j.items) return recur(j.items);
                 }
             })(rootNode.items);
         }
@@ -924,6 +944,12 @@ define(function(require, exports, module) {
             el.className = "error_widget " + extraClass;
             el.textContent = node.output;
             
+            var closeBtn = document.createElement("span");
+            closeBtn.textContent = "\xd7";
+            closeBtn.className = "widget-close-button";
+            w.el.appendChild(closeBtn);
+            closeBtn.onclick = function() { w.destroy() };
+            
             w.el.addEventListener("contextmenu", function(e){
                 if (e.which == 2 || e.which == 3) {
                     menuInlineContext.show(e.x + 1, e.y + 1);
@@ -937,6 +963,7 @@ define(function(require, exports, module) {
             
             w.destroy = function() {
                 session.widgetManager.removeLineWidget(w);
+                w.destroyed = true;
             };
             
             session.widgetManager.addLineWidget(w);
@@ -955,7 +982,7 @@ define(function(require, exports, module) {
                 if (widget.classList.contains("widget")) {
                     
                     if (widget.annotation && widget.classList.contains("more")) {
-                        if (widget.output) {
+                        if (widget.output && !widget.output.destroyed) {
                             widget.output.destroy();
                             widget.output = null;
                         } else {

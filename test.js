@@ -313,8 +313,9 @@ define(function(require, exports, module) {
                 // hint: "runs the selected test(s) in the test panel",
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
-                exec: function(){
-                    focussedPanel.tree.selectedNodes.forEach(function(n){
+                exec: function(args){
+                    var nodes = args.nodes || focussedPanel.tree.selectedNodes;
+                    nodes.forEach(function(n){
                         var output = (n.findFileNode() || 0).fullOutput;
                         if (!output) return;
                         
