@@ -63,6 +63,7 @@ define(function(require, exports, module) {
                 - Mark changed lines as yellow
             - Fix ace-tree height issue of results
             - Increase gutter to make room for both code coverage markings and fold widgets
+            - Multiple line widgets will overlap
             
             MOCHA
             - Address anomaly for writer-test not being able to execute single test
