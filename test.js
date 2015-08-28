@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
         "Panel", "ui", "settings", "panels", "menus", "commands", "Menu", 
-        "MenuItem", "Divider", "tabManager", "fs", "dialog.error"
+        "MenuItem", "Divider", "tabManager", "fs", "dialog.error", "c9"
     ];
     main.provides = ["test"];
     return main;
@@ -18,6 +18,7 @@ define(function(require, exports, module) {
         var MenuItem = imports.MenuItem;
         var Divider = imports.Divider;
         var fs = imports.fs;
+        var c9 = imports.c9;
         var showError = imports["dialog.error"].show;
         
         var Coverage = require("./data/coverage");
@@ -35,10 +36,20 @@ define(function(require, exports, module) {
             });
         };
         
+        var ENABLED = (c9.location.indexOf("test=0") === -1);
+        
+        if (!ENABLED && !options.enabled) {
+            register(null, {
+                "test": {
+                    register: function(){},
+                    unregister: function(){},
+                    on: function(){}
+                }
+            });
+        }
+        
         /*
             TODO:
-            
-            - Feature flag to disable test panel
             
             BUGS
             - output from mocha can come in differently combined chunks, 
