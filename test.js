@@ -53,6 +53,7 @@ define(function(require, exports, module) {
                 sometimes only half of output, ending in the middle of stacktrace
                 for combined output mocha only shows results of the first test
             - global coverage marker is too large in dark theme
+            - Add timeout to stop button, forcing stopped state
                 
             ACE (Harutyun)
             - Coverage

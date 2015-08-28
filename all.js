@@ -208,6 +208,7 @@ define(function(require, exports, module) {
                 getCaptionHTML: function(node) {
                    if (node.type == "file") {
                         var path = dirname(node.label);
+                        if (path == ".") return escapeHTML(node.label);
                         return escapeHTML(basename(path) + "/" + basename(node.label)) 
                             + "<span class='extrainfo'> - " + escapeHTML(dirname(path)) + "</span>";
                    }
@@ -976,7 +977,13 @@ define(function(require, exports, module) {
             var m, d;
             node.annotations.forEach(function(item){
                 m = item.message.trim();
-                d = m.length <= 50 ? m : m.substr(0, 20) + " ... " + m.substr(-25);
+                if (m.length <= 50) d = m;
+                else {
+                    if (m.indexOf("\n") > -1)
+                        d = m.split("\n")[0].substr(0, 45) + " ...";
+                    else
+                        m.substr(0, 20) + " ... " + m.substr(-25);
+                }
                 
                 session.lineAnnotations[item.line - 1] = { 
                     display: d,

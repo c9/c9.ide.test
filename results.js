@@ -92,6 +92,7 @@ define(function(require, exports, module) {
                 getCaptionHTML: function(node) {
                    if (node.type == "file") {
                         var path = dirname(node.label);
+                        if (path == ".") return escapeHTML(node.label);
                         return basename(path) + "/" + basename(node.label) 
                             + "<span class='extrainfo'> - " + dirname(path) + "</span>";
                    }
