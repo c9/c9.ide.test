@@ -53,10 +53,8 @@ define(function(require, exports, module) {
             - Coverage
                 - Move gutterDecorations and markers when typing
                 - Mark changed lines as yellow
-            - Horizontal scrolling with line widgets https://github.com/ajaxorg/ace/blob/master/lib/ace/virtual_renderer.js#L951
             - Fix ace-tree height issue of results
 
-            - Ace needs a mode where the line widgets are the full scroll width of ace
             - Increase gutter to make room for both code coverage markings and fold widgets
             
             MOCHA

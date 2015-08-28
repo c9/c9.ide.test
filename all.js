@@ -901,10 +901,8 @@ define(function(require, exports, module) {
             
             var w = {
                 row: node.pos && node.pos.el || 0, 
-                // fixedWidth: true,
+                fullWidth: true,
                 // coverGutter: true,
-                // rowCount: 0,
-                // coverLine: 1,
                 el: dom.createElement("div")
             };
             var extraClass = node.passed == 2 ? "ace_error" : "ace_warning";
