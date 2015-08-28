@@ -182,7 +182,9 @@ define(function(require, exports, module) {
                         
                         if (nodes) {
                             nodes.forEach(function(node){
-                                emit("clearCoverage", { node: node });
+                                emit(node.coverage
+                                    ? "coverage"
+                                    : "clearCoverage", { node: node });
                             });
                         }
                     });
@@ -242,7 +244,9 @@ define(function(require, exports, module) {
                         
                         if (nodes) {
                             nodes.forEach(function(node){
-                                emit("coverage", { node: node });
+                                emit(node.coverage
+                                    ? "coverage"
+                                    : "clearCoverage", { node: node });
                             });
                         }
                     });
