@@ -39,7 +39,6 @@ define(function(require, exports, module) {
             TODO:
             
             SALESFORCE PLUGIN
-                - Raw Test is empty (not even ace) after refresh
                 - Wait for upload before running test
                 - Parallel test execution
                 - Allow plugin to set global coverage
@@ -140,6 +139,7 @@ define(function(require, exports, module) {
             - [Can't reproduce] when filtering too early, filtering yield no results
             - [Can't reproduce] results window throws error when loop cannot find parents (line 385)
             - Move rowheight change code to widget?
+            - Creating a newfile document should not require a path
         */
         
         /***** Initialization *****/
@@ -322,7 +322,11 @@ define(function(require, exports, module) {
                             editorType: "ace",
                             focus: true,
                             document: {
-                                title: "Raw Test Output"
+                                title: "Raw Test Output",
+                                meta: {
+                                    nofs: true,
+                                    ignoreState: true
+                                }
                             },
                             value: output
                         }, function(){});
