@@ -56,10 +56,6 @@ define(function(require, exports, module) {
             - Fix ace-tree height issue of results
             - Increase gutter to make room for both code coverage markings and fold widgets
             
-            MOCHA
-            - Address anomaly for writer-test not being able to execute single test
-                    - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
-            
             TESTS
             - Manually: One problem with test panel is that it can throw errors 
                 in save and tab open listeners, breaking rest of the ide
@@ -94,6 +90,8 @@ define(function(require, exports, module) {
             
             MOCHA
             - other test formats (not bdd)
+            - Address anomaly for writer-test not being able to execute single test
+                    - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
             
             REFACTOR TO USE DATA OBJECTS
                 - Listen:

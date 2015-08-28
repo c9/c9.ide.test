@@ -160,12 +160,12 @@ define(function(require, exports, module) {
                             var cmd = fileNode.coverage 
                                 ? "runtestwithcoverage" 
                                 : "runtest";
-                                
+                            
+                            fileNode.fixParents();
                             commands.exec(cmd, null, { nodes: [fileNode] });
                         }
                     }
                 })) {
-                    fileNode.fixParents();
                     tree && tree.refresh();
                 }
             }, plugin);
@@ -764,7 +764,7 @@ define(function(require, exports, module) {
             var timer;
             stopping = Date.now();
             plugin.once("stop", function(e){
-                clearTimeout(timer)
+                clearTimeout(timer);
                 
                 (function _(items, first){
                     items.forEach(function(node){ 
@@ -920,6 +920,8 @@ define(function(require, exports, module) {
             var nodes = fileNode.findAllNodes("test|prepare");
             if (fileNode.ownPassed) nodes.push(fileNode);
             nodes.forEach(function(node){
+                if (!node.parent) fileNode.fixParents();
+                
                 if (node.passed !== undefined && (node.type == "test" || node.output)) {
                     var pos = node.pos ? node.pos.sl : 0;
                     session.addGutterDecoration(pos, "test-" + node.passed);
