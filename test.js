@@ -47,7 +47,12 @@ define(function(require, exports, module) {
                 sometimes there is output from several test in one chunk
                 sometimes only half of output, ending in the middle of stacktrace
                 for combined output mocha only shows results of the first test
+            
+            OPTIMIZATIONS
             - [Harutyun] mocha fetch is too slow and is called too often
+                - Add isTest() to runners and check that on save
+                - Only fetch list when test panel is opened
+                - Optimize default cmd to only search in the right places and for the right files
                 
             ACE (Harutyun)
             - Coverage
