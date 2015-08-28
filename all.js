@@ -900,7 +900,7 @@ define(function(require, exports, module) {
             // editor.selection.moveToPosition(pos);
             
             var w = {
-                row: node.pos && node.pos.el || 0, 
+                row: node.pos ? node.pos.el : 0, 
                 fullWidth: true,
                 // coverGutter: true,
                 el: dom.createElement("div")

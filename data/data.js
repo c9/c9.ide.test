@@ -187,7 +187,7 @@ define(function(require, exports, module) {
             clone.__defineSetter__("isOpen", function(v){ isOpen = v; });
         }
         
-        if (this.type == "file") {
+        if (this.type == "file" || this.type == "testset") {
             clone.keepChildren = true;
             if (forResults) {
                 passed = this.passed;

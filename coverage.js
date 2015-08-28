@@ -134,7 +134,7 @@ define(function(require, exports, module) {
             
             settings.on("read", function(){
                 settings.setDefaults("user/test/coverage", [
-                    ["alwayson", true],
+                    ["alwayson", false],
                     ["fullline", true],
                     ["testfiles", false],
                     ["toolbar", true]

@@ -54,7 +54,6 @@ define(function(require, exports, module) {
                 - Move gutterDecorations and markers when typing
                 - Mark changed lines as yellow
             - Fix ace-tree height issue of results
-
             - Increase gutter to make room for both code coverage markings and fold widgets
             
             MOCHA
