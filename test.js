@@ -39,10 +39,10 @@ define(function(require, exports, module) {
             TODO:
             
             SALESFORCE PLUGIN
-                - Fetch test files from filesystem (or see how the force cli does it)
-                - Parse the contents via outline
-                - Fetch the coverage data
                 - Parallel test execution
+                - Add uncovered lines
+                - stacktrace parsing need to find entry that is not top one
+                    - make stack paths links 
             
             BUGS
             - mocha fetch is too slow and is called too often
