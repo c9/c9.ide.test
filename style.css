@@ -97,3 +97,17 @@
     box-shadow: 0 1px @border-highlight;
     overflow: auto;
 }
+
+
+.widget-close-button:hover {
+    opacity: 1;
+}
+.widget-close-button {
+    position: absolute;
+    top: 6px;
+    left: 5px;
+    font-size: 17px;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
