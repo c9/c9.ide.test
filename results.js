@@ -533,7 +533,12 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            remove: remove
+            remove: remove,
+            
+            /**
+             * 
+             */
+            findFileByPath: all.findFileByPath
         });
         
         register(null, {

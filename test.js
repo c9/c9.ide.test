@@ -152,6 +152,7 @@ define(function(require, exports, module) {
         
         var runners = [];
         var toolbar, container, btnRun, focussedPanel, mnuRun, mnuSettings;
+        var lastTest;
         
         function load() {
             // plugin.setCommand({
@@ -163,7 +164,7 @@ define(function(require, exports, module) {
             commands.addCommand({
                 name: "runtest",
                 hint: "runs the selected test(s) in the test panel",
-                bindKey: { mac: "F6", win: "Ctrl-F5" },
+                // bindKey: { mac: "F6", win: "Ctrl-F5" },
                 group: "Test",
                 exec: function(editor, args){
                     if (settings.getBool("user/test/coverage/@alwayson"))
@@ -187,22 +188,46 @@ define(function(require, exports, module) {
 
             commands.addCommand({
                 name: "runfocussedtest",
-                // hint: "runs the selected test(s) in the test panel",
-                // bindKey: { mac: "F6", win: "Ctrl-F5" },
+                hint: "runs the focussed test or last run test",
+                bindKey: { mac: "F6", win: "Ctrl-F5" },
                 group: "Test",
                 exec: function(editor, args){
                     var path = tabManager.focussedTab.path;
+                    var test = focussedPanel.findFileByPath(path);
                     return commands.exec("runtest", editor, { 
-                        nodes: path,
+                        nodes: test ? [test] : lastTest,
                         transformRun: true
                     });
+                },
+                isAvailable: function(){
+                    var path = (tabManager.focussedTab || 0).path;
+                    return focussedPanel.findFileByPath(path) || lastTest ? true : false;
+                }
+            }, plugin);
+
+            commands.addCommand({
+                name: "runfocussedtestwithcoverage",
+                hint: "runs the focussed test or last run test with code coverage",
+                bindKey: { mac: "Shift-F6", win: "Ctrl-Shift-F5" },
+                group: "Test",
+                exec: function(editor, args){
+                    var path = tabManager.focussedTab.path;
+                    var test = focussedPanel.findFileByPath(path);
+                    return commands.exec("runtestwithcoverage", editor, { 
+                        nodes: test ? [test] : lastTest,
+                        transformRun: true
+                    });
+                },
+                isAvailable: function(){
+                    var path = (tabManager.focussedTab || 0).path;
+                    return focussedPanel.findFileByPath(path) || lastTest ? true : false;
                 }
             }, plugin);
 
             commands.addCommand({
                 name: "runtestwithcoverage",
                 hint: "runs the selected test(s) in the test panel with code coverage enabled",
-                bindKey: { mac: "Shift-F6", win: "Ctrl-Shift-F5" },
+                // bindKey: { mac: "Shift-F6", win: "Ctrl-Shift-F5" },
                 group: "Test",
                 exec: function(editor, args){
                     transformRunButton("stop");
@@ -319,6 +344,19 @@ define(function(require, exports, module) {
             });
         }
         
+        var drawnMenu = false;
+        function drawMenu(){
+            if (drawnMenu) return;
+            drawnMenu = true;
+            
+            menus.addItemByPath("Run/Run Test", new ui.item({
+                command: "runfocussedtest"
+            }), 1250, plugin);
+            menus.addItemByPath("Run/Run Test with Code Coverage", new ui.item({
+                command: "runfocussedtestwithcoverage"
+            }), 1260, plugin);
+        }
+        
         var drawn = false;
         function draw(opts) {
             if (drawn) return;
@@ -431,6 +469,8 @@ define(function(require, exports, module) {
         /***** Methods *****/
         
         function registerTestRunner(runner){
+            drawMenu();
+            
             runners.push(runner);
             
             emit("register", { runner: runner });
@@ -554,6 +594,7 @@ define(function(require, exports, module) {
         });
         plugin.on("unload", function() {
             drawn = false;
+            drawnMenu = false;
             toolbar = null;
             container = null;
             config = null;
@@ -602,6 +643,12 @@ define(function(require, exports, module) {
              */
             get focussedPanel(){ return focussedPanel; },
             set focussedPanel(v){ focussedPanel = v; },
+            
+            /**
+             * 
+             */
+            get lastTest(){ return lastTest; },
+            set lastTest(v){ lastTest = v; },
             
             /**
              * 

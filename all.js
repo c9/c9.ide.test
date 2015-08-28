@@ -357,8 +357,8 @@ define(function(require, exports, module) {
             
             // Menu
             menuContext = new Menu({ items: [
-                new MenuItem({ command: "runtest", caption: "Run", class: "strong" }),
-                new MenuItem({ command: "runtestwithcoverage", caption: "Run with Code Coverage" }),
+                new MenuItem({ command: "runtest", caption: "Run", class: "strong", hotkey: "Enter" }),
+                new MenuItem({ command: "runtestwithcoverage", caption: "Run with Code Coverage", hotkey: "Shift-Enter" }),
                 new Divider(),
                 new MenuItem({ caption: "Open Test File", onclick: openTestFile, hotkey: "Space" }),
                 new MenuItem({ caption: "Open Related Files", command: "openrelatedtestfiles" }), // TODO move to coverage plugin
@@ -599,6 +599,8 @@ define(function(require, exports, module) {
                 else
                     list.push(n);
             });
+            
+            test.lastTest = nodes;
             
             async[parallel ? "each" : "eachSeries"](list, function(node, callback){
                 if (stopping) return callback(new Error("Terminated"));
@@ -1139,7 +1141,12 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            findTest: findTest
+            findTest: findTest,
+            
+            /**
+             * 
+             */
+            findFileByPath: findFileByPath
         });
         
         register(null, {
