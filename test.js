@@ -45,6 +45,9 @@ define(function(require, exports, module) {
                     - make stack paths links 
                 - Allow plugin to set global coverage
                 - filtering can filter beyond files. This shouldn't be possible
+                - Filtering is not working after first filter
+                - Clear is broken
+                - Raw Test is empty (not even ace) after refresh
             
             BUGS
             - mocha fetch is too slow and is called too often
