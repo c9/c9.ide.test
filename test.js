@@ -40,22 +40,16 @@ define(function(require, exports, module) {
             
             - Feature flag to disable test panel
             
-            SALESFORCE PLUGIN
-                - Wait for upload before running test
-                - Parallel test execution
-                - Allow plugin to set global coverage
-                - [Can't Reproduce] Clear is broken
-            
             BUGS
-            - mocha fetch is too slow and is called too often
+            - global coverage marker is too large in dark theme
+            - Add timeout to stop button, forcing stopped state
             - resize issues
                 - results size (also needs 1px extra height @nightwing thoughts?)
             - output from mocha can come in differently combined chunks, 
                 sometimes there is output from several test in one chunk
                 sometimes only half of output, ending in the middle of stacktrace
                 for combined output mocha only shows results of the first test
-            - global coverage marker is too large in dark theme
-            - Add timeout to stop button, forcing stopped state
+            - [Harutyun] mocha fetch is too slow and is called too often
                 
             ACE (Harutyun)
             - Coverage
@@ -87,6 +81,11 @@ define(function(require, exports, module) {
                     - Test same for istanbul not installed
             
             *** LATER ***
+            
+            SALESFORCE
+            - Coverage files: wait for upload before running test
+            - Parallel test execution
+            - Allow plugin to set global coverage
             
             ALL VIEW
                 - Better icons

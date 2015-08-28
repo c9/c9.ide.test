@@ -72,7 +72,7 @@
 
 .coverage-btn .amount {
     text-align: center;
-    font-size: 25px;
+    font-size: @coverage-button-font-size;
 }
 
 .coverage-btn:hover {
