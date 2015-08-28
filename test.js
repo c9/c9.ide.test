@@ -36,14 +36,23 @@ define(function(require, exports, module) {
             });
         };
         
-        var ENABLED = (c9.location.indexOf("test=0") === -1);
+        var ENABLED = (c9.location.indexOf("test=1") > -1);
         
         if (!ENABLED && !options.enabled) {
-            register(null, {
+            return register(null, {
                 "test": {
+                    Coverage: Coverage,
+                    File: File,
+                    TestSet: TestSet,
+                    Test: Test,
+                    Node: Node,
+                    
+                    runners: [],
+                    
                     register: function(){},
                     unregister: function(){},
-                    on: function(){}
+                    on: function(){},
+                    once: function(){}
                 }
             });
         }
