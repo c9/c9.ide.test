@@ -39,15 +39,16 @@ define(function(require, exports, module) {
             TODO:
             
             SALESFORCE PLUGIN
-                - Parallel test execution
-                - Add uncovered lines
-                - stacktrace parsing need to find entry that is not top one
-                    - make stack paths links 
-                - Allow plugin to set global coverage
+                * stacktrace parsing need to find entry that is not top one
+                    * make stack paths links 
+                    * make links clickable (css + action)
                 - filtering can filter beyond files. This shouldn't be possible
                 - Filtering is not working after first filter
-                - Clear is broken
                 - Raw Test is empty (not even ace) after refresh
+                
+                - Parallel test execution
+                - Allow plugin to set global coverage
+                - [Can't Reproduce] Clear is broken
             
             BUGS
             - mocha fetch is too slow and is called too often
@@ -66,7 +67,6 @@ define(function(require, exports, module) {
                 - Mark changed lines as yellow
             - Fix ace-tree height issue of results
             - Increase gutter to make room for both code coverage markings and fold widgets
-            - Multiple line widgets will overlap
             
             MOCHA
             - Address anomaly for writer-test not being able to execute single test
@@ -97,6 +97,7 @@ define(function(require, exports, module) {
                 - Maybe: Icons for play/stop button
                 - When writing in a certain test, invalidate those resuls
                     - On save, only execute those tests that are changed
+                - Support favorite test files on demand (when they are opened)
             
             MOCHA
             - other test formats (not bdd)

@@ -111,3 +111,11 @@
     cursor: pointer;
     transition: opacity 0.2s;
 }
+
+.error_widget .link{
+    color : @highlight-color;
+    cursor: pointer;
+}
+.error_widget .link:hover{
+    text-decoration: underline;
+}

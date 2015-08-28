@@ -942,7 +942,7 @@ define(function(require, exports, module) {
             w.el.className = "error_widget_wrapper";
             el.style.whiteSpace = "pre";
             el.className = "error_widget " + extraClass;
-            el.textContent = node.output;
+            el.innerHTML = node.findRunner().parseLinks(escapeHTML(node.output));
             
             var closeBtn = document.createElement("span");
             closeBtn.textContent = "\xd7";
@@ -950,6 +950,23 @@ define(function(require, exports, module) {
             w.el.appendChild(closeBtn);
             closeBtn.onclick = function() { w.destroy() };
             
+            w.el.addEventListener("click", function(e){
+                if (e.target && e.target.className == "link") {
+                    var parts = e.target.getAttribute("link").split(":");
+                    tabManager.open({
+                        path: parts[0],
+                        focus: true,
+                        document: {
+                            ace: {
+                                jump: {
+                                    row: Number(parts[1]),
+                                    column: Number(parts[1])
+                                }
+                            }
+                        }
+                    });
+                }
+            }, false);
             w.el.addEventListener("contextmenu", function(e){
                 if (e.which == 2 || e.which == 3) {
                     menuInlineContext.show(e.x + 1, e.y + 1);
@@ -985,12 +1002,14 @@ define(function(require, exports, module) {
                         if (widget.output && !widget.output.destroyed) {
                             widget.output.destroy();
                             widget.output = null;
-                        } else {
+                        } 
+                        else {
                             var a = widget.annotation;
                             widget.output = createOutputWidget(editor, a.session, {
                                 pos: { el: a.row, ec: a.column },
                                 passed: 0,
-                                output: a.more
+                                output: a.more,
+                                findRunner: a.node.findRunner.bind(a.node)
                             });
                         }
                     }
@@ -1019,7 +1038,8 @@ define(function(require, exports, module) {
                     row: item.line - 1,
                     column: item.column,
                     more: m.length > 50 ? m : null,
-                    session: session
+                    session: session,
+                    node: node
                 };
             });
         }
