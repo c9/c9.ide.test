@@ -150,13 +150,23 @@ define(function(require, exports, module) {
                 if (!fileNode) return;
 
                 // Notify runners of change event and refresh tree 
-                if (fileNode.emit("change", e.value))
+                var runonsave = settings.getBool("user/test/@runonsave");
+                if (fileNode.emit("change", {
+                    value: e.value, 
+                    runonsave: runonsave,
+                    run: function(){
+                        // Re-run test on save
+                        if (runonsave) {
+                            var cmd = fileNode.coverage 
+                                ? "runtestwithcoverage" 
+                                : "runtest";
+                                
+                            commands.exec(cmd, null, { nodes: [fileNode] });
+                        }
+                    }
+                })) {
+                    fileNode.fixParents();
                     tree && tree.refresh();
-                    
-                // Re-run test on save
-                if (settings.getBool("user/test/@runonsave")) {
-                    var cmd = fileNode.coverage ? "runtestwithcoverage" : "runtest";
-                    commands.exec(cmd, null, { nodes: [fileNode] });
                 }
             }, plugin);
 

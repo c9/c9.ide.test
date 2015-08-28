@@ -38,6 +38,8 @@ define(function(require, exports, module) {
         /*
             TODO:
             
+            - Feature flag to disable test panel
+            
             SALESFORCE PLUGIN
                 - Wait for upload before running test
                 - Parallel test execution
