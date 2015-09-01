@@ -70,6 +70,9 @@ define(function(require, exports, module) {
         });
         
         function load() {
+            if (test.inactive)
+                return;
+            
             panels.on("afterAnimate", function(){
                 if (panels.isActive("test"))
                     tree && tree.resize();

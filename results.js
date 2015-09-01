@@ -43,6 +43,8 @@ define(function(require, exports, module) {
         var state = {};
         
         function load() {
+            if (test.inactive)
+                return;
             // plugin.setCommand({
             //     name: "test",
             //     hint: "search for a command and execute it",

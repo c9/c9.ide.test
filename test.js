@@ -52,7 +52,8 @@ define(function(require, exports, module) {
                     register: function(){},
                     unregister: function(){},
                     on: function(){},
-                    once: function(){}
+                    once: function(){},
+                    inactive: true
                 }
             });
         }

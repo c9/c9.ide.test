@@ -38,6 +38,9 @@ define(function(require, exports, module) {
         var menu, button;
         
         function load() {
+            if (test.inactive)
+                return;
+                
             test.on("coverage", function(e){
                 addToLibrary(e.node);
                 if (!showCoverage)
