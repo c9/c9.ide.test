@@ -1,7 +1,8 @@
 define(function(require, exports, module) {
     main.consumes = [
         "Panel", "ui", "settings", "panels", "menus", "commands", "Menu", 
-        "MenuItem", "Divider", "tabManager", "fs", "dialog.error", "c9"
+        "MenuItem", "Divider", "tabManager", "fs", "dialog.error", "c9",
+        "preferences.experimental"
     ];
     main.provides = ["test"];
     return main;
@@ -20,6 +21,7 @@ define(function(require, exports, module) {
         var fs = imports.fs;
         var c9 = imports.c9;
         var showError = imports["dialog.error"].show;
+        var experimental = imports["preferences.experimental"];
         
         var Coverage = require("./data/coverage");
         var File = require("./data/file");
@@ -36,7 +38,7 @@ define(function(require, exports, module) {
             });
         };
         
-        var ENABLED = (c9.location.indexOf("test=1") > -1);
+        var ENABLED = experimental.addExperiment("test=1", "Panels/Test Panel");
         
         if (!ENABLED && !options.enabled) {
             return register(null, {
