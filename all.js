@@ -12,7 +12,6 @@ define(function(require, exports, module) {
         var settings = imports.settings;
         var panels = imports.panels;
         var ui = imports.ui;
-        var fs = imports.fs;
         var Tree = imports.Tree;
         var test = imports.test;
         var commands = imports.commands;
@@ -150,15 +149,16 @@ define(function(require, exports, module) {
 
             // Save hooks
             save.on("afterSave", function(e){
-                var fileNode = findFileByPath(e.path);
-                if (!fileNode) return;
+                var runner = isTest(e.path, e.value);
+                if (!runner) return;
 
                 // Notify runners of change event and refresh tree 
                 var runonsave = settings.getBool("user/test/@runonsave");
-                if (fileNode.emit("change", {
+                if (runner.fileChange({
+                    path: e.path,
                     value: e.value, 
                     runonsave: runonsave,
-                    run: function(){
+                    run: function(fileNode){
                         // Re-run test on save
                         if (runonsave) {
                             var cmd = fileNode.coverage 
@@ -176,8 +176,7 @@ define(function(require, exports, module) {
 
             // Run Button Hook
             runGui.on("updateRunButton", function(e){
-                var fileNode = findFileByPath(e.path);
-                if (!fileNode) return;
+                if (!isTest(e.path)) return;
 
                 var btnRun = e.button;
                 btnRun.enable();
@@ -464,9 +463,8 @@ define(function(require, exports, module) {
             return test.config.excluded[path];
         }
         
-        function init(runner, cache){
+        function init(runner){
             if (!test.ready) return test.on("ready", init.bind(this, runner));
-            if (!test.drawn && !cache) return fetchFromCache(runner);
             
             var parent = runner.remote ? rmtNode : wsNode;
             runner.root.parent = parent;
@@ -477,28 +475,25 @@ define(function(require, exports, module) {
             
             updateStatus(runner.root, "loading");
             
-            runner.init(filter, cache, function(err){
-                if (err) return console.error(err); // TODO
-                
-                runner.root.isOpen = true;
-                updateStatus(runner.root, "loaded");
-                
-                var newCache = [];
-                runner.root.findAllNodes("file").forEach(function(node){
-                    newCache.push(node.path);
+            test.once("draw", function listen(){
+                runner.init(filter, function(err){
+                    if (err) return console.error(err); // TODO
                     
-                    if (!test.config.skipped[node.path]) return;
+                    runner.root.isOpen = true;
+                    updateStatus(runner.root, "loaded");
                     
-                    node.skip = true;
-                    node.findAllNodes("test").forEach(function(n){
-                        n.skip = true;
+                    runner.root.findAllNodes("file").forEach(function(node){
+                        if (!test.config.skipped[node.path]) return;
+                        
+                        node.skip = true;
+                        node.findAllNodes("test").forEach(function(n){
+                            n.skip = true;
+                        });
                     });
+                    
+                    runner.root.fixParents();
                 });
-                
-                runner.root.fixParents();
-                
-                writeToCache(runner, newCache.join("\n"));
-            });
+            }, runner);
         }
         
         function deinit(runner){
@@ -510,23 +505,6 @@ define(function(require, exports, module) {
             tree.refresh();
         }
 
-        function fetchFromCache(runner){
-            fs.readFile("~/.c9/cache/" + runner.name, function(err, data){
-                if (err) {
-                    test.once("draw", function(){ init(runner); });
-                    return;
-                }
-                
-                init(runner, data);
-            });
-        }
-        
-        function writeToCache(runner, cache, callback){
-            fs.writeFile("~/.c9/cache/" + runner.name, cache, function(err){
-                callback && callback(err);
-            });
-        }
-        
         function findFileByPath(path) {
             var found = false;
             rootNode.findAllNodes("file").some(function(n){
@@ -536,6 +514,25 @@ define(function(require, exports, module) {
                 }
             });
             return found;
+        }
+        
+        var knownTests = {};
+        function isTest(path, value) {
+            if (filter(path)) return false;
+            if (knownTests[path]) return true;
+            
+            if (!value)
+                value = tabManager.findTab(path).document.value;
+            
+            test.runners.some(function(runner){
+                if (runner.isTest(path, value)) {
+                    knownTests[path] = runner;
+                    return true;
+                }
+                return false;
+            });
+            
+            return knownTests[path] || false;
         }
         
         // TODO export to ace editor and add loading detection
