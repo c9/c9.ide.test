@@ -1,6 +1,6 @@
 /* .image-2x("@{icon-path}/@{tree-folder-icon}", @tree-folder-icon-width, @tree-folder-icon-height); */
 .test-in-progress{ background-image: url("@{icon-path}/testInProgress1.png"); }
-.test-notran{ background-image: url("@{icon-path}/testNotRan.png"); }
+.test-notran{ background-image: url("@{icon-path}/testPrepare.png"); }
 
 .test-failed, .test-0 { background-image: url("@{icon-path}/testFailed.png"); }
 .test-passed, .test-1 { background-image: url("@{icon-path}/testPassed.png"); }
@@ -9,8 +9,8 @@
 .test-ignored, .test-4 { background-image: url("@{icon-path}/testIgnored.png"); }
 
 .test-prepare { background-image: url("@{icon-path}/testPrepare.png"); }
-.test-set { background-image: url("@{icon-path}/testPrepare.png"); }
-.test-file { background-image: url("@{icon-path}/testFile.png"); }
+.test-set { background-image: url("@{icon-path}/testNotRan.png"); }
+.test-file { background-image: url("@{icon-path}/testPrepare.png"); }
 
 .stack-message{
     border-radius: 4px;

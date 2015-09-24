@@ -2,7 +2,7 @@ define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test",
         "Menu", "MenuItem", "Divider", "tabManager", "save", "preferences", "fs",
-        "run.gui", "layout"
+        "run.gui", "layout", "c9"
     ];
     main.provides = ["test.all"];
     return main;
@@ -15,6 +15,8 @@ define(function(require, exports, module) {
         var Tree = imports.Tree;
         var test = imports.test;
         var commands = imports.commands;
+        var fs = imports.fs;
+        var c9 = imports.c9;
         var Menu = imports.Menu;
         var MenuItem = imports.MenuItem;
         var Divider = imports.Divider;
@@ -230,7 +232,7 @@ define(function(require, exports, module) {
                             + "<span class='extrainfo'> - " + escapeHTML(dirname(path)) + "</span>";
                    }
                    else if (node.type == "testset") {
-                       return "<span style='opacity:0.5;'>" + escapeHTML(node.label) + "</span>";
+                       return escapeHTML(node.label); // "<span style='opacity:0.5;'>" + escapeHTML(node.label) + "</span>";
                    }
                    else if (node.kind == "it") {
                        return "it " + escapeHTML(node.label);
@@ -997,18 +999,30 @@ define(function(require, exports, module) {
             
             w.el.addEventListener("click", function(e){
                 if (e.target && e.target.className == "link") {
-                    var parts = e.target.getAttribute("link").split(":");
-                    tabManager.open({
-                        path: parts[0],
-                        focus: true,
-                        document: {
-                            ace: {
-                                jump: {
-                                    row: Number(parts[1]),
-                                    column: Number(parts[1])
+                    var link = e.target.getAttribute("link");
+                    var parts = link.split(":");
+                    fs.exists(parts[0], function(exists){
+                        if (!exists) {
+                            commands.exec("navigate", null, { keyword: link });
+                            return;
+                        }
+                        
+                        var path = parts[0].indexOf(c9.workspaceDir) === 0
+                            ? parts[0].replace(c9.workspaceDir, "")
+                            : parts[0];
+                        
+                        tabManager.open({
+                            path: path,
+                            focus: true,
+                            document: {
+                                ace: {
+                                    jump: {
+                                        row: Number(parts[1]),
+                                        column: Number(parts[1])
+                                    }
                                 }
                             }
-                        }
+                        });
                     });
                 }
             }, false);
@@ -1075,7 +1089,7 @@ define(function(require, exports, module) {
                     if (m.indexOf("\n") > -1)
                         d = m.split("\n")[0].substr(0, 45) + " ...";
                     else
-                        m.substr(0, 20) + " ... " + m.substr(-25);
+                        d = m.substr(0, 20) + " ... " + m.substr(-25);
                 }
                 
                 session.lineAnnotations[item.line - 1] = { 
