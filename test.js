@@ -589,6 +589,11 @@ define(function(require, exports, module) {
             /**
              * 
              */
+            get drawn(){ return drawn; },
+            
+            /**
+             * 
+             */
             get config(){ return config; },
             
             /**
