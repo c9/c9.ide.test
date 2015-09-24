@@ -447,6 +447,8 @@ define(function(require, exports, module) {
             btnRun.setAttribute("command", type == "stop" ? "stoptest" : "runtest");
         }
         
+        // TODO: https://github.com/tj/js-yaml/blob/master/lib/yaml.js
+        // OR: https://github.com/jeremyfa/yaml.js/blob/develop/dist/yaml.min.js
         function parse(data){
             if (!config) config = {};
             
@@ -585,6 +587,11 @@ define(function(require, exports, module) {
              * 
              */
             get ready(){ return ready; },
+            
+            /**
+             * 
+             */
+            get drawn(){ return drawn; },
             
             /**
              * 

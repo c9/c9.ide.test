@@ -465,6 +465,7 @@ define(function(require, exports, module) {
         
         function init(runner){
             if (!test.ready) return test.on("ready", init.bind(this, runner));
+            if (!test.drawn) return test.once("draw", init.bind(this, runner), runner);
             
             var parent = runner.remote ? rmtNode : wsNode;
             runner.root.parent = parent;
@@ -475,25 +476,23 @@ define(function(require, exports, module) {
             
             updateStatus(runner.root, "loading");
             
-            test.once("draw", function listen(){
-                runner.init(filter, function(err){
-                    if (err) return console.error(err); // TODO
+            runner.init(filter, function(err){
+                if (err) return console.error(err); // TODO
+                
+                runner.root.isOpen = true;
+                updateStatus(runner.root, "loaded");
+                
+                runner.root.findAllNodes("file").forEach(function(node){
+                    if (!test.config.skipped[node.path]) return;
                     
-                    runner.root.isOpen = true;
-                    updateStatus(runner.root, "loaded");
-                    
-                    runner.root.findAllNodes("file").forEach(function(node){
-                        if (!test.config.skipped[node.path]) return;
-                        
-                        node.skip = true;
-                        node.findAllNodes("test").forEach(function(n){
-                            n.skip = true;
-                        });
+                    node.skip = true;
+                    node.findAllNodes("test").forEach(function(n){
+                        n.skip = true;
                     });
-                    
-                    runner.root.fixParents();
                 });
-            }, runner);
+                
+                runner.root.fixParents();
+            });
         }
         
         function deinit(runner){
@@ -1168,6 +1167,10 @@ define(function(require, exports, module) {
             session.$lineWidgets = [];
         }
         
+        function refresh(){
+            tree && tree.refresh();
+        }
+        
         /***** Lifecycle *****/
         
         plugin.on("load", function() {
@@ -1212,6 +1215,11 @@ define(function(require, exports, module) {
              * 
              */
             get root() { return rootNode; },
+            
+            /**
+             * 
+             */
+            refresh: refresh,
             
             /**
              * 
