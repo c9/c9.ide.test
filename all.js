@@ -149,15 +149,16 @@ define(function(require, exports, module) {
 
             // Save hooks
             save.on("afterSave", function(e){
-                var fileNode = findFileByPath(e.path);
-                if (!fileNode) return;
+                var runner = isTest(e.path, e.value);
+                if (!runner) return;
 
                 // Notify runners of change event and refresh tree 
                 var runonsave = settings.getBool("user/test/@runonsave");
-                if (fileNode.emit("change", {
+                if (runner.fileChange({
+                    path: e.path,
                     value: e.value, 
                     runonsave: runonsave,
-                    run: function(){
+                    run: function(fileNode){
                         // Re-run test on save
                         if (runonsave) {
                             var cmd = fileNode.coverage 
@@ -175,15 +176,13 @@ define(function(require, exports, module) {
 
             // Run Button Hook
             runGui.on("updateRunButton", function(e){
-                var fileNode = findFileByPath(e.path);
-                if (!fileNode) return;
+                if (!isTest(e.path)) return;
 
                 var btnRun = e.button;
                 btnRun.enable();
                 btnRun.setAttribute("command", "runfocussedtest");
                 btnRun.setAttribute("caption", "Run Test");
-                btnRun.setAttribute("tooltip", "Run Test"
-                    + basename(e.path));
+                btnRun.setAttribute("tooltip", "Run Test" + basename(e.path));
 
                 return false;
             }, plugin);
@@ -476,23 +475,25 @@ define(function(require, exports, module) {
             
             updateStatus(runner.root, "loading");
             
-            runner.init(filter, function(err){
-                if (err) return console.error(err); // TODO
-                
-                runner.root.isOpen = true;
-                updateStatus(runner.root, "loaded");
-                
-                runner.root.findAllNodes("file").forEach(function(node){
-                    if (!test.config.skipped[node.path]) return;
+            test.once("draw", function listen(){
+                runner.init(filter, function(err){
+                    if (err) return console.error(err); // TODO
                     
-                    node.skip = true;
-                    node.findAllNodes("test").forEach(function(n){
-                        n.skip = true;
+                    runner.root.isOpen = true;
+                    updateStatus(runner.root, "loaded");
+                    
+                    runner.root.findAllNodes("file").forEach(function(node){
+                        if (!test.config.skipped[node.path]) return;
+                        
+                        node.skip = true;
+                        node.findAllNodes("test").forEach(function(n){
+                            n.skip = true;
+                        });
                     });
+                    
+                    runner.root.fixParents();
                 });
-                
-                runner.root.fixParents();
-            });
+            }, runner);
         }
         
         function deinit(runner){
@@ -513,6 +514,25 @@ define(function(require, exports, module) {
                 }
             });
             return found;
+        }
+        
+        var knownTests = {};
+        function isTest(path, value) {
+            if (filter(path)) return false;
+            if (knownTests[path]) return true;
+            
+            if (!value)
+                value = tabManager.findTab(path).document.value;
+            
+            test.runners.some(function(runner){
+                if (runner.isTest(path, value)) {
+                    knownTests[path] = runner;
+                    return true;
+                }
+                return false;
+            });
+            
+            return knownTests[path] || false;
         }
         
         // TODO export to ace editor and add loading detection
@@ -646,12 +666,12 @@ define(function(require, exports, module) {
             async[parallel ? "each" : "eachSeries"](list, function(node, callback){
                 if (stopping) return callback(new Error("Terminated"));
                 
-                if (node.status == "pending") { // TODO do this lazily
-                    return populate(node, function(err){
-                        if (err) return callback(err);
-                        _run(node, options, callback);
-                    });
-                }
+                // if (node.status == "pending") { // TODO do this lazily
+                //     return populate(node, function(err){
+                //         if (err) return callback(err);
+                //         _run(node, options, callback);
+                //     });
+                // }
                 
                 _run(node, options, callback);
             }, function(err){

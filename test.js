@@ -63,84 +63,6 @@ define(function(require, exports, module) {
         /*
             TODO:
             
-            BUGS
-            - output from mocha can come in differently combined chunks, 
-                sometimes there is output from several test in one chunk
-                sometimes only half of output, ending in the middle of stacktrace
-                for combined output mocha only shows results of the first test
-            
-            OPTIMIZATIONS
-            - [Harutyun] mocha fetch is too slow and is called too often
-                - Add isTest() to runners and check that on save
-                - Only fetch list when test panel is opened
-                - Optimize default cmd to only search in the right places and for the right files
-                
-            ACE (Harutyun)
-            - Coverage
-                - Move gutterDecorations and markers when typing
-                - Mark changed lines as yellow
-            - Fix ace-tree height issue of results
-            - Increase gutter to make room for both code coverage markings and fold widgets
-            
-            TESTS
-            - Manually: One problem with test panel is that it can throw errors 
-                in save and tab open listeners, breaking rest of the ide
-                we need to carefully review this parts before merging
-            - Write tests for at least mocha.js plugin
-                - Error state for failed tests
-                    - Error before test is started isn't shown
-                    - Stack trace before test is started isn't shown
-                    - Timed out tests
-                    - Broken mid-run
-                    - Terminated (stop button)
-                    - Test file is only executed when it has parsed tests
-                    - Syntax errors causing 0 tests to be found by outline
-                    - replace test file with a single character < (trying syntax error scenario)
-                    - Mocha not installed:
-                        - Raw output shows (nothing in file): execvp(3) failed.: No such file or directory
-                    - Test same for istanbul not installed
-            
-            *** LATER ***
-            
-            SALESFORCE
-            - Coverage files: wait for upload before running test
-            - Parallel test execution
-            - Allow plugin to set global coverage
-            
-            ALL VIEW
-                - Better icons
-                - Maybe: Icons for play/stop button
-                - When writing in a certain test, invalidate those resuls
-                    - On save, only execute those tests that are changed
-                - Support favorite test files on demand (when they are opened)
-            
-            MOCHA
-            - other test formats (not bdd)
-            - Address anomaly for writer-test not being able to execute single test
-                    - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
-            
-            REFACTOR TO USE DATA OBJECTS
-                - Listen:
-                    - rename a file | Mocha is doing this itself by refetching. is that optimal?
-                    - delete a file | Mocha is doing this itself by refetching. is that optimal?
-            
-            CODE COVERAGE PANEL
-                - Add toolbar with dropdown to select to view coverage of only 1 test (or test type)
-                - Expand methods in the tree and calculate coverage per method
-            
-            RAW LOG OUTPUT VIEWER
-            - stream log output
-            
-            COVERAGE
-            - Clear all coverage from subnodes (might not be relevant anymore)
-            
-            OPTIMIZATIONS
-            - Should test results be kept in state?
-            - Should test output be kept in state?
-            
-            ACE
-            - Make line annotation an ace plugin
-            
             DOCS:
             - Update Tree documentation:
                 - Expand/Collapse using .isOpen = true/false + tree.refresh
@@ -149,9 +71,6 @@ define(function(require, exports, module) {
                 - afterChoose is not documented (it says choose event)
             
             BUGS:
-            - Running closed items in result window will close them again. they should stay open
-            - result window loses focus when running
-            -----
             - normal outline has wrong color on selection (of filtered text)
             - test outline should highlight filtered text
             - duplicate favorite gives an error
@@ -163,6 +82,9 @@ define(function(require, exports, module) {
             - [Can't reproduce] results window throws error when loop cannot find parents (line 385)
             - Move rowheight change code to widget?
             - Creating a newfile document should not require a path
+            - When adding a favorite the tree should scroll up
+            - Add a shortkey to open the last closed tab(s).
+                - Fix the last closed tab(s) list to be in the correct order
         */
         
         /***** Initialization *****/
@@ -284,7 +206,7 @@ define(function(require, exports, module) {
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
                 exec: function(editor, args){
-                    focussedPanel.stop(function(err){});
+                    focussedPanel.stop(function(){});
                 }
             }, plugin);
             
@@ -304,7 +226,7 @@ define(function(require, exports, module) {
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
                 exec: function(){
-                    focussedPanel.skip(function(err){});
+                    focussedPanel.skip(function(){});
                 },
                 isAvailable: function(){
                     return focussedPanel.tree 
@@ -320,7 +242,7 @@ define(function(require, exports, module) {
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
                 exec: function(){
-                    focussedPanel.remove(function(err){});
+                    focussedPanel.remove(function(){});
                 },
                 isAvailable: function(){
                     return focussedPanel.tree 
