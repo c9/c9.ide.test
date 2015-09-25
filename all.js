@@ -673,12 +673,12 @@ define(function(require, exports, module) {
             async[parallel ? "each" : "eachSeries"](list, function(node, callback){
                 if (stopping) return callback(new Error("Terminated"));
                 
-                // if (node.status == "pending") { // TODO do this lazily
-                //     return populate(node, function(err){
-                //         if (err) return callback(err);
-                //         _run(node, options, callback);
-                //     });
-                // }
+                if (node.status == "pending") { // TODO do this lazily
+                    return populate(node, function(err){
+                        if (err) return callback(err);
+                        _run(node, options, callback);
+                    });
+                }
                 
                 _run(node, options, callback);
             }, function(err){
