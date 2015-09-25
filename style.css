@@ -87,8 +87,8 @@
     box-shadow: @stats-button-active-box-shadow;
 }
 
-.runner-form-header{
-    font-size: 12px;
+body .runner-form-header{
+    font-size: 13px;
     font-variant: small-caps;
     padding: 0 10px 5px;
     border-bottom: 1px solid @border-highlight;
