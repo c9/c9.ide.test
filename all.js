@@ -311,7 +311,7 @@ define(function(require, exports, module) {
                 },
                 
                 getRowIndent: function(node) {
-                    return node.$depth ? node.$depth : 0;
+                    return node.$depth ? node.$depth - 1 : 0;
                 },
                 
                 hasChildren: function(node) {
