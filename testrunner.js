@@ -201,9 +201,10 @@ define(function(require, module, exports) {
                             plugin.root.items.remove(fileNode);
                     });
                     
-                    for (var p in lut) {
-                        createFile(p);
-                    }
+                    // TODO: Run fetch() in this directory to get the new tests
+                    // for (var p in lut) {
+                    //     createFile(p);
+                    // }
                     
                     all.refresh();
                 }, plugin);
