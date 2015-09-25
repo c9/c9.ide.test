@@ -391,9 +391,11 @@ define(function(require, exports, module) {
             
             // Buttons
             btnRun = ui.insertByIndex(toolbar, new ui.splitbutton({
-                caption: "Run Tests",
+                caption: "Run",
+                icon: "run.png",
                 skinset: "default",
                 skin: "c9-menu-btn",
+                class: "runtestbtn stopped",
                 command: "runtest",
                 submenu: mnuRun
             }), 100, plugin);
@@ -443,8 +445,9 @@ define(function(require, exports, module) {
         
         function transformRunButton(type){
             if (!drawn) return;
-            btnRun.setAttribute("caption", type == "stop" ? "Stop" : "Run Tests");
+            btnRun.setAttribute("caption", type == "stop" ? "Stop" : "Run");
             btnRun.setAttribute("command", type == "stop" ? "stoptest" : "runtest");
+            btnRun.setAttribute("class", "runtestbtn " + (type == "stop" ? "running" : "stopped"));
         }
         
         // TODO: https://github.com/tj/js-yaml/blob/master/lib/yaml.js

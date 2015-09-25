@@ -965,7 +965,7 @@ define(function(require, exports, module) {
                 if (showInline) {
                     if (node.annotations)
                         createStackWidget(editor, session, node);
-                    if (node.output)
+                    if (node.output && node.output.trim())
                         createOutputWidget(editor, session, node);
                 }
             });

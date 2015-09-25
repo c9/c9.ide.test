@@ -121,3 +121,15 @@ body .runner-form-header{
 .error_widget .link:hover{
     text-decoration: underline;
 }
+
+.runtestbtn .icon{
+    .image-2x(@runbtn-stopped-image, @runbtn-stopped-image-width, @runbtn-stopped-image-height, no-repeat, true);
+    background-position: 1px 2px;
+    height: 22px;
+}
+.runtestbtn.running .icon{
+    .image-2x(@runbtn-running-image, @runbtn-running-image-width, @runbtn-running-image-height, no-repeat, true);
+}
+.runtestbtn .c9-menu-btnIcon{
+    padding-left: 29px !important;
+}
