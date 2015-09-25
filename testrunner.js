@@ -230,8 +230,9 @@ define(function(require, module, exports) {
                 
                 form = new Form({ 
                     form: formOptions,
+                    rowheight: 45,
                     colwidth: 100,
-                    style: "width:300px"
+                    style: "width:320px"
                 }, plugin);
                 
                 return form;

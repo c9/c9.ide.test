@@ -2,7 +2,7 @@ define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test",
         "Menu", "MenuItem", "Divider", "tabManager", "save", "preferences", "fs",
-        "run.gui", "layout", "c9"
+        "run.gui", "layout", "c9", "Form"
     ];
     main.provides = ["test.all"];
     return main;
@@ -17,6 +17,7 @@ define(function(require, exports, module) {
         var commands = imports.commands;
         var fs = imports.fs;
         var c9 = imports.c9;
+        var Form = imports.Form;
         var Menu = imports.Menu;
         var MenuItem = imports.MenuItem;
         var Divider = imports.Divider;
@@ -203,6 +204,42 @@ define(function(require, exports, module) {
             test.on("resize", function(){
                 tree && tree.resize();
             }, plugin);
+            
+            var label, form;
+            test.on("showRunMenu", function(e){
+                if (!label) {
+                    label = new ui.label({
+                        caption: "General",
+                        class: "runner-form-header"
+                    });
+                    form = new Form({ 
+                        colwidth: 180,
+                        rowheight: 45,
+                        style: "width:320px",
+                        form: [
+                            {
+                                title: "Parallel Test Execution",
+                                type: "checked-spinner",
+                                name: "parallel",
+                                min: 1,
+                                max: 999,
+                                defaultCheckboxValue: test.config.parallel || false,
+                                defaultValue: test.config.parallelConcurrency || 6,
+                                onchange: function(e){
+                                    test.config[e.type == "checkbox" 
+                                        ? "parallel"
+                                        : "parallelConcurrency"] = e.value;
+                                    test.saveConfig(function(){});
+                                }
+                            }
+                        ]
+                    }, plugin);
+                }
+                e.menu.appendChild(label);
+                form.attachTo(e.menu);
+                
+                return false;
+            });
             
             test.runners.forEach(init);
             
@@ -636,12 +673,18 @@ define(function(require, exports, module) {
                 if (!nodes) return callback(new Error("Nothing to do"));
             }
             
-            var parallel = !options || options.parallel === undefined
-                ? settings.getBool("shared/test/@parallel")
-                : options.parallel; // TODO have a setting per runner
-            
             var withCodeCoverage = options && options.withCodeCoverage;
             var transformRun = options && options.transformRun;
+            
+            var parallel = !options || options.parallel === undefined
+                ? test.config.parallel
+                : options.parallel;
+            var parallelConcurrency = (!options || options.parallelConcurrency === undefined
+                ? test.config.parallelConcurrency
+                : options.parallelConcurrency) || 6;
+                
+            options.parallel = parallel;
+            options.parallelConcurrency = options.parallelConcurrency;
 
             if (transformRun) {
                 var button = runGui.transformButton("stop");
@@ -670,7 +713,7 @@ define(function(require, exports, module) {
             
             test.lastTest = nodes;
             
-            async[parallel ? "each" : "eachSeries"](list, function(node, callback){
+            var worker = function(node, callback){
                 if (stopping) return callback(new Error("Terminated"));
                 
                 if (node.status == "pending") { // TODO do this lazily
@@ -681,16 +724,28 @@ define(function(require, exports, module) {
                 }
                 
                 _run(node, options, callback);
-            }, function(err){
+            };
+            var complete = function(err){
                 emit("stop", { nodes: list });
                 running = false;
-                delete progress.stop;
+                progress.stop = [];
 
                 if (transformRun)
                     runGui.transformButton();
                 
                 callback(err, list);
-            });
+            };
+            
+            if (parallel) {
+                var queue = async.queue(worker, parallelConcurrency);
+                queue.drain = complete;
+                list.forEach(function(item){
+                    queue.push(item, function(){});
+                });
+            }
+            else {
+                async.eachSeries(list, worker, complete);
+            }
         }
         
         var progress = {
@@ -703,7 +758,8 @@ define(function(require, exports, module) {
             },
             end: function(node){
                 updateStatus(node, "loaded");
-            }
+            },
+            stop: []
         };
         
         function findTest(path){
@@ -747,16 +803,19 @@ define(function(require, exports, module) {
             clear([node], true);
             // emit("clearResult", { node: node });
             
-            progress.stop = runner.run(node, progress, options, function(err){
+            var stop = runner.run(node, progress, options, function(err){
                 updateStatus(node, "loaded");
                 
                 var tab = tabManager.findTab(fileNode.path);
                 if (tab) decorate(fileNode, tab);
                 
+                delete progress.stop[stopId];
+                
                 callback(err, node);
                 
                 emit("result", { node: node });
             });
+            var stopId = progress.stop.push(stop) - 1;
         }
         
         function refreshTree(node){
@@ -807,7 +866,8 @@ define(function(require, exports, module) {
                         else if (typeof node.passed != "number")
                             node.passed = 3;
                         
-                        if (first) updateStatus(node, "loaded");
+                        // This caused unrun tests to no longer have an arrow
+                        // if (first) updateStatus(node, "loaded");
                     });
                 })(e.nodes, true);
                 
@@ -815,8 +875,9 @@ define(function(require, exports, module) {
                 callback();
             });
             
-            if (progress.stop)
-                progress.stop();
+            progress.stop.forEach(function(stop){
+                if (stop) stop();
+            });
             
             timer = setTimeout(function(){
                 emit("stop", { nodes: [] }); // It was probably not running anymore

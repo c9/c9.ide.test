@@ -341,7 +341,7 @@ define(function(require, exports, module) {
             
             // Run Menu
             var emptyLabel = new ui.label({ caption: "No Settings "});
-            mnuRun = new ui.menu({});
+            mnuRun = new ui.menu({ style: "padding:0" });
             mnuRun.addEventListener("prop.visible", function(e){
                 if (!e.value) return;
                 
@@ -370,7 +370,7 @@ define(function(require, exports, module) {
                     });
                 }
                 
-                if (!runners.length) {
+                if (emit("showRunMenu", { menu: mnuRun }) !== false && !runners.length) {
                     mnuRun.appendChild(emptyLabel);
                     return;
                 }
@@ -452,22 +452,33 @@ define(function(require, exports, module) {
         
         // TODO: https://github.com/tj/js-yaml/blob/master/lib/yaml.js
         // OR: https://github.com/jeremyfa/yaml.js/blob/develop/dist/yaml.min.js
+        function convertToType(x){
+            if (x.toLowerCase() == "true") return true;
+            if (x.toLowerCase() == "false") return false;
+            if (typeof parseFloat(x) == "number") return parseFloat(x);
+            throw new Error("Unknown Type");
+        }
         function parse(data){
             if (!config) config = {};
             
-            var keepNewline, stack = [config], top = config, name, create;
+            var keepNewline, stack = [config], top = config, name, create, value;
                 
             data.split("\n").forEach(function(rawLine){
                 // line = line.trim();
                 var line = rawLine.split("#")[0].trimRight();
                 
-                if (line.match(/^\s*([\w-_ ]*):(\s?[|>]?)$/)) {
+                if (line.match(/^\s*([\w-_ ]*):(\s?[|>]?)(.*)$/)) {
                     // stack.pop(); top = stack[stack.length - 1];
                     top = config; // Fucks use of stack, but will fix later
                     
                     name = RegExp.$1;
                     create = true;
-                    // keepNewline = RegExp.$2 == "|";  // Not used
+                    keepNewline = RegExp.$2 == "|";  // Not used
+                    value = RegExp.$3;
+                    
+                    if (value.trim()) {
+                        top[name] = convertToType(value);
+                    }
                 }
                 else if (line.match(/^\s*- (.*)$/)) {
                     if (create) {
@@ -488,7 +499,7 @@ define(function(require, exports, module) {
                 }
             });
             
-            if (stack.pop() == -1) 
+            if (stack.pop() == -1 && typeof top[name] === "string") 
                 top[name] = top[name].substr(0, top[name].length - 1); // Remove last \n of strings
             
             return config;
@@ -509,6 +520,12 @@ define(function(require, exports, module) {
                           + (typeof item[name] == "string" ? item[name] : name)
                           + "\n";
                     }
+                }
+                else if (typeof item == "boolean") {
+                    contents += " " + item.toString();
+                }
+                else if (typeof item == "number") {
+                    contents += " " + item.toString();
                 }
                 else {
                     contents += " |\n";

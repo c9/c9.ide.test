@@ -220,7 +220,7 @@ define(function(require, exports, module) {
             });
             
             tree.on("afterChoose",  function(){
-                if (!tree.model.hasChildren(tree.selectedNode))
+                if (tree.selectedNode && !tree.model.hasChildren(tree.selectedNode))
                     openTestFile([tree.selectedNode], false);
             });
             

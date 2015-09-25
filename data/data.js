@@ -205,6 +205,27 @@ define(function(require, exports, module) {
         return clone;
     }
     
+    Data.prototype.serialize = function(toJson){
+        var obj = {};
+        for (var prop in this.data) {
+            if (prop.match(/^(parent|isSelected|items|map|children|coverage|runner|tree)$/))
+                continue;
+            
+            if (!this.data[prop] || Array.isArray(this.data[prop]) && !this.data[prop].length)
+                continue;
+            
+            obj[prop] = this.data[prop];
+        }
+        
+        if (this.data.items && this.data.items.length) {
+            obj.items = this.data.items.map(function(item){
+                return item.serialize(true);
+            });
+        }
+        
+        return toJson ? obj : JSON.stringify(obj);
+    }
+    
     module.exports = Data;
     
 });
