@@ -520,7 +520,7 @@ define(function(require, exports, module) {
         var knownTests = {};
         function isTest(path, value) {
             if (filter(path)) return false;
-            if (knownTests[path]) return true;
+            if (knownTests[path]) return knownTests[path];
             
             if (!value)
                 value = tabManager.findTab(path).document.value;
@@ -590,10 +590,16 @@ define(function(require, exports, module) {
                             var el = n.pos ? n.pos.el : 0;
                             scrollToDefinition(ace, sl, el);
                             
-                            ace.moveCursorTo(pos ? pos.sl : 0, pos ? pos.sc : 0);
-                            if (select)
-                                ace.getSession().getSelection()
-                                    .selectToPosition({ row: pos.el, column: pos.ec });
+                            var a = n.annotations;
+                            if (a && a.length)
+                                ace.moveCursorTo(a[0].line - 1, a[0].column - 1);
+                            else {
+                                ace.moveCursorTo(pos ? pos.sl : 0, pos ? pos.sc : 0);
+                                
+                                if (select)
+                                    ace.getSession().getSelection()
+                                        .selectToPosition({ row: pos.el, column: pos.ec });
+                            }
                         };
                         
                         if (!ace.session.doc.$lines.length)
@@ -1003,7 +1009,9 @@ define(function(require, exports, module) {
                     var parts = link.split(":");
                     fs.exists(parts[0], function(exists){
                         if (!exists) {
-                            commands.exec("navigate", null, { keyword: link });
+                            commands.exec("navigate", null, { 
+                                keyword: link[0] == "/" ? link.substr(1) : link 
+                            });
                             return;
                         }
                         
@@ -1086,7 +1094,7 @@ define(function(require, exports, module) {
                 m = item.message.trim();
                 if (m.length <= 50) d = m;
                 else {
-                    if (m.indexOf("\n") > -1)
+                    if (m.match(/[\n\r]/) > -1)
                         d = m.split("\n")[0].substr(0, 45) + " ...";
                     else
                         d = m.substr(0, 20) + " ... " + m.substr(-25);

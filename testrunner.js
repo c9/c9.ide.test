@@ -33,6 +33,7 @@ define(function(require, module, exports) {
             var index = options.index || 100;
             var watcher = imports.watcher;
             var query = options.query;
+            var getName = options.getName;
             var meta = {};
             var form;
             
@@ -272,7 +273,7 @@ define(function(require, module, exports) {
             
             function createFile(name, items){
                 var file = new File({
-                    label: name,
+                    label: getName ? getName(name) : name,
                     path: "/" + name
                 });
                 
@@ -317,7 +318,6 @@ define(function(require, module, exports) {
                     p.on("exit", function(){
                         callback(null, stdout);
                     });
-                    
                 });
             }
             
@@ -460,6 +460,11 @@ define(function(require, module, exports) {
                  * 
                  */
                 get update(){ return update },
+                
+                /**
+                 * 
+                 */
+                createFile: createFile,
                 
                 /**
                  * 

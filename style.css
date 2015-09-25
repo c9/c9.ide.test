@@ -1,16 +1,18 @@
 /* .image-2x("@{icon-path}/@{tree-folder-icon}", @tree-folder-icon-width, @tree-folder-icon-height); */
-.test-in-progress{ background-image: url("@{icon-path}/testInProgress1.png"); }
-.test-notran{ background-image: url("@{icon-path}/testPrepare.png"); }
+.test-in-progress{ .image-2x("@{icon-path}/testInProgress1.png", 16px, 16px); }
+.test-notran{ .image-2x("@{icon-path}/testPrepare.png", 16px, 16px); }
 
-.test-failed, .test-0 { background-image: url("@{icon-path}/testFailed.png"); }
-.test-passed, .test-1 { background-image: url("@{icon-path}/testPassed.png"); }
-.test-error, .test-2 { background-image: url("@{icon-path}/testError.png"); }
-.test-terminated, .test-3 { background-image: url("@{icon-path}/testTerminated.png"); }
-.test-ignored, .test-4 { background-image: url("@{icon-path}/testIgnored.png"); }
+.test-failed, .test-0 { .image-2x("@{icon-path}/testFailed.png", 16px, 16px); }
+.test-passed, .test-1 { .image-2x("@{icon-path}/testPassed.png", 16px, 16px); }
+.test-error, .test-2 { .image-2x("@{icon-path}/testError.png", 16px, 16px); }
+.test-terminated, .test-3 { .image-2x("@{icon-path}/testTerminated.png", 16px, 16px); }
+.test-ignored, .test-4 { .image-2x("@{icon-path}/testIgnored.png", 16px, 16px); }
 
-.test-prepare { background-image: url("@{icon-path}/testPrepare.png"); }
-.test-set { background-image: url("@{icon-path}/testNotRan.png"); }
-.test-file { background-image: url("@{icon-path}/testPrepare.png"); }
+.test-0, .test-1, .test-2, .test-3, .test-4 { background-position-x: 4px; }
+
+.test-prepare { .image-2x("@{icon-path}/testPrepare.png", 16px, 16px); }
+.test-set { .image-2x("@{icon-path}/testNotRan.png", 16px, 16px); }
+.test-file { .image-2x("@{icon-path}/testPrepare.png", 16px, 16px); }
 
 .stack-message{
     border-radius: 4px;
