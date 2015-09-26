@@ -23,6 +23,7 @@ define(function(require, module, exports) {
         
         var basename = require("path").basename;
         var dirname = require("path").dirname;
+        var join = require("path").join;
         var async = require("async");
 
         function TestRunner(developer, deps, options) {
@@ -187,27 +188,8 @@ define(function(require, module, exports) {
                     rmdir(e.path);
                 }, plugin);
                 watcher.on("directory", function(e){
-                    var lut = {};
-                    var path = e.path;
-                    e.files.forEach(function(stat){
-                        lut[path + "/" + stat.name] = true;
-                    });
-                    
-                    plugin.root.findAllNodes("file").forEach(function(fileNode){
-                        if (lut[fileNode.path]) {
-                            delete lut[fileNode.path];
-                            return;
-                        }
-                        if (fileNode.path.indexOf(path) === 0)
-                            plugin.root.items.remove(fileNode);
-                    });
-                    
                     // TODO: Run fetch() in this directory to get the new tests
-                    // for (var p in lut) {
-                    //     createFile(p);
-                    // }
-                    
-                    all.refresh();
+                    // all.refresh();
                 }, plugin);
                 watcher.on("change", function(e){
                     var fileNode = all.findFileByPath(e.path);

@@ -137,10 +137,7 @@ define(function(require, exports, module) {
                 (function _(items){ 
                     items.forEach(function(n){ 
                         map[n.label] = n; 
-                        if (n.items) {
-                            _(n.items);
-                            n.children = n.items;
-                        }
+                        if (n.items) _(n.items);
                     });
                 })(myItems);
                 myItems.length = 0;
