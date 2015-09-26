@@ -41,7 +41,6 @@ define(function(require, module, exports) {
             
             var DEFAULTSCRIPT = query ? JSON.stringify(query.def, " ", 4) : "";
             
-            // var lookup = {};
             var update;
             
             /*
@@ -263,7 +262,6 @@ define(function(require, module, exports) {
                 });
                 
                 (items || plugin.root.items).push(file);
-                // lookup[path] = file;
                 
                 return file;
             }
