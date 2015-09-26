@@ -137,7 +137,10 @@ define(function(require, exports, module) {
                 (function _(items){ 
                     items.forEach(function(n){ 
                         map[n.label] = n; 
-                        if (n.items) _(n.items);
+                        if (n.items) {
+                            _(n.items);
+                            n.children = n.items;
+                        }
                     });
                 })(myItems);
                 myItems.length = 0;
@@ -207,11 +210,13 @@ define(function(require, exports, module) {
     
     Data.prototype.serialize = function(toJson){
         var obj = {};
+        
         for (var prop in this.data) {
             if (prop.match(/^(parent|isSelected|items|map|children|coverage|runner|tree)$/))
                 continue;
             
-            if (!this.data[prop] || Array.isArray(this.data[prop]) && !this.data[prop].length)
+            if (this.data[prop] === undefined 
+              || Array.isArray(this.data[prop]) && !this.data[prop].length)
                 continue;
             
             obj[prop] = this.data[prop];

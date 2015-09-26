@@ -14,7 +14,7 @@ define(function(require, exports, module) {
     }
     
     File.prototype = new Data(
-        ["path", "coverage", "passed", "fullOutput", "output", "ownPassed"], 
+        ["path", "type", "coverage", "passed", "fullOutput", "output", "ownPassed"], 
         ["items"]
     );
     

@@ -209,7 +209,7 @@ define(function(require, exports, module) {
             test.on("showRunMenu", function(e){
                 if (!label) {
                     label = new ui.label({
-                        caption: "General",
+                        caption: "general",
                         class: "runner-form-header"
                     });
                     form = new Form({ 
@@ -337,10 +337,13 @@ define(function(require, exports, module) {
                 }
             }, plugin);
             
+            // TODO generalize this
+            tree.renderer.scrollBarV.$minWidth = 10;
+            
             tree.container.style.position = "absolute";
             tree.container.style.left = "0";
             tree.container.style.top = "0";
-            tree.container.style.right = "10px";
+            tree.container.style.right = "0";
             tree.container.style.bottom = "0";
             tree.container.style.height = "";
             
@@ -813,9 +816,25 @@ define(function(require, exports, module) {
                 
                 callback(err, node);
                 
+                // Write To Cache
+                writeToCache(runner, fileNode.path, fileNode.serialize());
+                
                 emit("result", { node: node });
             });
             var stopId = progress.stop.push(stop) - 1;
+        }
+        
+        function clearCache(runner, callback) {
+            fs.rmdir("~/.c9/cache/" + runner.name, { recursive: true }, function(){
+                callback && callback.apply(this, arguments);
+            });
+        }
+        
+        function writeToCache(runner, path, cache, callback){
+            fs.writeFile("~/.c9/cache/" + runner.name 
+              + "/" + path.replace(/\//g, "\\"), cache, function(err){
+                callback && callback(err);
+            });
         }
         
         function refreshTree(node){
@@ -902,6 +921,7 @@ define(function(require, exports, module) {
                 tree.filterKeyword = tree.filterKeyword;
             else tree.refresh();
             
+            clearCache();
             clearAllDecorations();
         }
         

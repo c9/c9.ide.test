@@ -23,6 +23,7 @@ define(function(require, module, exports) {
         
         var basename = require("path").basename;
         var dirname = require("path").dirname;
+        var async = require("async");
 
         function TestRunner(developer, deps, options) {
             var plugin = new Plugin(developer, deps);
@@ -39,7 +40,7 @@ define(function(require, module, exports) {
             
             var DEFAULTSCRIPT = query ? JSON.stringify(query.def, " ", 4) : "";
             
-            var lookup = {};
+            // var lookup = {};
             var update;
             
             /*
@@ -273,14 +274,14 @@ define(function(require, module, exports) {
                 return "'" + str.replace(/'/g, "\\'") + "'";
             }
             
-            function createFile(name, items){
+            function createFile(path, items){
                 var file = new File({
-                    label: getName ? getName(name) : name,
-                    path: "/" + name
+                    label: getName ? getName(path) : path,
+                    path: path
                 });
                 
                 (items || plugin.root.items).push(file);
-                lookup[name] = file;
+                // lookup[path] = file;
                 
                 return file;
             }
@@ -293,6 +294,22 @@ define(function(require, module, exports) {
                 } catch(e) {
                     return query.def;
                 }
+            }
+            
+            function fetchFromCache(callback){
+                fs.readFile("~/.c9/cache/" + plugin.name, function(err, data){
+                    if (err)
+                        return callback(err);
+                    
+                    try { callback(null, JSON.parse(data)); }
+                    catch(e) { callback(); }
+                });
+            }
+            
+            function writeToCache(cache, callback){
+                fs.writeFile("~/.c9/cache/" + plugin.name + "/index", cache, function(err){
+                    callback && callback(err);
+                });
             }
             
             function fetch(callback) {
@@ -329,41 +346,73 @@ define(function(require, module, exports) {
                     - Strategies:
                         - Periodically
                         * Based on fs/watcher events
-                        - Based on opening the test panel
-                        - Refresh button
+                        * Based on opening the test panel
+                        * Refresh button
                     
                     Do initial populate
                 */
                 
-                var isUpdating;
+                var isUpdating, initialUpdate = true;
                 update = function(){
                     if (isUpdating) return fsUpdate(null, 10000);
                     
                     isUpdating = true;
-                    plugin.fetch(function(err, list){
-                        isUpdating = false;
-                        
+                    
+                    async.parallel({
+                        cache: function(cb){
+                            if (initialUpdate) {
+                                initialUpdate = false; // Only fetch cache at startup
+                                
+                                fetchFromCache(function(err, nodes){
+                                    if (!nodes || err) return cb();
+                                    
+                                    nodes.forEach(function(node){
+                                        if (!node.label) {
+                                            node.label = getName(node.path);
+                                            node.status = "pending";
+                                        }
+                                    });
+                                    
+                                    plugin.root.importItems(nodes);
+                                    callback(null, plugin.root.items);
+                                    
+                                    cb(null, nodes);
+                                });
+                            }
+                            else return callback();
+                        },
+                        recent: function(callback){
+                            plugin.fetch(function(err, list){
+                                isUpdating = false;
+                                
+                                if (err) return callback(err);
+                                
+                                var items = [];
+                                var newCache = [];
+                                
+                                list.split("\n").forEach(function(name){
+                                    var path = "/" + name;
+                                    if (!name || filter(path)) return;
+                                    
+                                    newCache.push(path);
+                                    
+                                    items.push({
+                                        label: getName ? getName(path) : path,
+                                        path: path,
+                                        type: "file"
+                                    });
+                                });
+                                
+                                writeToCache(newCache.join("\n"));
+                                
+                                callback(null, items);
+                            });
+                        }
+                    }, function(err, data){
                         if (err) return callback(err);
                         
-                        var items = [];
-                        var lastLookup = lookup;
-                        lookup = {};
-                        
-                        list.split("\n").forEach(function(name){
-                            if (!name || filter("/" + name)) return;
-                            
-                            if (lastLookup[name]) {
-                                items.push(lookup[name] = lastLookup[name]);
-                                delete lastLookup[name];
-                                return;
-                            }
-                            
-                            createFile(name, items);
-                        });
-                        
-                        plugin.root.items = items;
-                        
-                        callback(null, items);
+                        plugin.root.importItems(data.recent);
+                        callback(null, plugin.root.items);
                     });
                 };
                 

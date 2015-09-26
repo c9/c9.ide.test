@@ -33,8 +33,15 @@ define(function(require, exports, module) {
         // Destructive conversion process
         Data.fromJSON = function(list){
             return list.map(function(node){
+                if (node instanceof Data) return node;
                 if (node.items) node.items = Data.fromJSON(node.items);
-                return node.type == "testset" ? new TestSet(node) : new Test(node);
+                
+                if (node.type == "file")
+                    return new File(node);
+                if (node.type == "testset")
+                    return new TestSet(node);
+                if (node.type == "test")
+                    return new Test(node);
             });
         };
         
