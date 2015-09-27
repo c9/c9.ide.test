@@ -70,6 +70,7 @@ define(function(require, exports, module) {
             
             var BGCOLOR = { 
                 "flat-light": "#f7f7f7", 
+                "flat-dark": "#3D3D3D",
                 "light": "#D3D3D3", 
                 "light-gray": "#D3D3D3",
                 "dark": "#3D3D3D",
