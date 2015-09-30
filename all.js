@@ -1083,6 +1083,7 @@ define(function(require, exports, module) {
             closeBtn.className = "widget-close-button";
             w.el.appendChild(closeBtn);
             closeBtn.onclick = function() { w.destroy() };
+            closeBtn.onmousedown = function(e) { e.preventDefault() };
             
             w.el.addEventListener("click", function(e){
                 if (e.target && e.target.className == "link") {
