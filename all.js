@@ -921,7 +921,10 @@ define(function(require, exports, module) {
                 tree.filterKeyword = tree.filterKeyword;
             else tree.refresh();
             
-            clearCache();
+            test.runners.forEach(function(runner){
+                clearCache(runner);
+            });
+            
             clearAllDecorations();
         }
         
