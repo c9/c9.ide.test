@@ -448,7 +448,7 @@ define(function(require, exports, module) {
                     position: 300
                 }),
                 new MenuItem({ 
-                    caption: "Clear Test Results", 
+                    caption: "Clear Test Results In This File", 
                     onclick: function() {
                         var editor = tabManager.focussedTab.editor;
                         if (editor.ace)
