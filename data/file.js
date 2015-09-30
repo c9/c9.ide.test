@@ -28,9 +28,9 @@ define(function(require, exports, module) {
         return this.data.label == file.label;
     };
     
-    File.prototype.addTest = function(def) {
+    File.prototype.addTest = function(def, parent) {
         var test = Data.fromJSON([def])[0];
-        this.data.items.push(test);
+        (parent || this).data.items.push(test);
         return test;
     };
     
