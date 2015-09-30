@@ -42,7 +42,9 @@ define(function(require, exports, module) {
                     return new TestSet(node);
                 if (node.type == "test")
                     return new Test(node);
-            });
+                // TODO what should happen with other types
+                console.log("unhandled type ", node);
+            }).filter(Boolean);
         };
         
         var ENABLED = experimental.addExperiment("test=1", "Panels/Test Panel");

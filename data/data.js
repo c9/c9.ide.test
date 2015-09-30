@@ -100,10 +100,10 @@ define(function(require, exports, module) {
         type = new RegExp("^(" + type + ")$");
         
         (function recur(items){
-            for (var j, i = 0; i < items.length; i++) {
-                j = items[i];
-                if ((j.type || "").match(type)) nodes.push(j);
-                else if (j.items) recur(j.items);
+            for (var i = 0; i < items.length; i++) {
+                var j = items[i];
+                if (j && type.test(j.type)) nodes.push(j);
+                else if (j && j.items) recur(j.items);
             }
         })([node]);
         
