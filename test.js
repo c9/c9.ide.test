@@ -42,6 +42,8 @@ define(function(require, exports, module) {
                     return new TestSet(node);
                 if (node.type == "test")
                     return new Test(node);
+                if (node.type == "prepare")
+                    return new Node(node);
                 // TODO what should happen with other types
                 console.log("unhandled type ", node);
             }).filter(Boolean);
