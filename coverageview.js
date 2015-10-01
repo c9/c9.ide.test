@@ -22,6 +22,9 @@ define(function(require, exports, module) {
         var commands = imports.commands;
         var coverage = imports["test.coverage"];
         
+        var basename = require("path").basename;
+        var dirname = require("path").dirname;
+        
         /***** Initialization *****/
         
         var extensions = [];
@@ -66,7 +69,7 @@ define(function(require, exports, module) {
                           
         function CoverageView(){
             var plugin = new Editor("Ajax.org", main.consumes, extensions);
-            var datagrid;
+            var datagrid, dropdown;
             
             var BGCOLOR = { 
                 "flat-light": "#f7f7f7", 
@@ -77,8 +80,34 @@ define(function(require, exports, module) {
             };
             
             plugin.on("draw", function(e) {
+                var vbox = e.tab.appendChild(new ui.vsplitbox({
+                    childNodes: [
+                        new ui.hbox({
+                            height: 32,
+                            edge: "1 1 1 1",
+                            style: "background-color:#f7f7f7;border-bottom: 1px solid #ECECEC;box-sizing: border-box;",
+                            childNodes: [
+                                new ui.label({ caption: "Filter:", style: "padding:7px" }),
+                                dropdown = new ui.dropdown({ 
+                                    skin: "black_dropdown",
+                                    value: "all",
+                                    minwidth: 150,
+                                    childNodes: [
+                                        new ui.item({ caption: "All Tests", value: "all", selected: true })
+                                    ]
+                                })
+                            ]
+                        })
+                    ]
+                }));
+                
+                dropdown.on("afterchange", function(){
+                    update();
+                });
+                
+                var container = vbox.appendChild(new ui.bar());
                 datagrid = new Datagrid({
-                    container: e.htmlNode,
+                    container: container.$int,
                 
                     columns : [
                         {
@@ -103,7 +132,8 @@ define(function(require, exports, module) {
                 }, plugin);
                 
                 datagrid.on("afterChoose", function(){
-                    tabManager.openFile("/" + datagrid.selectedNode.label, true, function(){});
+                    tabManager.openFile("/" + datagrid.selectedNode.label, 
+                        true, function(){});
                 });
                 
                 coverage.on("update", function(){
@@ -118,17 +148,57 @@ define(function(require, exports, module) {
             /***** Method *****/
             
             function update(){
-                var nodes = datagrid.root || [];
+                var nodes = [];
                 var lookup = nodes.lookup || (nodes.lookup = {});
+                var filter = dropdown.value;
                 
-                var files = coverage.files;
+                var files;
+                if (filter == "all") {
+                    files = coverage.files;
+                }
+                else {
+                    files = {};
+                    coverage.tests[filter].paths.forEach(function(path){
+                        var cvg = coverage.files[path];
+                        if (!cvg) return;
+                        
+                        files[path] = {
+                            coveredLines: cvg.lines.covered.length,
+                            totalLines: cvg.lines.covered.length + cvg.lines.uncovered.length,
+                            lines: coverage.files[path].lines
+                        };
+                    });
+                }
+                
                 for (var path in files) {
                     var file = files[path];
+                    if (!file.lines)
+                        continue;
+                    
                     var node = lookup[path];
-                    if (!node) nodes.push(node = lookup[path] = { label: path.substr(1) });
+                    if (!node) 
+                        nodes.push(node = lookup[path] = { label: path.substr(1) });
+                        
                     node.covered = Math.round(file.coveredLines / file.totalLines * 100);
                     node.uncovered = file.totalLines - file.coveredLines;
                 }
+                
+                var items = dropdown.childNodes;
+                for (var i = items.length - 1; i >= 0; i--) {
+                    if (items[i].value == "all") continue;
+                    dropdown.removeChild(items[i]);
+                }
+                
+                var tests = coverage.tests;
+                for (var path in tests) {
+                    var name = basename(dirname(path)) + "/" + basename(path);
+                    dropdown.appendChild(new ui.item({ 
+                        caption: name, 
+                        value: path 
+                    }));
+                }
+                
+                // TODO set value again
                 
                 datagrid.setRoot(nodes);
             }

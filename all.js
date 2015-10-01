@@ -1389,7 +1389,12 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            findFileByPath: findFileByPath
+            findFileByPath: findFileByPath,
+            
+            /**
+             * 
+             */
+            writeToCache: writeToCache
         });
         
         register(null, {

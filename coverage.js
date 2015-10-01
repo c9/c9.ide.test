@@ -2,7 +2,7 @@ define(function(require, exports, module) {
     main.consumes = [
         "Plugin", "test", "ui", "layout", "test.all", "c9", "util", 
         "tabManager", "commands", "settings", "Menu", "MenuItem", "Divider",
-        "preferences", "save"
+        "preferences", "save", "test.all"
     ];
     main.provides = ["test.coverage"];
     return main;
@@ -23,6 +23,7 @@ define(function(require, exports, module) {
         var Divider = imports.Divider;
         var save = imports.save;
         var prefs = imports.preferences;
+        var testAll = imports["test.all"];
         
         var Range = require("ace/range").Range;
         
@@ -60,9 +61,9 @@ define(function(require, exports, module) {
                 if (!showCoverage) return;
                 
                 if (files[tab.path])
-                    decorateFile(tab);
+                    decorateTab(tab);
                 else if (tests[tab.path])
-                    decorateTest(tab);
+                    decorateTab(tab, true);
             });
             
             commands.addCommand({
@@ -103,11 +104,11 @@ define(function(require, exports, module) {
                         var tab;
                         for (var path in tests) {
                             tab = tabManager.findTab(path);
-                            if (tab) decorateTest(tab);
+                            if (tab) decorateTab(tab, true);
                         }
                         for (var path in files) {
                             tab = tabManager.findTab(path);
-                            if (tab) decorateFile(tab);
+                            if (tab) decorateTab(tab);
                         }
                     }
                 },
@@ -311,7 +312,8 @@ define(function(require, exports, module) {
                 tests[fileNode.path] = { 
                     paths: coverageFiles.map(function(coverage){
                         return coverage.file.replace(reWs, "");
-                    }), 
+                    }),
+                    node: fileNode,
                     all: coverageFiles 
                 };
             }
@@ -323,14 +325,14 @@ define(function(require, exports, module) {
                 if (tests[path]) {
                     tests[path].own = coverage;
                     tab = tabManager.findTab(path);
-                    if (tab) decorateTest(tab);
+                    if (tab) decorateTab(tab, true);
                 }
                 else {
                     var fInfo = files[path];
                     if (!fInfo || !fInfo.coverage) {
                         fInfo = files[path] = { 
                             coverage: {}, 
-                            lines: {}, 
+                            lines: {},
                             paths: [],
                             coveredLines: 0
                         };
@@ -342,33 +344,32 @@ define(function(require, exports, module) {
                     fInfo.coverage[fileNode.path] = coverage;
                     fInfo.totalLines = coverage.lines.found;
                     
-                    var update = function(coverage){
-                        coverage.lines.covered.forEach(function(nr){
-                            if (!fInfo.lines[nr]) {
-                                fInfo.coveredLines++;
-                                fInfo.lines[nr] = true;
-                            }
-                        });
-                        coverage.lines.uncovered.forEach(function(nr){
-                            if (!fInfo.lines[nr])
-                                fInfo.lines[nr] = false;
-                        });
-                    };
-                    
                     if (isNew) {
-                        update(coverage);
+                        fInfo.lines.covered = coverage.lines.covered;
+                        fInfo.lines.uncovered = coverage.lines.uncovered;
                     }
                     else {
-                        fInfo.lines = {};
-                        fInfo.coveredLines = 0;
+                        var covered = {}, uncovered = {};
                         
-                        for (var id in fInfo.coverage) {
-                            update(fInfo.coverage[id]);
+                        for (var path in fInfo.coverage) {
+                            var cvg = fInfo.coverage[path];
+                            cvg.lines.covered.forEach(function(nr){
+                                covered[nr] = true;
+                            });
+                            cvg.lines.uncovered.forEach(function(nr){
+                                uncovered[nr] = true;
+                            });
                         }
+                        
+                        fInfo.lines = {
+                            covered: Object.keys(covered),
+                            uncovered: Object.keys(uncovered)
+                        };
                     }
+                    fInfo.coveredLines = fInfo.lines.covered.length;
                     
                     tab = tabManager.findTab(path);
-                    if (tab) decorateFile(tab);
+                    if (tab) decorateTab(tab);
                 }
             });
             
@@ -385,8 +386,14 @@ define(function(require, exports, module) {
             if (!tests[path]) return;
             
             var all = tests[path].all;
+            var fileNode = tests[path].node;
+            
             delete tests[path].own;
             delete tests[path].all;
+            delete tests[path].node;
+            
+            fileNode.coverage = null;
+            testAll.writeToCache(fileNode.findRunner(), path, fileNode.serialize());
             
             if (!all) return; // Already cleared
             
@@ -417,9 +424,9 @@ define(function(require, exports, module) {
             }
             for (var path in files) {
                 state.files[path] = { 
-                    paths: files[path].paths,
-                    coveredLines: files[path].coveredLines,
-                    totalLines: files[path].totalLines
+                    paths: files[path].paths
+                    // coveredLines: files[path].coveredLines,
+                    // totalLines: files[path].totalLines
                 };
             }
             
@@ -453,19 +460,26 @@ define(function(require, exports, module) {
             session.coverageLines.push({ marker: marker, gutter: row, type: type });
         }
 
-        function decorateTest(tab){
-            if (!tests[tab.path]) return;
-            if (!settings.getBool("user/test/coverage/@testfiles")) return;
+        function decorateTab(tab, isTest){
+            if (isTest && !tests[tab.path]) return;
+            else if (!files[tab.path]) return;
             
-            var coverage = tests[tab.path].own;
+            if (isTest && !settings.getBool("user/test/coverage/@testfiles")) 
+                return;
+            
             var session = tab.document.getSession().session;
             if (!session) {
-                tab.once("activate", function(){ setTimeout(function(){ decorateTest(tab); }); });
+                tab.once("activate", function(){ 
+                    setTimeout(function(){ 
+                        decorateTab(tab, isTest); 
+                    });
+                });
                 return;
             }
             
             clearDecoration(session);
             
+            var coverage = isTest ? tests[tab.path].own : files[tab.path];
             var showMarker = settings.getBool("user/test/coverage/@fullline");
             coverage.lines.covered.forEach(function(row){
                 addMarker(session, "covered", row - 1, showMarker);
@@ -473,25 +487,6 @@ define(function(require, exports, module) {
             coverage.lines.uncovered.forEach(function(row){
                 addMarker(session, "uncovered", row - 1, showMarker);
             });
-        }
-        
-        function decorateFile(tab){
-            if (!files[tab.path]) return;
-            
-            var lines = files[tab.path].lines;
-            var session = tab.document.getSession().session;
-            if (!session) {
-                tab.once("activate", function(){ setTimeout(function(){ decorateFile(tab); }); });
-                return;
-            }
-            
-            clearDecoration(session);
-            
-            var showMarker = settings.getBool("user/test/coverage/@fullline");
-            for (var row in lines) {
-                var css = lines[row] === true ? "covered" : "uncovered";
-                addMarker(session, css, row - 1, showMarker);    
-            }
         }
         
         function clearDecoration(session){
