@@ -88,7 +88,7 @@ define(function(require, exports, module) {
             tree = new Tree({
                 container: opts.html,
                 maxLines: 50,
-                scrollMargin: [10, 0],
+                scrollMargin: [10, 10],
                 theme: "filetree",
             
                 getCaptionHTML: function(node) {

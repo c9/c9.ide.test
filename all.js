@@ -259,7 +259,7 @@ define(function(require, exports, module) {
             // Tree
             tree = new Tree({
                 container: opts.html,
-                scrollMargin: [10, 0],
+                scrollMargin: [10, 10],
                 theme: "filetree",
                 emptyMessage: "No tests found",
             

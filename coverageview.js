@@ -92,6 +92,7 @@ define(function(require, exports, module) {
                                     skin: "black_dropdown",
                                     value: "all",
                                     minwidth: 150,
+                                    "maxitems": 15,
                                     childNodes: [
                                         new ui.item({ caption: "All Tests", value: "all", selected: true })
                                     ]
@@ -226,6 +227,10 @@ define(function(require, exports, module) {
             
             plugin.on("documentActivate", function(e) {
                 
+            });
+            
+            plugin.on("resize", function(e) {
+                datagrid && datagrid.resize();
             });
             
             /***** Register and define API *****/

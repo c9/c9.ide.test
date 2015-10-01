@@ -392,8 +392,11 @@ define(function(require, exports, module) {
             delete tests[path].all;
             delete tests[path].node;
             
-            fileNode.coverage = null;
-            testAll.writeToCache(fileNode.findRunner(), path, fileNode.serialize());
+            if (fileNode) {
+                fileNode.coverage = null;
+                testAll.writeToCache(fileNode.findRunner(), path, 
+                    fileNode.serialize());
+            }
             
             if (!all) return; // Already cleared
             
