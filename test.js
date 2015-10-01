@@ -44,8 +44,9 @@ define(function(require, exports, module) {
                     return new Test(node);
                 if (node.type == "prepare")
                     return new Node(node);
+                    
                 // TODO what should happen with other types
-                console.log("unhandled type ", node);
+                console.error("unhandled type ", node);
             }).filter(Boolean);
         };
         
@@ -116,11 +117,11 @@ define(function(require, exports, module) {
         var lastTest;
         
         function load() {
-            // plugin.setCommand({
-            //     name: "test",
-            //     hint: "search for a command and execute it",
-            //     bindKey: { mac: "Command-.", win: "Ctrl-." }
-            // });
+            plugin.setCommand({
+                name: "showtestpanel"
+                // hint: "search for a command and execute it",
+                // bindKey: { mac: "Command-.", win: "Ctrl-." }
+            });
             
             commands.addCommand({
                 name: "runtest",
@@ -559,6 +560,14 @@ define(function(require, exports, module) {
             emit("update");
         }
         
+        function setCoverage(node){
+            emit("coverage", { node: node });
+        }
+        
+        function clearCoverage(node){
+            emit("clearCoverage", { node: node });
+        }
+        
         function openTestConfigFile(){
             tabManager.open({
                 path: configPath,
@@ -675,6 +684,16 @@ define(function(require, exports, module) {
              * 
              */
             unregister: unregisterTestRunner,
+            
+            /**
+             * 
+             */
+            setCoverage: setCoverage,
+            
+            /**
+             * 
+             */
+            clearCoverage: clearCoverage
         });
         
         register(null, {

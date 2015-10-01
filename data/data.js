@@ -209,12 +209,17 @@ define(function(require, exports, module) {
         var obj = {};
         
         for (var prop in this.data) {
-            if (prop.match(/^(parent|isSelected|items|map|children|coverage|runner|tree)$/))
+            if (prop.match(/^(parent|isSelected|items|map|children|runner|tree)$/))
                 continue;
             
-            if (this.data[prop] === undefined 
+            if (this.data[prop] === undefined || this.data[prop] === null 
               || Array.isArray(this.data[prop]) && !this.data[prop].length)
                 continue;
+            
+            if (prop == "coverage") {
+                obj.coverage = this.data.coverage.serialize(true);
+                continue;
+            }
             
             obj[prop] = this.data[prop];
         }

@@ -537,8 +537,13 @@ define(function(require, exports, module) {
                     }
                     
                     // Call Results
-                    if (first && typeof node.passed == "number")
-                        emit("result", { node: node });
+                    if (first) {
+                        if (typeof node.passed == "number")
+                            emit("result", { node: node });
+                        
+                        if (node.coverage)
+                            test.setCoverage(node);
+                    }
                 });
                 
                 runner.root.fixParents();
