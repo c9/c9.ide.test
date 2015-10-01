@@ -437,7 +437,7 @@ define(function(require, module, exports) {
                 
                 if (((def.match || 0).content || 0).length) {
                     if (!def.match.content.some(function(q){
-                        return value.match(new RegExp(q));
+                        return (value || "").match(new RegExp(q));
                     })) return false;
                 }
                 

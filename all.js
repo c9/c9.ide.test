@@ -241,8 +241,10 @@ define(function(require, exports, module) {
                 return false;
             });
             
+            // Initialize All Runners
             test.runners.forEach(init);
             
+            // Set the all panel as the focussed panel
             test.focussedPanel = plugin;
         }
         
@@ -502,7 +504,7 @@ define(function(require, exports, module) {
         }
         
         function filter(path){
-            return test.config.excluded[path];
+            return test.config ? test.config.excluded[path] : false;
         }
         
         function init(runner){
@@ -540,6 +542,15 @@ define(function(require, exports, module) {
                 });
                 
                 runner.root.fixParents();
+                
+                if (first) {
+                    // Init any tab that is already opened
+                    tabManager.getTabs().forEach(function(tab){
+                        if (tab.path && isTest(tab.path, tab.document.value)) {
+                            decorate(findFileByPath(tab.path), tab);
+                        }
+                    });
+                }
                 
                 first = false;
             });
@@ -618,47 +629,51 @@ define(function(require, exports, module) {
                             return;
                     }
                     
-                    var pos = n.selpos || n.pos;
-                    var select = n.selpos ? {
-                        row: n.selpos.el,
-                        column: n.selpos.ec
-                    } : undefined;
-                    
                     tabManager.open({
                         path: fileNode.path,
                         active: true
                     }, function(err, tab){
                         if (err) return console.error(err);
                         
-                        var ace = tab.editor.ace;
-                        var scroll = function(){
-                            ace.selection.clearSelection();
-                            
-                            var sl = n.pos ? n.pos.sl : 0;
-                            var el = n.pos ? n.pos.el : 0;
-                            scrollToDefinition(ace, sl, el);
-                            
-                            var a = n.annotations;
-                            if (a && a.length)
-                                ace.moveCursorTo(a[0].line - 1, a[0].column - 1);
-                            else {
-                                ace.moveCursorTo(pos ? pos.sl : 0, pos ? pos.sc : 0);
-                                
-                                if (select)
-                                    ace.getSession().getSelection()
-                                        .selectToPosition({ row: pos.el, column: pos.ec });
-                            }
-                        };
-                        
-                        if (!ace.session.doc.$lines.length)
-                            ace.once("changeSession", scroll);
-                        else if (!ace.renderer.$cursorLayer.config)
-                            ace.once("afterRender", scroll);
-                        else
-                            scroll();
+                        scrollTab(tab, n);
                     });
                 }
             });
+        }
+        
+        function scrollTab(tab, n) {
+            var pos = n.selpos || n.pos;
+            var select = n.selpos ? {
+                row: n.selpos.el,
+                column: n.selpos.ec
+            } : undefined;
+            
+            var ace = tab.editor.ace;
+            var scroll = function(){
+                ace.selection.clearSelection();
+                
+                var sl = n.pos ? n.pos.sl : 0;
+                var el = n.pos ? n.pos.el : 0;
+                scrollToDefinition(ace, sl, el);
+                
+                var a = n.annotations;
+                if (a && a.length)
+                    ace.moveCursorTo(a[0].line - 1, a[0].column - 1);
+                else {
+                    ace.moveCursorTo(pos ? pos.sl : 0, pos ? pos.sc : 0);
+                    
+                    if (select)
+                        ace.getSession().getSelection()
+                            .selectToPosition({ row: pos.el, column: pos.ec });
+                }
+            };
+            
+            if (!ace.session.doc.$lines.length)
+                ace.once("changeSession", scroll);
+            else if (!ace.renderer.$cursorLayer.config)
+                ace.once("afterRender", scroll);
+            else
+                scroll();
         }
         
         /***** Methods *****/
