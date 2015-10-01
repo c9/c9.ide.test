@@ -518,6 +518,7 @@ define(function(require, exports, module) {
             
             updateStatus(runner.root, "loading");
             
+            var first = true;
             runner.init(filter, function(err){
                 if (err) return console.error(err); // TODO
                 
@@ -525,15 +526,22 @@ define(function(require, exports, module) {
                 updateStatus(runner.root, "loaded");
                 
                 runner.root.findAllNodes("file").forEach(function(node){
-                    if (!test.config.skipped[node.path]) return;
+                    // Mark skipped tests
+                    if (test.config.skipped[node.path]) {
+                        node.skip = true;
+                        node.findAllNodes("test").forEach(function(n){
+                            n.skip = true;
+                        });
+                    }
                     
-                    node.skip = true;
-                    node.findAllNodes("test").forEach(function(n){
-                        n.skip = true;
-                    });
+                    // Call Results
+                    if (first && typeof node.passed == "number")
+                        emit("result", { node: node });
                 });
                 
                 runner.root.fixParents();
+                
+                first = false;
             });
         }
         
