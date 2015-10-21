@@ -138,3 +138,16 @@ body .runner-form-header{
 .runtestbtn .c9-menu-btnIcon{
     padding-left: 29px !important;
 }
+
+.coverage-toolbar{
+    background-color:rgb(58, 58, 58);
+    border-bottom: 1px solid rgb(41, 41, 41);
+    box-sizing: border-box;
+}
+.coverage-toolbar .label{
+    padding: 7px;
+}
+.coverage-toolbar .black_dropdown{
+    margin: 3px 0;
+    min-height: 21px !important;
+}

@@ -85,9 +85,9 @@ define(function(require, exports, module) {
                         new ui.hbox({
                             height: 32,
                             edge: "1 1 1 1",
-                            style: "background-color:#f7f7f7;border-bottom: 1px solid #ECECEC;box-sizing: border-box;",
+                            class: "coverage-toolbar",
                             childNodes: [
-                                new ui.label({ caption: "Filter:", style: "padding:7px" }),
+                                new ui.label({ caption: "Filter:" }),
                                 dropdown = new ui.dropdown({ 
                                     skin: "black_dropdown",
                                     value: "all",
