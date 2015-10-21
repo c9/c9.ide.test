@@ -50,7 +50,8 @@ define(function(require, exports, module) {
             }).filter(Boolean);
         };
         
-        var ENABLED = experimental.addExperiment("test=1", "Panels/Test Panel");
+        var ENABLED = options.enabled 
+            || experimental.addExperiment("test=1", "Panels/Test Panel");
         
         if (!ENABLED && !options.enabled) {
             return register(null, {
