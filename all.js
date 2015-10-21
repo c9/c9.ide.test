@@ -419,15 +419,14 @@ define(function(require, exports, module) {
             
             // Menu
             menuContext = new Menu({ items: [
-                new MenuItem({ command: "runtest", caption: "Run", class: "strong", hotkey: "Enter" }),
-                new MenuItem({ command: "runtestwithcoverage", caption: "Run with Code Coverage", hotkey: "Shift-Enter" }),
-                new Divider(),
-                new MenuItem({ caption: "Open Test File", onclick: openTestFile, hotkey: "Space" }),
-                new MenuItem({ caption: "Open Related Files", command: "openrelatedtestfiles" }), // TODO move to coverage plugin
-                new MenuItem({ caption: "Open Raw Test Output", command: "opentestoutput" }),
-                new Divider(),
-                new MenuItem({ caption: "Skip", command: "skiptest" }),
-                new MenuItem({ caption: "Remove", command: "removetest" })
+                new MenuItem({ position: 100, command: "runtest", caption: "Run", class: "strong", hotkey: "Enter" }),
+                new MenuItem({ position: 200, command: "runtestwithcoverage", caption: "Run with Code Coverage", hotkey: "Shift-Enter" }),
+                new Divider({  position: 300 }),
+                new MenuItem({ position: 400, caption: "Open Test File", onclick: openTestFile, hotkey: "Space" }),
+                new MenuItem({ position: 500, caption: "Open Raw Test Output", command: "opentestoutput" }),
+                new Divider({  position: 600 }),
+                new MenuItem({ position: 700, caption: "Skip", command: "skiptest" }),
+                new MenuItem({ position: 800, caption: "Remove", command: "removetest" })
             ] }, plugin);
             opts.aml.setAttribute("contextmenu", menuContext.aml);
             

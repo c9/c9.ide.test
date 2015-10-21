@@ -255,6 +255,44 @@ define(function(require, exports, module) {
                 var cmd = files[e.path].coverage ? "runtestwithcoverage" : "runtest";
                 commands.exec(cmd, null, { nodes: tests });
             }, plugin);
+            
+            all.on("draw", function(){
+                var menuRelatedFiles = new Menu({}, plugin);
+                menuRelatedFiles.on("itemclick", function(e){
+                    tabManager.openFile(e.value, true);
+                });
+                
+                menuRelatedFiles.on("show", function(){
+                    var tree = test.focussedPanel.tree;
+                    var fileNode = tree.selectedNode.findFileNode();
+                    
+                    var items = menuRelatedFiles.items;
+                    for (var i = items.length - 1; i > 0; i--) {
+                        menuRelatedFiles.remove(items[i]);
+                    }
+                    
+                    if (tests[fileNode.path]) {
+                        tests[fileNode.path].paths.forEach(function(path){
+                            menuRelatedFiles.append(new MenuItem({
+                                caption: path,
+                                value: path
+                            }));
+                        });
+                    }
+                });
+            
+                all.contextMenu.append(new MenuItem({ 
+                    caption: "Open Related Files", 
+                    position: 450,
+                    submenu: menuRelatedFiles,
+                    isAvailable: function(){
+                        var tree = test.focussedPanel.tree;
+                        if (!tree || !tree.selectedNode) return false;
+                        var fileNode = tree.selectedNode.findFileNode();
+                        return tests[fileNode.path] ? true : false;
+                    }
+                }), plugin);
+            });
         }
         
         var drawn;
