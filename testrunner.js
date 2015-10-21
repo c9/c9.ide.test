@@ -23,7 +23,6 @@ define(function(require, module, exports) {
         
         var basename = require("path").basename;
         var dirname = require("path").dirname;
-        var join = require("path").join;
         var async = require("async");
 
         function TestRunner(developer, deps, options) {

@@ -150,12 +150,6 @@ define(function(require, exports, module) {
                 
                 settings.set("state/test/coverage/@show", false);
                 
-                var state = settings.getJson("state/test/coverage/history");
-                if (state) {
-                    tests = state.tests;
-                    files = state.files;
-                }
-                
                 var totalCoverage = settings.getNumber("state/test/coverage/@total");
                 if (totalCoverage && settings.getBool("user/test/coverage/@toolbar")) {
                     draw();
@@ -200,7 +194,7 @@ define(function(require, exports, module) {
                 if (value) {
                     for (var path in tests) {
                         tab = tabManager.findTab(path);
-                        if (tab) decorateTest(tab);
+                        if (tab) decorateTab(tab);
                     }
                 }
                 else {
@@ -374,7 +368,6 @@ define(function(require, exports, module) {
             });
             
             // Store in settings
-            saveCoverage();
             updateGlobalCoverage();
             
             emit("update");
@@ -417,23 +410,6 @@ define(function(require, exports, module) {
             // updateGlobalCoverage();
             
             emit("update");
-        }
-        
-        function saveCoverage(){
-            var state = { tests: {}, files: {} };
-            
-            for (var path in tests) {
-                state.tests[path] = { paths: tests[path].paths };
-            }
-            for (var path in files) {
-                state.files[path] = { 
-                    paths: files[path].paths
-                    // coveredLines: files[path].coveredLines,
-                    // totalLines: files[path].totalLines
-                };
-            }
-            
-            settings.setJson("state/test/coverage/history", state);
         }
         
         function updateGlobalCoverage(){
@@ -539,6 +515,11 @@ define(function(require, exports, module) {
         });
         plugin.on("unload", function() {
             drawn = false;
+            files = null;
+            tests = null;
+            showCoverage = null;
+            menu = null;
+            button = null;
         });
         
         /***** Register and define API *****/

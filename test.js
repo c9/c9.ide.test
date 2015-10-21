@@ -601,6 +601,7 @@ define(function(require, exports, module) {
             drawn = false;
             drawnMenu = false;
             toolbar = null;
+            lastTest = null;
             container = null;
             config = null;
             ready = null;
