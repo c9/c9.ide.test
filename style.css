@@ -151,3 +151,10 @@ body .runner-form-header{
     margin: 3px 0 !important;
     min-height: 21px !important;
 }
+
+.runner-config-menu {
+    padding:0;
+}
+.runner-config-menu .spinner{
+    margin-top: -3px;
+}

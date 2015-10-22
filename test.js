@@ -354,7 +354,7 @@ define(function(require, exports, module) {
             
             // Run Menu
             var emptyLabel = new ui.label({ caption: "No Settings "});
-            mnuRun = new ui.menu({ style: "padding:0" });
+            mnuRun = new ui.menu({ class: "runner-config-menu" });
             mnuRun.addEventListener("prop.visible", function(e){
                 if (!e.value) return;
                 
@@ -383,7 +383,10 @@ define(function(require, exports, module) {
                     });
                 }
                 
-                if (emit("showRunMenu", { menu: mnuRun }) !== false && !runners.length) {
+                if (emit("showRunMenu", { 
+                    menu: mnuRun, 
+                    runners: runners 
+                }) !== false && !runners.length) {
                     mnuRun.appendChild(emptyLabel);
                     return;
                 }

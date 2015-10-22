@@ -223,7 +223,9 @@ define(function(require, exports, module) {
                                 name: "parallel",
                                 min: 1,
                                 max: 999,
-                                defaultCheckboxValue: test.config.parallel || false,
+                                defaultCheckboxValue: test.config.parallel !== undefined
+                                    ? test.config.parallel
+                                    : (e.runners[0].defaultParallel || false),
                                 defaultValue: test.config.parallelConcurrency || 6,
                                 onchange: function(e){
                                     test.config[e.type == "checkbox" 
