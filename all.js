@@ -374,9 +374,7 @@ define(function(require, exports, module) {
             });
             
             tree.on("afterChoose",  function(){
-                if (tree.selectedNode.status != "pending" 
-                  && !tree.model.hasChildren(tree.selectedNode))
-                    openTestFile([tree.selectedNode], false);
+                commands.exec("runtest");
             });
             
             layout.on("eachTheme", function(e){
