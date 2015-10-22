@@ -35,7 +35,7 @@ define(function(require, module, exports) {
             var watcher = imports.watcher;
             var query = options.query;
             var getName = options.getName;
-            var defaultParallel = false;
+            var defaultParallel = options.defaultParallel || false;
             var meta = {};
             var form;
             
