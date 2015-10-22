@@ -292,8 +292,8 @@ define(function(require, module, exports) {
             }
             
             function fetch(callback) {
-                // return callback(null, "configs/client-config_test.js\nplugins/c9.api/quota_test.js\nplugins/c9.api/settings_test.js\nplugins/c9.api/sitemap-writer_test.js\nplugins/c9.api/stats_test.js\nplugins/c9.api/vfs_test.js\nplugins/c9.cli.publish/publish_test.js\nplugins/c9.analytics/analytics_test.js\nplugins/c9.api/base_test.js\nplugins/c9.api/collab_test.js\nplugins/c9.api/docker_test.js\nplugins/c9.api/package_test.js");
-                // return callback(null, "classes/Twilio_TestAccounts.cls\nclasses/Twilio_TestApplication.cls\nclasses/Twilio_TestCalls.cls\nclasses/Twilio_TestCapability.cls\nclasses/Twilio_TestConference.cls\nclasses/Twilio_TestConnectApps.cls\nclasses/Twilio_TestMedia.cls\nclasses/Twilio_TestMember.cls\nclasses/Twilio_TestMessage.cls\nclasses/Twilio_TestNotification.cls\nclasses/Twilio_TestPhoneNumbers.cls\nclasses/Twilio_TestQueue.cls\nclasses/Twilio_TestRecording.cls\nclasses/Twilio_TestRest.cls\nclasses/Twilio_TestSandbox.cls\nclasses/Twilio_TestSms.cls\nclasses/Twilio_TestTwiML.cls");
+                if (!query) 
+                    return callback(new Error("Invalid Plugin Definition. Missing query"));
                 
                 var script = parseScript(getConfig());
                 
