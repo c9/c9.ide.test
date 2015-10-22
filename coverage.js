@@ -385,10 +385,10 @@ define(function(require, exports, module) {
                         
                         for (var path in fInfo.coverage) {
                             var cvg = fInfo.coverage[path];
-                            cvg.lines.covered.forEach(function(nr){
+                            (cvg.lines.covered || []).forEach(function(nr){
                                 covered[nr] = true;
                             });
-                            cvg.lines.uncovered.forEach(function(nr){
+                            (cvg.lines.uncovered || []).forEach(function(nr){
                                 uncovered[nr] = true;
                             });
                         }
