@@ -58,6 +58,7 @@
     padding: 4px 5px 2px 5px;
     box-sizing: border-box;
     height: 100%;
+    margin-right: -1px;
     border-right: @stats-button-border-right;
     border-left: @stats-button-border-left;
     box-shadow: @stats-button-box-shadow;
