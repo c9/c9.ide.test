@@ -226,7 +226,9 @@ define(function(require, exports, module) {
                                 defaultCheckboxValue: test.config.parallel !== undefined
                                     ? test.config.parallel
                                     : (e.runners[0].defaultParallel || false),
-                                defaultValue: test.config.parallelConcurrency || 6,
+                                defaultValue: test.config.parallelConcurrency !== undefined
+                                    ? test.config.parallelConcurrency
+                                    : (e.runners[0].defaultParallelConcurrency || 6),
                                 onchange: function(e){
                                     test.config[e.type == "checkbox" 
                                         ? "parallel"
@@ -712,7 +714,7 @@ define(function(require, exports, module) {
             var parallelConcurrency = (!options || options.parallelConcurrency === undefined
                 ? test.config.parallelConcurrency
                 : options.parallelConcurrency) || 6;
-                
+            
             options.parallel = parallel;
             options.parallelConcurrency = options.parallelConcurrency;
 
@@ -740,6 +742,12 @@ define(function(require, exports, module) {
                 else
                     list.push(n);
             });
+            
+            var firstRunner = list[0].findRunner();
+            if (options.parallel === undefined)
+                options.parallel = firstRunner.defaultParallel || false;
+            if (options.parallelConcurrency === undefined)
+                options.parallelConcurrency = firstRunner.defaultParallelConcurrency || 6;
             
             test.lastTest = nodes;
             
@@ -821,7 +829,8 @@ define(function(require, exports, module) {
             var runner = node.findRunner();
             var fileNode = node.findFileNode();
             
-            if (!runner) runner = findFileByPath(fileNode.path).findRunner();
+            if (!runner) 
+                runner = findFileByPath(fileNode.path).findRunner();
             
             if (runner.form)
                 options = runner.form.toJson(null, options || {});

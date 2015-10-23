@@ -36,6 +36,7 @@ define(function(require, module, exports) {
             var query = options.query;
             var getName = options.getName;
             var defaultParallel = options.defaultParallel || false;
+            var defaultParallelConcurrency = options.defaultParallelConcurrency || 4;
             var meta = {};
             var form;
             
