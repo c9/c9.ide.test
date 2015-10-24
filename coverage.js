@@ -498,12 +498,16 @@ define(function(require, exports, module) {
             
             var coverage = isTest ? tests[tab.path].own : files[tab.path];
             var showMarker = settings.getBool("user/test/coverage/@fullline");
-            coverage.lines.covered.forEach(function(row){
-                addMarker(session, "covered", row - 1, showMarker);
-            });
-            coverage.lines.uncovered.forEach(function(row){
-                addMarker(session, "uncovered", row - 1, showMarker);
-            });
+            if (coverage.lines.covered) {
+                coverage.lines.covered.forEach(function(row){
+                    addMarker(session, "covered", row - 1, showMarker);
+                });
+            }
+            if (coverage.lines.uncovered) {
+                coverage.lines.uncovered.forEach(function(row){
+                    addMarker(session, "uncovered", row - 1, showMarker);
+                });
+            }
         }
         
         function clearDecoration(session){
