@@ -502,6 +502,12 @@ define(function(require, module, exports) {
                 /**
                  * 
                  */
+                get defaultParallelConcurrency(){ return defaultParallelConcurrency; },
+                set defaultParallelConcurrency(v){ defaultParallelConcurrency = v; },
+                
+                /**
+                 * 
+                 */
                 createFile: createFile,
                 
                 /**
