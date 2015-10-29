@@ -1114,10 +1114,16 @@ define(function(require, exports, module) {
             var left = editor.renderer.$cursorLayer.getPixelPosition(pos).left;
             arrow.style.left = left /*+ editor.renderer.gutterWidth*/ - 5 + "px";
             
+            var runner = node.findRunner();
+            if (!runner)
+                runner = findFileByPath(node.findFileNode().path);
+            
             w.el.className = "error_widget_wrapper";
             el.style.whiteSpace = "pre";
             el.className = "error_widget " + extraClass;
-            el.innerHTML = node.findRunner().parseLinks(escapeHTML(node.output));
+            el.innerHTML = runner
+                ? runner.parseLinks(escapeHTML(node.output))
+                : escapeHTML(node.output);
             
             var closeBtn = document.createElement("span");
             closeBtn.textContent = "\xd7";
