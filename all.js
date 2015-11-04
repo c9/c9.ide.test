@@ -205,6 +205,13 @@ define(function(require, exports, module) {
                 tree && tree.resize();
             }, plugin);
             
+            // This is global to protect from error states
+            plugin.on("stop", function(){
+                progress.stop = [];
+                running = false;
+                runGui.transformButton();
+            });
+            
             var label, form;
             test.on("showRunMenu", function(e){
                 if (!label) {
@@ -765,12 +772,6 @@ define(function(require, exports, module) {
             };
             var complete = function(err){
                 emit("stop", { nodes: list });
-                running = false;
-                progress.stop = [];
-
-                if (transformRun)
-                    runGui.transformButton();
-                
                 callback(err, list);
             };
             
@@ -935,7 +936,8 @@ define(function(require, exports, module) {
             });
             
             timer = setTimeout(function(){
-                emit("stop", { nodes: [] }); // It was probably not running anymore
+                emit("stop", { nodes: [] });
+                test.transformRunButton("run");
             }, 5000);
         }
         

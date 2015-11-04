@@ -219,7 +219,10 @@ define(function(require, exports, module) {
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
                 exec: function(editor, args){
-                    focussedPanel.stop(function(){});
+                    btnRun.disable();
+                    focussedPanel.stop(function(){
+                        btnRun.enable();
+                    });
                 }
             }, plugin);
             
@@ -698,7 +701,12 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            clearCoverage: clearCoverage
+            clearCoverage: clearCoverage,
+            
+            /**
+             * 
+             */
+            transformRunButton: transformRunButton
         });
         
         register(null, {
