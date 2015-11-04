@@ -148,6 +148,9 @@ define(function(require, exports, module) {
                             });
                         }
                     });
+                },
+                isAvailable: function(){
+                    return focussedPanel ? true : false;
                 }
             }, plugin);
 
@@ -166,7 +169,8 @@ define(function(require, exports, module) {
                 },
                 isAvailable: function(){
                     var path = (tabManager.focussedTab || 0).path;
-                    return focussedPanel.findFileByPath(path) || lastTest ? true : false;
+                    return focussedPanel && (focussedPanel.findFileByPath(path) || lastTest)
+                        ? true : false;
                 }
             }, plugin);
 
@@ -185,7 +189,8 @@ define(function(require, exports, module) {
                 },
                 isAvailable: function(){
                     var path = (tabManager.focussedTab || 0).path;
-                    return focussedPanel.findFileByPath(path) || lastTest ? true : false;
+                    return focussedPanel && (focussedPanel.findFileByPath(path) || lastTest) 
+                        ? true : false;
                 }
             }, plugin);
 
@@ -210,6 +215,9 @@ define(function(require, exports, module) {
                             });
                         }
                     });
+                },
+                isAvailable: function(){
+                    return focussedPanel ? true : false;
                 }
             }, plugin);
             
@@ -223,6 +231,9 @@ define(function(require, exports, module) {
                     focussedPanel.stop(function(){
                         btnRun.enable();
                     });
+                },
+                isAvailable: function(){
+                    return focussedPanel ? true : false;
                 }
             }, plugin);
             
@@ -245,7 +256,7 @@ define(function(require, exports, module) {
                     focussedPanel.skip(function(){});
                 },
                 isAvailable: function(){
-                    return focussedPanel.tree 
+                    return focussedPanel && focussedPanel.tree 
                       && focussedPanel.tree.selectedNodes.some(function(n){
                         if (n.type == "file") return true;
                     });
@@ -261,7 +272,7 @@ define(function(require, exports, module) {
                     focussedPanel.remove(function(){});
                 },
                 isAvailable: function(){
-                    return focussedPanel.tree 
+                    return focussedPanel && focussedPanel.tree 
                       && focussedPanel.tree.selectedNodes.some(function(n){
                         if (n.type == "file") return true;
                     });
@@ -294,7 +305,7 @@ define(function(require, exports, module) {
                     });
                 },
                 isAvailable: function(){
-                    return focussedPanel.tree.selectedNodes.some(function(n){
+                    return focussedPanel && focussedPanel.tree.selectedNodes.some(function(n){
                         return (n.findFileNode() || 0).fullOutput || false;
                     });
                 }
