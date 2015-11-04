@@ -1078,16 +1078,15 @@ define(function(require, exports, module) {
             nodes.forEach(function(node){
                 if (!node.parent) fileNode.fixParents();
                 
-                var pos;
                 if (node.passed !== undefined && (node.type == "test" || node.output)) {
-                    pos = node.pos ? node.pos.sl : 0;
+                    var pos = node.pos ? node.pos.sl : 0;
                     session.addGutterDecoration(pos, "test-" + node.passed);
                     (session.$markers || (session.$markers = []))
                         .push([pos, "test-" + node.passed]);
                 }
                 if (showInline) {
                     if (node.annotations)
-                        createStackWidget(editor, session, node, pos);
+                        createStackWidget(editor, session, node);
                     if (node.output && node.output.trim())
                         createOutputWidget(editor, session, node);
                 }
@@ -1211,7 +1210,7 @@ define(function(require, exports, module) {
             editor.container.addEventListener("mousedown", onMouseDown, true);
         }
         
-        function createStackWidget(editor, session, node, startRow){
+        function createStackWidget(editor, session, node){
             decorateEditor(editor);
             var m, d;
             node.annotations.forEach(function(item){
@@ -1224,16 +1223,9 @@ define(function(require, exports, module) {
                         d = m.substr(0, 20) + " ... " + m.substr(-25);
                 }
                 
-                var row = item.line - 1;
-                if (startRow != row) {
-                    session.addGutterDecoration(row, "test-0");
-                    (session.$markers || (session.$markers = []))
-                        .push([row, "test-0"]);
-                }
-                
                 session.lineAnnotations[item.line - 1] = { 
                     display: d,
-                    row: row,
+                    row: item.line - 1,
                     column: item.column,
                     more: m.length > 50 ? m : null,
                     session: session,
