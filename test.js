@@ -33,12 +33,25 @@ define(function(require, exports, module) {
         // Destructive conversion process
         Data.fromJSON = function(list){
             return list.map(function(node){
+                if (node instanceof Data) return node;
                 if (node.items) node.items = Data.fromJSON(node.items);
-                return node.type == "testset" ? new TestSet(node) : new Test(node);
-            });
+                
+                if (node.type == "file")
+                    return new File(node);
+                if (node.type == "testset")
+                    return new TestSet(node);
+                if (node.type == "test")
+                    return new Test(node);
+                if (node.type == "prepare")
+                    return new Node(node);
+                    
+                // TODO what should happen with other types
+                console.error("unhandled type ", node);
+            }).filter(Boolean);
         };
         
-        var ENABLED = experimental.addExperiment("test=1", "Panels/Test Panel");
+        var ENABLED = options.enabled 
+            || experimental.addExperiment("test=1", "Panels/Test Panel");
         
         if (!ENABLED && !options.enabled) {
             return register(null, {
@@ -63,84 +76,6 @@ define(function(require, exports, module) {
         /*
             TODO:
             
-            BUGS
-            - output from mocha can come in differently combined chunks, 
-                sometimes there is output from several test in one chunk
-                sometimes only half of output, ending in the middle of stacktrace
-                for combined output mocha only shows results of the first test
-            
-            OPTIMIZATIONS
-            - [Harutyun] mocha fetch is too slow and is called too often
-                - Add isTest() to runners and check that on save
-                - Only fetch list when test panel is opened
-                - Optimize default cmd to only search in the right places and for the right files
-                
-            ACE (Harutyun)
-            - Coverage
-                - Move gutterDecorations and markers when typing
-                - Mark changed lines as yellow
-            - Fix ace-tree height issue of results
-            - Increase gutter to make room for both code coverage markings and fold widgets
-            
-            TESTS
-            - Manually: One problem with test panel is that it can throw errors 
-                in save and tab open listeners, breaking rest of the ide
-                we need to carefully review this parts before merging
-            - Write tests for at least mocha.js plugin
-                - Error state for failed tests
-                    - Error before test is started isn't shown
-                    - Stack trace before test is started isn't shown
-                    - Timed out tests
-                    - Broken mid-run
-                    - Terminated (stop button)
-                    - Test file is only executed when it has parsed tests
-                    - Syntax errors causing 0 tests to be found by outline
-                    - replace test file with a single character < (trying syntax error scenario)
-                    - Mocha not installed:
-                        - Raw output shows (nothing in file): execvp(3) failed.: No such file or directory
-                    - Test same for istanbul not installed
-            
-            *** LATER ***
-            
-            SALESFORCE
-            - Coverage files: wait for upload before running test
-            - Parallel test execution
-            - Allow plugin to set global coverage
-            
-            ALL VIEW
-                - Better icons
-                - Maybe: Icons for play/stop button
-                - When writing in a certain test, invalidate those resuls
-                    - On save, only execute those tests that are changed
-                - Support favorite test files on demand (when they are opened)
-            
-            MOCHA
-            - other test formats (not bdd)
-            - Address anomaly for writer-test not being able to execute single test
-                    - It appears to be a variable in a test/describe definition. This should be marked as unparseable.
-            
-            REFACTOR TO USE DATA OBJECTS
-                - Listen:
-                    - rename a file | Mocha is doing this itself by refetching. is that optimal?
-                    - delete a file | Mocha is doing this itself by refetching. is that optimal?
-            
-            CODE COVERAGE PANEL
-                - Add toolbar with dropdown to select to view coverage of only 1 test (or test type)
-                - Expand methods in the tree and calculate coverage per method
-            
-            RAW LOG OUTPUT VIEWER
-            - stream log output
-            
-            COVERAGE
-            - Clear all coverage from subnodes (might not be relevant anymore)
-            
-            OPTIMIZATIONS
-            - Should test results be kept in state?
-            - Should test output be kept in state?
-            
-            ACE
-            - Make line annotation an ace plugin
-            
             DOCS:
             - Update Tree documentation:
                 - Expand/Collapse using .isOpen = true/false + tree.refresh
@@ -149,9 +84,6 @@ define(function(require, exports, module) {
                 - afterChoose is not documented (it says choose event)
             
             BUGS:
-            - Running closed items in result window will close them again. they should stay open
-            - result window loses focus when running
-            -----
             - normal outline has wrong color on selection (of filtered text)
             - test outline should highlight filtered text
             - duplicate favorite gives an error
@@ -163,6 +95,9 @@ define(function(require, exports, module) {
             - [Can't reproduce] results window throws error when loop cannot find parents (line 385)
             - Move rowheight change code to widget?
             - Creating a newfile document should not require a path
+            - When adding a favorite the tree should scroll up
+            - Add a shortkey to open the last closed tab(s).
+                - Fix the last closed tab(s) list to be in the correct order
         */
         
         /***** Initialization *****/
@@ -183,11 +118,11 @@ define(function(require, exports, module) {
         var lastTest;
         
         function load() {
-            // plugin.setCommand({
-            //     name: "test",
-            //     hint: "search for a command and execute it",
-            //     bindKey: { mac: "Command-.", win: "Ctrl-." }
-            // });
+            plugin.setCommand({
+                name: "showtestpanel"
+                // hint: "search for a command and execute it",
+                // bindKey: { mac: "Command-.", win: "Ctrl-." }
+            });
             
             commands.addCommand({
                 name: "runtest",
@@ -213,6 +148,9 @@ define(function(require, exports, module) {
                             });
                         }
                     });
+                },
+                isAvailable: function(){
+                    return focussedPanel ? true : false;
                 }
             }, plugin);
 
@@ -231,7 +169,8 @@ define(function(require, exports, module) {
                 },
                 isAvailable: function(){
                     var path = (tabManager.focussedTab || 0).path;
-                    return focussedPanel.findFileByPath(path) || lastTest ? true : false;
+                    return focussedPanel && (focussedPanel.findFileByPath(path) || lastTest)
+                        ? true : false;
                 }
             }, plugin);
 
@@ -250,7 +189,8 @@ define(function(require, exports, module) {
                 },
                 isAvailable: function(){
                     var path = (tabManager.focussedTab || 0).path;
-                    return focussedPanel.findFileByPath(path) || lastTest ? true : false;
+                    return focussedPanel && (focussedPanel.findFileByPath(path) || lastTest) 
+                        ? true : false;
                 }
             }, plugin);
 
@@ -275,6 +215,9 @@ define(function(require, exports, module) {
                             });
                         }
                     });
+                },
+                isAvailable: function(){
+                    return focussedPanel ? true : false;
                 }
             }, plugin);
             
@@ -284,7 +227,13 @@ define(function(require, exports, module) {
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
                 exec: function(editor, args){
-                    focussedPanel.stop(function(err){});
+                    btnRun.disable();
+                    focussedPanel.stop(function(){
+                        btnRun.enable();
+                    });
+                },
+                isAvailable: function(){
+                    return focussedPanel ? true : false;
                 }
             }, plugin);
             
@@ -304,10 +253,10 @@ define(function(require, exports, module) {
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
                 exec: function(){
-                    focussedPanel.skip(function(err){});
+                    focussedPanel.skip(function(){});
                 },
                 isAvailable: function(){
-                    return focussedPanel.tree 
+                    return focussedPanel && focussedPanel.tree 
                       && focussedPanel.tree.selectedNodes.some(function(n){
                         if (n.type == "file") return true;
                     });
@@ -320,10 +269,10 @@ define(function(require, exports, module) {
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
                 exec: function(){
-                    focussedPanel.remove(function(err){});
+                    focussedPanel.remove(function(){});
                 },
                 isAvailable: function(){
-                    return focussedPanel.tree 
+                    return focussedPanel && focussedPanel.tree 
                       && focussedPanel.tree.selectedNodes.some(function(n){
                         if (n.type == "file") return true;
                     });
@@ -356,7 +305,7 @@ define(function(require, exports, module) {
                     });
                 },
                 isAvailable: function(){
-                    return focussedPanel.tree.selectedNodes.some(function(n){
+                    return focussedPanel && focussedPanel.tree.selectedNodes.some(function(n){
                         return (n.findFileNode() || 0).fullOutput || false;
                     });
                 }
@@ -419,7 +368,7 @@ define(function(require, exports, module) {
             
             // Run Menu
             var emptyLabel = new ui.label({ caption: "No Settings "});
-            mnuRun = new ui.menu({});
+            mnuRun = new ui.menu({ class: "runner-config-menu" });
             mnuRun.addEventListener("prop.visible", function(e){
                 if (!e.value) return;
                 
@@ -448,7 +397,10 @@ define(function(require, exports, module) {
                     });
                 }
                 
-                if (!runners.length) {
+                if (emit("showRunMenu", { 
+                    menu: mnuRun, 
+                    runners: runners 
+                }) !== false && !runners.length) {
                     mnuRun.appendChild(emptyLabel);
                     return;
                 }
@@ -469,9 +421,11 @@ define(function(require, exports, module) {
             
             // Buttons
             btnRun = ui.insertByIndex(toolbar, new ui.splitbutton({
-                caption: "Run Tests",
+                caption: "Run",
+                icon: "run.png",
                 skinset: "default",
                 skin: "c9-menu-btn",
+                class: "runtestbtn stopped",
                 command: "runtest",
                 submenu: mnuRun
             }), 100, plugin);
@@ -521,26 +475,40 @@ define(function(require, exports, module) {
         
         function transformRunButton(type){
             if (!drawn) return;
-            btnRun.setAttribute("caption", type == "stop" ? "Stop" : "Run Tests");
+            btnRun.setAttribute("caption", type == "stop" ? "Stop" : "Run");
             btnRun.setAttribute("command", type == "stop" ? "stoptest" : "runtest");
+            btnRun.setAttribute("class", "runtestbtn " + (type == "stop" ? "running" : "stopped"));
         }
         
+        // TODO: https://github.com/tj/js-yaml/blob/master/lib/yaml.js
+        // OR: https://github.com/jeremyfa/yaml.js/blob/develop/dist/yaml.min.js
+        function convertToType(x){
+            if (x.toLowerCase() == "true") return true;
+            if (x.toLowerCase() == "false") return false;
+            if (typeof parseFloat(x) == "number") return parseFloat(x);
+            throw new Error("Unknown Type");
+        }
         function parse(data){
             if (!config) config = {};
             
-            var keepNewline, stack = [config], top = config, name, create;
+            var keepNewline, stack = [config], top = config, name, create, value;
                 
             data.split("\n").forEach(function(rawLine){
                 // line = line.trim();
                 var line = rawLine.split("#")[0].trimRight();
                 
-                if (line.match(/^\s*([\w-_ ]*):(\s?[|>]?)$/)) {
+                if (line.match(/^\s*([\w-_ ]*):(\s?[|>]?)(.*)$/)) {
                     // stack.pop(); top = stack[stack.length - 1];
                     top = config; // Fucks use of stack, but will fix later
                     
                     name = RegExp.$1;
                     create = true;
-                    // keepNewline = RegExp.$2 == "|";  // Not used
+                    keepNewline = RegExp.$2 == "|";  // Not used
+                    value = RegExp.$3;
+                    
+                    if (value.trim()) {
+                        top[name] = convertToType(value);
+                    }
                 }
                 else if (line.match(/^\s*- (.*)$/)) {
                     if (create) {
@@ -561,7 +529,7 @@ define(function(require, exports, module) {
                 }
             });
             
-            if (stack.pop() == -1) 
+            if (stack.pop() == -1 && typeof top[name] === "string") 
                 top[name] = top[name].substr(0, top[name].length - 1); // Remove last \n of strings
             
             return config;
@@ -583,6 +551,12 @@ define(function(require, exports, module) {
                           + "\n";
                     }
                 }
+                else if (typeof item == "boolean") {
+                    contents += " " + item.toString();
+                }
+                else if (typeof item == "number") {
+                    contents += " " + item.toString();
+                }
                 else {
                     contents += " |\n";
                     contents += "  " + item.toString().split("\n").join("\n  ");
@@ -602,6 +576,14 @@ define(function(require, exports, module) {
         
         function refresh(){
             emit("update");
+        }
+        
+        function setCoverage(node){
+            emit("coverage", { node: node });
+        }
+        
+        function clearCoverage(node){
+            emit("clearCoverage", { node: node });
         }
         
         function openTestConfigFile(){
@@ -637,6 +619,7 @@ define(function(require, exports, module) {
             drawn = false;
             drawnMenu = false;
             toolbar = null;
+            lastTest = null;
             container = null;
             config = null;
             ready = null;
@@ -663,6 +646,11 @@ define(function(require, exports, module) {
              * 
              */
             get ready(){ return ready; },
+            
+            /**
+             * 
+             */
+            get drawn(){ return drawn; },
             
             /**
              * 
@@ -715,6 +703,21 @@ define(function(require, exports, module) {
              * 
              */
             unregister: unregisterTestRunner,
+            
+            /**
+             * 
+             */
+            setCoverage: setCoverage,
+            
+            /**
+             * 
+             */
+            clearCoverage: clearCoverage,
+            
+            /**
+             * 
+             */
+            transformRunButton: transformRunButton
         });
         
         register(null, {

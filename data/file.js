@@ -14,7 +14,7 @@ define(function(require, exports, module) {
     }
     
     File.prototype = new Data(
-        ["path", "coverage", "passed", "fullOutput", "output", "ownPassed"], 
+        ["path", "type", "coverage", "passed", "fullOutput", "output", "ownPassed"], 
         ["items"]
     );
     
@@ -26,6 +26,12 @@ define(function(require, exports, module) {
     
     File.prototype.equals = function(file) {
         return this.data.label == file.label;
+    };
+    
+    File.prototype.addTest = function(def, parent) {
+        var test = Data.fromJSON([def])[0];
+        (parent || this).data.items.push(test);
+        return test;
     };
     
     module.exports = File;

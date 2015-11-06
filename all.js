@@ -2,7 +2,7 @@ define(function(require, exports, module) {
     main.consumes = [
         "TestPanel", "ui", "Tree", "settings", "panels", "commands", "test",
         "Menu", "MenuItem", "Divider", "tabManager", "save", "preferences", "fs",
-        "run.gui", "layout"
+        "run.gui", "layout", "c9", "Form"
     ];
     main.provides = ["test.all"];
     return main;
@@ -15,6 +15,9 @@ define(function(require, exports, module) {
         var Tree = imports.Tree;
         var test = imports.test;
         var commands = imports.commands;
+        var fs = imports.fs;
+        var c9 = imports.c9;
+        var Form = imports.Form;
         var Menu = imports.Menu;
         var MenuItem = imports.MenuItem;
         var Divider = imports.Divider;
@@ -149,15 +152,16 @@ define(function(require, exports, module) {
 
             // Save hooks
             save.on("afterSave", function(e){
-                var fileNode = findFileByPath(e.path);
-                if (!fileNode) return;
+                var runner = isTest(e.path, e.value);
+                if (!runner) return;
 
                 // Notify runners of change event and refresh tree 
                 var runonsave = settings.getBool("user/test/@runonsave");
-                if (fileNode.emit("change", {
+                if (runner.fileChange({
+                    path: e.path,
                     value: e.value, 
                     runonsave: runonsave,
-                    run: function(){
+                    run: function(fileNode){
                         // Re-run test on save
                         if (runonsave) {
                             var cmd = fileNode.coverage 
@@ -175,15 +179,13 @@ define(function(require, exports, module) {
 
             // Run Button Hook
             runGui.on("updateRunButton", function(e){
-                var fileNode = findFileByPath(e.path);
-                if (!fileNode) return;
+                if (!isTest(e.path)) return;
 
                 var btnRun = e.button;
                 btnRun.enable();
                 btnRun.setAttribute("command", "runfocussedtest");
                 btnRun.setAttribute("caption", "Run Test");
-                btnRun.setAttribute("tooltip", "Run Test"
-                    + basename(e.path));
+                btnRun.setAttribute("tooltip", "Run Test" + basename(e.path));
 
                 return false;
             }, plugin);
@@ -203,8 +205,57 @@ define(function(require, exports, module) {
                 tree && tree.resize();
             }, plugin);
             
+            // This is global to protect from error states
+            plugin.on("stop", function(){
+                progress.stop = [];
+                running = false;
+                runGui.transformButton();
+            });
+            
+            var label, form;
+            test.on("showRunMenu", function(e){
+                if (!label) {
+                    label = new ui.label({
+                        caption: "general",
+                        class: "runner-form-header"
+                    });
+                    form = new Form({ 
+                        colwidth: 180,
+                        rowheight: 45,
+                        style: "width:320px",
+                        form: [
+                            {
+                                title: "Parallel Test Execution",
+                                type: "checked-spinner",
+                                name: "parallel",
+                                min: 1,
+                                max: 999,
+                                defaultCheckboxValue: test.config.parallel !== undefined
+                                    ? test.config.parallel
+                                    : (e.runners[0].defaultParallel || false),
+                                defaultValue: test.config.parallelConcurrency !== undefined
+                                    ? test.config.parallelConcurrency
+                                    : (e.runners[0].defaultParallelConcurrency || 6),
+                                onchange: function(e){
+                                    test.config[e.type == "checkbox" 
+                                        ? "parallel"
+                                        : "parallelConcurrency"] = e.value;
+                                    test.saveConfig(function(){});
+                                }
+                            }
+                        ]
+                    }, plugin);
+                }
+                e.menu.appendChild(label);
+                form.attachTo(e.menu);
+                
+                return false;
+            });
+            
+            // Initialize All Runners
             test.runners.forEach(init);
             
+            // Set the all panel as the focussed panel
             test.focussedPanel = plugin;
         }
         
@@ -219,7 +270,7 @@ define(function(require, exports, module) {
             // Tree
             tree = new Tree({
                 container: opts.html,
-                scrollMargin: [10, 0],
+                scrollMargin: [10, 10],
                 theme: "filetree",
                 emptyMessage: "No tests found",
             
@@ -231,7 +282,7 @@ define(function(require, exports, module) {
                             + "<span class='extrainfo'> - " + escapeHTML(dirname(path)) + "</span>";
                    }
                    else if (node.type == "testset") {
-                       return "<span style='opacity:0.5;'>" + escapeHTML(node.label) + "</span>";
+                       return escapeHTML(node.label); // "<span style='opacity:0.5;'>" + escapeHTML(node.label) + "</span>";
                    }
                    else if (node.kind == "it") {
                        return "it " + escapeHTML(node.label);
@@ -273,7 +324,7 @@ define(function(require, exports, module) {
                 },
                 
                 getRowIndent: function(node) {
-                    return node.$depth ? node.$depth : 0;
+                    return node.$depth ? node.$depth - 1 : 0;
                 },
                 
                 hasChildren: function(node) {
@@ -299,10 +350,13 @@ define(function(require, exports, module) {
                 }
             }, plugin);
             
+            // TODO generalize this
+            tree.renderer.scrollBarV.$minWidth = 10;
+            
             tree.container.style.position = "absolute";
             tree.container.style.left = "0";
             tree.container.style.top = "0";
-            tree.container.style.right = "10px";
+            tree.container.style.right = "0";
             tree.container.style.bottom = "0";
             tree.container.style.height = "";
             
@@ -329,9 +383,7 @@ define(function(require, exports, module) {
             });
             
             tree.on("afterChoose",  function(){
-                if (tree.selectedNode.status != "pending" 
-                  && !tree.model.hasChildren(tree.selectedNode))
-                    openTestFile([tree.selectedNode], false);
+                commands.exec("runtest");
             });
             
             layout.on("eachTheme", function(e){
@@ -376,15 +428,14 @@ define(function(require, exports, module) {
             
             // Menu
             menuContext = new Menu({ items: [
-                new MenuItem({ command: "runtest", caption: "Run", class: "strong", hotkey: "Enter" }),
-                new MenuItem({ command: "runtestwithcoverage", caption: "Run with Code Coverage", hotkey: "Shift-Enter" }),
-                new Divider(),
-                new MenuItem({ caption: "Open Test File", onclick: openTestFile, hotkey: "Space" }),
-                new MenuItem({ caption: "Open Related Files", command: "openrelatedtestfiles" }), // TODO move to coverage plugin
-                new MenuItem({ caption: "Open Raw Test Output", command: "opentestoutput" }),
-                new Divider(),
-                new MenuItem({ caption: "Skip", command: "skiptest" }),
-                new MenuItem({ caption: "Remove", command: "removetest" })
+                new MenuItem({ position: 100, command: "runtest", caption: "Run", class: "strong", hotkey: "Enter" }),
+                new MenuItem({ position: 200, command: "runtestwithcoverage", caption: "Run with Code Coverage", hotkey: "Shift-Enter" }),
+                new Divider({  position: 300 }),
+                new MenuItem({ position: 400, caption: "Open Test File", onclick: openTestFile, hotkey: "Space" }),
+                new MenuItem({ position: 500, caption: "Open Raw Test Output", command: "opentestoutput" }),
+                new Divider({  position: 600 }),
+                new MenuItem({ position: 700, caption: "Skip", command: "skiptest" }),
+                new MenuItem({ position: 800, caption: "Remove", command: "removetest" })
             ] }, plugin);
             opts.aml.setAttribute("contextmenu", menuContext.aml);
             
@@ -407,7 +458,7 @@ define(function(require, exports, module) {
                     position: 300
                 }),
                 new MenuItem({ 
-                    caption: "Clear Test Results", 
+                    caption: "Clear Test Results In This File", 
                     onclick: function() {
                         var editor = tabManager.focussedTab.editor;
                         if (editor.ace)
@@ -461,11 +512,12 @@ define(function(require, exports, module) {
         }
         
         function filter(path){
-            return test.config.excluded[path];
+            return test.config ? test.config.excluded[path] : false;
         }
         
         function init(runner){
             if (!test.ready) return test.on("ready", init.bind(this, runner));
+            if (!test.drawn) return test.once("draw", init.bind(this, runner), runner);
             
             var parent = runner.remote ? rmtNode : wsNode;
             runner.root.parent = parent;
@@ -476,6 +528,7 @@ define(function(require, exports, module) {
             
             updateStatus(runner.root, "loading");
             
+            var first = true;
             runner.init(filter, function(err){
                 if (err) return console.error(err); // TODO
                 
@@ -483,15 +536,36 @@ define(function(require, exports, module) {
                 updateStatus(runner.root, "loaded");
                 
                 runner.root.findAllNodes("file").forEach(function(node){
-                    if (!test.config.skipped[node.path]) return;
+                    // Mark skipped tests
+                    if (test.config.skipped[node.path]) {
+                        node.skip = true;
+                        node.findAllNodes("test").forEach(function(n){
+                            n.skip = true;
+                        });
+                    }
                     
-                    node.skip = true;
-                    node.findAllNodes("test").forEach(function(n){
-                        n.skip = true;
-                    });
+                    // Call Results
+                    if (first) {
+                        if (typeof node.passed == "number")
+                            emit("result", { node: node });
+                        
+                        if (node.coverage)
+                            test.setCoverage(node);
+                    }
                 });
                 
                 runner.root.fixParents();
+                
+                if (first) {
+                    // Init any tab that is already opened
+                    tabManager.getTabs().forEach(function(tab){
+                        if (tab.path && isTest(tab.path, tab.document.value)) {
+                            decorate(findFileByPath(tab.path), tab);
+                        }
+                    });
+                }
+                
+                first = false;
             });
         }
         
@@ -513,6 +587,25 @@ define(function(require, exports, module) {
                 }
             });
             return found;
+        }
+        
+        var knownTests = {};
+        function isTest(path, value) {
+            if (filter(path)) return false;
+            if (knownTests[path]) return knownTests[path];
+            
+            if (!value)
+                value = tabManager.findTab(path).document.value;
+            
+            test.runners.some(function(runner){
+                if (runner.isTest(path, value)) {
+                    knownTests[path] = runner;
+                    return true;
+                }
+                return false;
+            });
+            
+            return knownTests[path] || false;
         }
         
         // TODO export to ace editor and add loading detection
@@ -549,41 +642,51 @@ define(function(require, exports, module) {
                             return;
                     }
                     
-                    var pos = n.selpos || n.pos;
-                    var select = n.selpos ? {
-                        row: n.selpos.el,
-                        column: n.selpos.ec
-                    } : undefined;
-                    
                     tabManager.open({
                         path: fileNode.path,
                         active: true
                     }, function(err, tab){
                         if (err) return console.error(err);
                         
-                        var ace = tab.editor.ace;
-                        var scroll = function(){
-                            ace.selection.clearSelection();
-                            
-                            var sl = n.pos ? n.pos.sl : 0;
-                            var el = n.pos ? n.pos.el : 0;
-                            scrollToDefinition(ace, sl, el);
-                            
-                            ace.moveCursorTo(pos ? pos.sl : 0, pos ? pos.sc : 0);
-                            if (select)
-                                ace.getSession().getSelection()
-                                    .selectToPosition({ row: pos.el, column: pos.ec });
-                        };
-                        
-                        if (!ace.session.doc.$lines.length)
-                            ace.once("changeSession", scroll);
-                        else if (!ace.renderer.$cursorLayer.config)
-                            ace.once("afterRender", scroll);
-                        else
-                            scroll();
+                        scrollTab(tab, n);
                     });
                 }
             });
+        }
+        
+        function scrollTab(tab, n) {
+            var pos = n.selpos || n.pos;
+            var select = n.selpos ? {
+                row: n.selpos.el,
+                column: n.selpos.ec
+            } : undefined;
+            
+            var ace = tab.editor.ace;
+            var scroll = function(){
+                ace.selection.clearSelection();
+                
+                var sl = n.pos ? n.pos.sl : 0;
+                var el = n.pos ? n.pos.el : 0;
+                scrollToDefinition(ace, sl, el);
+                
+                var a = n.annotations;
+                if (a && a.length)
+                    ace.moveCursorTo(a[0].line - 1, a[0].column - 1);
+                else {
+                    ace.moveCursorTo(pos ? pos.sl : 0, pos ? pos.sc : 0);
+                    
+                    if (select)
+                        ace.getSession().getSelection()
+                            .selectToPosition({ row: pos.el, column: pos.ec });
+                }
+            };
+            
+            if (!ace.session.doc.$lines.length)
+                ace.once("changeSession", scroll);
+            else if (!ace.renderer.$cursorLayer.config)
+                ace.once("afterRender", scroll);
+            else
+                scroll();
         }
         
         /***** Methods *****/
@@ -609,12 +712,18 @@ define(function(require, exports, module) {
                 if (!nodes) return callback(new Error("Nothing to do"));
             }
             
-            var parallel = !options || options.parallel === undefined
-                ? settings.getBool("shared/test/@parallel")
-                : options.parallel; // TODO have a setting per runner
-            
             var withCodeCoverage = options && options.withCodeCoverage;
             var transformRun = options && options.transformRun;
+            
+            var parallel = !options || options.parallel === undefined
+                ? test.config.parallel
+                : options.parallel;
+            var parallelConcurrency = (!options || options.parallelConcurrency === undefined
+                ? test.config.parallelConcurrency
+                : options.parallelConcurrency) || 6;
+            
+            options.parallel = parallel;
+            options.parallelConcurrency = options.parallelConcurrency;
 
             if (transformRun) {
                 var button = runGui.transformButton("stop");
@@ -641,9 +750,15 @@ define(function(require, exports, module) {
                     list.push(n);
             });
             
+            var firstRunner = list[0].findRunner();
+            if (options.parallel === undefined)
+                options.parallel = firstRunner.defaultParallel || false;
+            if (options.parallelConcurrency === undefined)
+                options.parallelConcurrency = firstRunner.defaultParallelConcurrency || 6;
+            
             test.lastTest = nodes;
             
-            async[parallel ? "each" : "eachSeries"](list, function(node, callback){
+            var worker = function(node, callback){
                 if (stopping) return callback(new Error("Terminated"));
                 
                 if (node.status == "pending") { // TODO do this lazily
@@ -654,16 +769,22 @@ define(function(require, exports, module) {
                 }
                 
                 _run(node, options, callback);
-            }, function(err){
+            };
+            var complete = function(err){
                 emit("stop", { nodes: list });
-                running = false;
-                delete progress.stop;
-
-                if (transformRun)
-                    runGui.transformButton();
-                
                 callback(err, list);
-            });
+            };
+            
+            if (parallel) {
+                var queue = async.queue(worker, parallelConcurrency);
+                queue.drain = complete;
+                list.forEach(function(item){
+                    queue.push(item, function(){});
+                });
+            }
+            else {
+                async.eachSeries(list, worker, complete);
+            }
         }
         
         var progress = {
@@ -676,7 +797,8 @@ define(function(require, exports, module) {
             },
             end: function(node){
                 updateStatus(node, "loaded");
-            }
+            },
+            stop: []
         };
         
         function findTest(path){
@@ -708,7 +830,8 @@ define(function(require, exports, module) {
             var runner = node.findRunner();
             var fileNode = node.findFileNode();
             
-            if (!runner) runner = findFileByPath(fileNode.path).findRunner();
+            if (!runner) 
+                runner = findFileByPath(fileNode.path).findRunner();
             
             if (runner.form)
                 options = runner.form.toJson(null, options || {});
@@ -720,15 +843,34 @@ define(function(require, exports, module) {
             clear([node], true);
             // emit("clearResult", { node: node });
             
-            progress.stop = runner.run(node, progress, options, function(err){
+            var stop = runner.run(node, progress, options, function(err){
                 updateStatus(node, "loaded");
                 
                 var tab = tabManager.findTab(fileNode.path);
                 if (tab) decorate(fileNode, tab);
                 
+                delete progress.stop[stopId];
+                
                 callback(err, node);
                 
+                // Write To Cache
+                writeToCache(runner, fileNode.path, fileNode.serialize());
+                
                 emit("result", { node: node });
+            });
+            var stopId = progress.stop.push(stop) - 1;
+        }
+        
+        function clearCache(runner, callback) {
+            fs.rmdir("~/.c9/cache/" + runner.name, { recursive: true }, function(){
+                callback && callback.apply(this, arguments);
+            });
+        }
+        
+        function writeToCache(runner, path, cache, callback){
+            fs.writeFile("~/.c9/cache/" + runner.name 
+              + "/" + path.replace(/\//g, "\\"), cache, function(err){
+                callback && callback(err);
             });
         }
         
@@ -780,7 +922,8 @@ define(function(require, exports, module) {
                         else if (typeof node.passed != "number")
                             node.passed = 3;
                         
-                        if (first) updateStatus(node, "loaded");
+                        // This caused unrun tests to no longer have an arrow
+                        // if (first) updateStatus(node, "loaded");
                     });
                 })(e.nodes, true);
                 
@@ -788,11 +931,13 @@ define(function(require, exports, module) {
                 callback();
             });
             
-            if (progress.stop)
-                progress.stop();
+            progress.stop.forEach(function(stop){
+                if (stop) stop();
+            });
             
             timer = setTimeout(function(){
-                emit("stop", { nodes: [] }); // It was probably not running anymore
+                emit("stop", { nodes: [] });
+                test.transformRunButton("run");
             }, 5000);
         }
         
@@ -813,6 +958,10 @@ define(function(require, exports, module) {
             if (tree.filterKeyword)
                 tree.filterKeyword = tree.filterKeyword;
             else tree.refresh();
+            
+            test.runners.forEach(function(runner){
+                clearCache(runner);
+            });
             
             clearAllDecorations();
         }
@@ -938,7 +1087,7 @@ define(function(require, exports, module) {
                 if (showInline) {
                     if (node.annotations)
                         createStackWidget(editor, session, node);
-                    if (node.output)
+                    if (node.output && node.output.trim())
                         createOutputWidget(editor, session, node);
                 }
             });
@@ -965,31 +1114,52 @@ define(function(require, exports, module) {
             var left = editor.renderer.$cursorLayer.getPixelPosition(pos).left;
             arrow.style.left = left /*+ editor.renderer.gutterWidth*/ - 5 + "px";
             
+            var runner = node.findRunner();
+            if (!runner)
+                runner = findFileByPath(node.findFileNode().path);
+            
             w.el.className = "error_widget_wrapper";
             el.style.whiteSpace = "pre";
             el.className = "error_widget " + extraClass;
-            el.innerHTML = node.findRunner().parseLinks(escapeHTML(node.output));
+            el.innerHTML = runner
+                ? runner.parseLinks(escapeHTML(node.output))
+                : escapeHTML(node.output);
             
             var closeBtn = document.createElement("span");
             closeBtn.textContent = "\xd7";
             closeBtn.className = "widget-close-button";
             w.el.appendChild(closeBtn);
             closeBtn.onclick = function() { w.destroy() };
+            closeBtn.onmousedown = function(e) { e.preventDefault() };
             
             w.el.addEventListener("click", function(e){
                 if (e.target && e.target.className == "link") {
-                    var parts = e.target.getAttribute("link").split(":");
-                    tabManager.open({
-                        path: parts[0],
-                        focus: true,
-                        document: {
-                            ace: {
-                                jump: {
-                                    row: Number(parts[1]),
-                                    column: Number(parts[1])
+                    var link = e.target.getAttribute("link");
+                    var parts = link.split(":");
+                    fs.exists(parts[0], function(exists){
+                        if (!exists) {
+                            commands.exec("navigate", null, { 
+                                keyword: link[0] == "/" ? link.substr(1) : link 
+                            });
+                            return;
+                        }
+                        
+                        var path = parts[0].indexOf(c9.workspaceDir) === 0
+                            ? parts[0].replace(c9.workspaceDir, "")
+                            : parts[0];
+                        
+                        tabManager.open({
+                            path: path,
+                            focus: true,
+                            document: {
+                                ace: {
+                                    jump: {
+                                        row: Number(parts[1]),
+                                        column: Number(parts[1])
+                                    }
                                 }
                             }
-                        }
+                        });
                     });
                 }
             }, false);
@@ -1053,10 +1223,10 @@ define(function(require, exports, module) {
                 m = item.message.trim();
                 if (m.length <= 50) d = m;
                 else {
-                    if (m.indexOf("\n") > -1)
+                    if (m.match(/[\n\r]/) > -1)
                         d = m.split("\n")[0].substr(0, 45) + " ...";
                     else
-                        m.substr(0, 20) + " ... " + m.substr(-25);
+                        d = m.substr(0, 20) + " ... " + m.substr(-25);
                 }
                 
                 session.lineAnnotations[item.line - 1] = { 
@@ -1148,6 +1318,10 @@ define(function(require, exports, module) {
             session.$lineWidgets = [];
         }
         
+        function refresh(){
+            tree && tree.refresh();
+        }
+        
         /***** Lifecycle *****/
         
         plugin.on("load", function() {
@@ -1196,6 +1370,11 @@ define(function(require, exports, module) {
             /**
              * 
              */
+            refresh: refresh,
+            
+            /**
+             * 
+             */
             run: run,
             
             /**
@@ -1226,7 +1405,12 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            findFileByPath: findFileByPath
+            findFileByPath: findFileByPath,
+            
+            /**
+             * 
+             */
+            writeToCache: writeToCache
         });
         
         register(null, {

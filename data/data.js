@@ -100,10 +100,10 @@ define(function(require, exports, module) {
         type = new RegExp("^(" + type + ")$");
         
         (function recur(items){
-            for (var j, i = 0; i < items.length; i++) {
-                j = items[i];
-                if ((j.type || "").match(type)) nodes.push(j);
-                else if (j.items) recur(j.items);
+            for (var i = 0; i < items.length; i++) {
+                var j = items[i];
+                if (j && type.test(j.type)) nodes.push(j);
+                else if (j && j.items) recur(j.items);
             }
         })([node]);
         
@@ -203,6 +203,34 @@ define(function(require, exports, module) {
         clone.clone = this.clone.bind(this);
         
         return clone;
+    }
+    
+    Data.prototype.serialize = function(toJson){
+        var obj = {};
+        
+        for (var prop in this.data) {
+            if (prop.match(/^(parent|isSelected|items|map|children|runner|tree)$/))
+                continue;
+            
+            if (this.data[prop] === undefined || this.data[prop] === null 
+              || Array.isArray(this.data[prop]) && !this.data[prop].length)
+                continue;
+            
+            if (prop == "coverage") {
+                obj.coverage = this.data.coverage.serialize(true);
+                continue;
+            }
+            
+            obj[prop] = this.data[prop];
+        }
+        
+        if (this.data.items && this.data.items.length) {
+            obj.items = this.data.items.map(function(item){
+                return item.serialize(true);
+            });
+        }
+        
+        return toJson ? obj : JSON.stringify(obj);
     }
     
     module.exports = Data;
