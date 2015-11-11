@@ -51,7 +51,7 @@ define(function(require, exports, module) {
         };
         
         var ENABLED = options.enabled 
-            || experimental.addExperiment("test=1", "Panels/Test Panel");
+            || experimental.addExperiment("test", false, "Panels/Test Panel");
         
         if (!ENABLED && !options.enabled) {
             return register(null, {
