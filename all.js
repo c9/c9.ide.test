@@ -1103,7 +1103,9 @@ define(function(require, exports, module) {
                 // coverGutter: true,
                 el: dom.createElement("div")
             };
-            var extraClass = node.passed == 2 ? "ace_error" : "ace_warning";
+            var extraClass = node.passed == 2 
+                ? "ace_error" 
+                : (node.passed == 1 ? "ace_ok" : "ace_warning");
             var el = w.el.appendChild(dom.createElement("div"));
             var arrow = w.el.appendChild(dom.createElement("div"));
             arrow.className = "error_widget_arrow " + extraClass;
