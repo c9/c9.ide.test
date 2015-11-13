@@ -13,7 +13,8 @@ define(function(require, exports, module) {
     
     Node.prototype = new Data(
         ["passed", "type", "runner", "index", "tree"], 
-        ["items"]
+        ["items", "annotations"],
+        ["pos", "selpos"]
     );
     
     Node.prototype.equals = function(node) {

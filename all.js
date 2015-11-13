@@ -1341,6 +1341,11 @@ define(function(require, exports, module) {
         plugin.on("unload", function(){
             drawn = false;
             tree = null;
+            stopping = null;
+            menuContext = null;
+            running = null;
+            boxFilter = null;
+            menuInlineContext = null;
         });
         
         /***** Register and define API *****/
