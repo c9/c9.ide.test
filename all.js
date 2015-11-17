@@ -171,6 +171,9 @@ define(function(require, exports, module) {
                             fileNode.fixParents();
                             commands.exec(cmd, null, { nodes: [fileNode] });
                         }
+                    },
+                    refresh: function(){
+                        tree && tree.refresh();
                     }
                 })) {
                     tree && tree.refresh();
@@ -219,6 +222,9 @@ define(function(require, exports, module) {
                         caption: "general",
                         class: "runner-form-header"
                     });
+                    
+                    var runner = e.runners[0] || 0;
+                    
                     form = new Form({ 
                         colwidth: 180,
                         rowheight: 45,
@@ -232,10 +238,10 @@ define(function(require, exports, module) {
                                 max: 999,
                                 defaultCheckboxValue: test.config.parallel !== undefined
                                     ? test.config.parallel
-                                    : (e.runners[0].defaultParallel || false),
+                                    : (runner.defaultParallel || false),
                                 defaultValue: test.config.parallelConcurrency !== undefined
                                     ? test.config.parallelConcurrency
-                                    : (e.runners[0].defaultParallelConcurrency || 6),
+                                    : (runner.defaultParallelConcurrency || 6),
                                 onchange: function(e){
                                     test.config[e.type == "checkbox" 
                                         ? "parallel"
