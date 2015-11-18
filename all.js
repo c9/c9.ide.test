@@ -671,12 +671,14 @@ define(function(require, exports, module) {
                 
                 var sl = n.pos ? n.pos.sl : 0;
                 var el = n.pos ? n.pos.el : 0;
-                scrollToDefinition(ace, sl, el);
                 
                 var a = n.annotations;
-                if (a && a.length)
+                if (a && a.length) {
+                    scrollToDefinition(ace, a[0].line, a[0].line);
                     ace.moveCursorTo(a[0].line - 1, a[0].column - 1);
+                }
                 else {
+                    scrollToDefinition(ace, sl, el);
                     ace.moveCursorTo(pos ? pos.sl : 0, pos ? pos.sc : 0);
                     
                     if (select)
@@ -1232,7 +1234,12 @@ define(function(require, exports, module) {
                         d = m.substr(0, 20) + " ... " + m.substr(-25);
                 }
                 
-                session.lineAnnotations[item.line - 1] = { 
+                var pos = item.line - 1;
+                session.addGutterDecoration(pos, "test-0");
+                (session.$markers || (session.$markers = []))
+                    .push([pos, "test-0"]);
+                
+                session.lineAnnotations[pos] = { 
                     display: d,
                     row: item.line - 1,
                     column: item.column,
