@@ -157,7 +157,7 @@ define(function(require, exports, module) {
 
                 // Notify runners of change event and refresh tree 
                 var runonsave = settings.getBool("user/test/@runonsave");
-                if (runner.fileChange({
+                runner.fileChange({
                     path: e.path,
                     value: e.value, 
                     runonsave: runonsave,
@@ -175,9 +175,7 @@ define(function(require, exports, module) {
                     refresh: function(){
                         tree && tree.refresh();
                     }
-                })) {
-                    tree && tree.refresh();
-                }
+                });
             }, plugin);
 
             // Run Button Hook
@@ -721,16 +719,6 @@ define(function(require, exports, module) {
             var withCodeCoverage = options && options.withCodeCoverage;
             var transformRun = options && options.transformRun;
             
-            var parallel = !options || options.parallel === undefined
-                ? test.config.parallel
-                : options.parallel;
-            var parallelConcurrency = (!options || options.parallelConcurrency === undefined
-                ? test.config.parallelConcurrency
-                : options.parallelConcurrency) || 6;
-            
-            options.parallel = parallel;
-            options.parallelConcurrency = options.parallelConcurrency;
-
             if (transformRun) {
                 var button = runGui.transformButton("stop");
                 button.setAttribute("command", "stoptest");
@@ -757,10 +745,15 @@ define(function(require, exports, module) {
             });
             
             var firstRunner = list[0].findRunner();
-            if (options.parallel === undefined)
-                options.parallel = firstRunner.defaultParallel || false;
-            if (options.parallelConcurrency === undefined)
-                options.parallelConcurrency = firstRunner.defaultParallelConcurrency || 6;
+            var parallel = (!options || options.parallel === undefined
+                ? test.config.parallel || firstRunner.defaultParallel
+                : options.parallel) || false;
+            var parallelConcurrency = (!options || options.parallelConcurrency === undefined
+                ? test.config.parallelConcurrency || firstRunner.defaultParallelConcurrency
+                : options.parallelConcurrency) || 6;
+            
+            options.parallel = parallel;
+            options.parallelConcurrency = parallelConcurrency;
             
             test.lastTest = nodes;
             
@@ -955,6 +948,8 @@ define(function(require, exports, module) {
                 n.passed = undefined;
                 n.ownPassed = null;
                 n.output = "";
+                if (n.status == "running")
+                    n.status = "loaded";
                 n.annotations = [];
                 if (n.items) clear(n.items, true);
             });
