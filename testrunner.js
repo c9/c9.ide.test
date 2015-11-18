@@ -431,8 +431,8 @@ define(function(require, module, exports) {
                 var def = getConfig();
                 
                 var reSearch = util.escapeRegExp(def.search)
-                    .replace(/\\*/g, ".*")
-                    .replace(/\\?/g, ".");
+                    .replace(/\\\*/g, ".*")
+                    .replace(/\\\?/g, ".");
                 
                 if (!path.match(reSearch)) return false;
                 

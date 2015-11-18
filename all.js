@@ -157,7 +157,7 @@ define(function(require, exports, module) {
 
                 // Notify runners of change event and refresh tree 
                 var runonsave = settings.getBool("user/test/@runonsave");
-                if (runner.fileChange({
+                runner.fileChange({
                     path: e.path,
                     value: e.value, 
                     runonsave: runonsave,
@@ -171,10 +171,11 @@ define(function(require, exports, module) {
                             fileNode.fixParents();
                             commands.exec(cmd, null, { nodes: [fileNode] });
                         }
+                    },
+                    refresh: function(){
+                        tree && tree.refresh();
                     }
-                })) {
-                    tree && tree.refresh();
-                }
+                });
             }, plugin);
 
             // Run Button Hook
@@ -219,6 +220,9 @@ define(function(require, exports, module) {
                         caption: "general",
                         class: "runner-form-header"
                     });
+                    
+                    var runner = e.runners[0] || 0;
+                    
                     form = new Form({ 
                         colwidth: 180,
                         rowheight: 45,
@@ -232,10 +236,10 @@ define(function(require, exports, module) {
                                 max: 999,
                                 defaultCheckboxValue: test.config.parallel !== undefined
                                     ? test.config.parallel
-                                    : (e.runners[0].defaultParallel || false),
+                                    : (runner.defaultParallel || false),
                                 defaultValue: test.config.parallelConcurrency !== undefined
                                     ? test.config.parallelConcurrency
-                                    : (e.runners[0].defaultParallelConcurrency || 6),
+                                    : (runner.defaultParallelConcurrency || 6),
                                 onchange: function(e){
                                     test.config[e.type == "checkbox" 
                                         ? "parallel"
@@ -625,6 +629,15 @@ define(function(require, exports, module) {
             (nodes || test.focussedPanel.tree.selectedNodes).forEach(function(n){
                 var tab;
                 
+                if (n.passed === 0) {
+                    var found; 
+                    n.findAllNodes("test").some(function(n){ 
+                        found = n;
+                        return n.passed === 0; 
+                    });
+                    n = found;
+                }
+                
                 if (n.type == "file" && (!n.ownPassed || !n.output)) {
                     if (onlyWhenOpen) {
                         tab = tabManager.findTab(n.path);
@@ -667,12 +680,14 @@ define(function(require, exports, module) {
                 
                 var sl = n.pos ? n.pos.sl : 0;
                 var el = n.pos ? n.pos.el : 0;
-                scrollToDefinition(ace, sl, el);
                 
                 var a = n.annotations;
-                if (a && a.length)
+                if (a && a.length) {
+                    scrollToDefinition(ace, a[0].line, a[0].line);
                     ace.moveCursorTo(a[0].line - 1, a[0].column - 1);
+                }
                 else {
+                    scrollToDefinition(ace, sl, el);
                     ace.moveCursorTo(pos ? pos.sl : 0, pos ? pos.sc : 0);
                     
                     if (select)
@@ -715,16 +730,6 @@ define(function(require, exports, module) {
             var withCodeCoverage = options && options.withCodeCoverage;
             var transformRun = options && options.transformRun;
             
-            var parallel = !options || options.parallel === undefined
-                ? test.config.parallel
-                : options.parallel;
-            var parallelConcurrency = (!options || options.parallelConcurrency === undefined
-                ? test.config.parallelConcurrency
-                : options.parallelConcurrency) || 6;
-            
-            options.parallel = parallel;
-            options.parallelConcurrency = options.parallelConcurrency;
-
             if (transformRun) {
                 var button = runGui.transformButton("stop");
                 button.setAttribute("command", "stoptest");
@@ -751,10 +756,15 @@ define(function(require, exports, module) {
             });
             
             var firstRunner = list[0].findRunner();
-            if (options.parallel === undefined)
-                options.parallel = firstRunner.defaultParallel || false;
-            if (options.parallelConcurrency === undefined)
-                options.parallelConcurrency = firstRunner.defaultParallelConcurrency || 6;
+            var parallel = (!options || options.parallel === undefined
+                ? test.config.parallel || firstRunner.defaultParallel
+                : options.parallel) || false;
+            var parallelConcurrency = (!options || options.parallelConcurrency === undefined
+                ? test.config.parallelConcurrency || firstRunner.defaultParallelConcurrency
+                : options.parallelConcurrency) || 6;
+            
+            options.parallel = parallel;
+            options.parallelConcurrency = parallelConcurrency;
             
             test.lastTest = nodes;
             
@@ -949,6 +959,8 @@ define(function(require, exports, module) {
                 n.passed = undefined;
                 n.ownPassed = null;
                 n.output = "";
+                if (n.status == "running")
+                    n.status = "loaded";
                 n.annotations = [];
                 if (n.items) clear(n.items, true);
             });
@@ -1231,7 +1243,12 @@ define(function(require, exports, module) {
                         d = m.substr(0, 20) + " ... " + m.substr(-25);
                 }
                 
-                session.lineAnnotations[item.line - 1] = { 
+                var pos = item.line - 1;
+                session.addGutterDecoration(pos, "test-0");
+                (session.$markers || (session.$markers = []))
+                    .push([pos, "test-0"]);
+                
+                session.lineAnnotations[pos] = { 
                     display: d,
                     row: item.line - 1,
                     column: item.column,
