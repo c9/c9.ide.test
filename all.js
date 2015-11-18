@@ -629,6 +629,15 @@ define(function(require, exports, module) {
             (nodes || test.focussedPanel.tree.selectedNodes).forEach(function(n){
                 var tab;
                 
+                if (n.passed === 0) {
+                    var found; 
+                    n.findAllNodes("test").some(function(n){ 
+                        found = n;
+                        return n.passed === 0; 
+                    });
+                    n = found;
+                }
+                
                 if (n.type == "file" && (!n.ownPassed || !n.output)) {
                     if (onlyWhenOpen) {
                         tab = tabManager.findTab(n.path);
