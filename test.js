@@ -2,7 +2,7 @@ define(function(require, exports, module) {
     main.consumes = [
         "Panel", "ui", "settings", "panels", "menus", "commands", "Menu", 
         "MenuItem", "Divider", "tabManager", "fs", "dialog.error", "c9",
-        "preferences.experimental", "save"
+        "preferences.experimental", "save", "watcher"
     ];
     main.provides = ["test"];
     return main;
@@ -21,6 +21,7 @@ define(function(require, exports, module) {
         var fs = imports.fs;
         var c9 = imports.c9;
         var save = imports.save;
+        var watcher = imports.watcher;
         var showError = imports["dialog.error"].show;
         var experimental = imports["preferences.experimental"];
         
@@ -316,18 +317,30 @@ define(function(require, exports, module) {
                 onclick: openTestConfigFile
             }), 900, plugin);
             
-            fs.readFile(configPath, function(err, data){
-                if (err && err.code != "ENOENT")
-                    return showError("Could not load " + configPath 
-                        + ". The test panel is disabled. Please restart " 
-                        + "Cloud9 to retry.");
-                
-                parse(data || "");
-                
-                // TODO add watcher for the config
-                
-                ready = true;
-                emit.sticky("ready");
+            function readConfig(cb){
+                fs.readFile(configPath, function(err, data){
+                    if (err && err.code != "ENOENT")
+                        return showError("Could not load " + configPath 
+                            + ". The test panel is disabled. Please restart " 
+                            + "Cloud9 to retry.");
+                    
+                    parse(data || "");
+                    
+                    cb && cb()
+                    
+                    ready = true;
+                    emit.sticky("ready");
+                });
+            }
+            readConfig(function(){
+                watcher.watch(configPath);
+                watcher.on("change", function(e){
+                    if (e.path == configPath) {
+                        readConfig(function(){
+                            emit("updateConfig");
+                        });
+                    }
+                });
             });
             
             save.on("afterSave", function(e){
