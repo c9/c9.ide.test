@@ -222,7 +222,7 @@ define(function(require, module, exports) {
             }
             
             function parseScript(def){
-                var script = ["grep -lsR"];
+                var script = ["grep -lsRi"];
                 
                 if ((def.match || 0).content) 
                     def.match.content.forEach(function(q){
