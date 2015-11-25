@@ -1434,7 +1434,12 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            writeToCache: writeToCache
+            writeToCache: writeToCache,
+            
+            /**
+             * 
+             */
+            clearCache: clearCache
         });
         
         register(null, {

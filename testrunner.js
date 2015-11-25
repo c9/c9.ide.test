@@ -112,7 +112,11 @@ define(function(require, module, exports) {
                         
                         test.config[query.id] = ta.value;
                         test.saveConfig(function(){
-                            plugin.update();
+                            update(function(){
+                                all.clearCache(plugin, function(){
+                                    all.refresh();
+                                });
+                            });
                         });
                     });
                     
@@ -334,7 +338,7 @@ define(function(require, module, exports) {
                 */
                 
                 var isUpdating, initialUpdate = true;
-                update = function(){
+                update = function(otherCallback){
                     if (isUpdating) return fsUpdate(null, 10000);
                     
                     isUpdating = true;
@@ -360,7 +364,10 @@ define(function(require, module, exports) {
                                     cb(null, nodes);
                                 });
                             }
-                            else return callback();
+                            else {
+                                callback();
+                                cb();
+                            }
                         },
                         recent: function(callback){
                             plugin.fetch(function(err, list){
@@ -390,6 +397,7 @@ define(function(require, module, exports) {
                             });
                         }
                     }, function(err, data){
+                        otherCallback && otherCallback();
                         if (err) return callback(err);
                         
                         plugin.root.importItems(data.recent);
