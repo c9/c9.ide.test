@@ -113,9 +113,7 @@ define(function(require, module, exports) {
                         test.config[query.id] = ta.value;
                         test.saveConfig(function(){
                             update(function(){
-                                all.clearCache(plugin, function(){
-                                    all.refresh();
-                                });
+                                all.refresh();
                             });
                         });
                     });

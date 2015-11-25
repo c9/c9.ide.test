@@ -2,7 +2,7 @@ define(function(require, exports, module) {
     main.consumes = [
         "Panel", "ui", "settings", "panels", "menus", "commands", "Menu", 
         "MenuItem", "Divider", "tabManager", "fs", "dialog.error", "c9",
-        "preferences.experimental"
+        "preferences.experimental", "save"
     ];
     main.provides = ["test"];
     return main;
@@ -20,6 +20,7 @@ define(function(require, exports, module) {
         var Divider = imports.Divider;
         var fs = imports.fs;
         var c9 = imports.c9;
+        var save = imports.save;
         var showError = imports["dialog.error"].show;
         var experimental = imports["preferences.experimental"];
         
@@ -328,6 +329,13 @@ define(function(require, exports, module) {
                 ready = true;
                 emit.sticky("ready");
             });
+            
+            save.on("afterSave", function(e){
+                if (e.path == configPath) {
+                    parse(e.value);
+                    emit("updateConfig");
+                }
+            }, plugin);
         }
         
         var drawnMenu = false;

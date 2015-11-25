@@ -88,6 +88,14 @@ define(function(require, exports, module) {
                     test.config.skipped = {};
             }, plugin);
             
+            test.on("updateConfig", function(){
+                async.each(test.runners, function(runner, cb){
+                    runner.update(cb);
+                }, function(){
+                    refresh();
+                });
+            }, plugin);
+            
             settings.on("read", function(){
                 settings.setDefaults("user/test", [
                     ["inlineresults", true],
