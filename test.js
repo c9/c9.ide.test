@@ -75,33 +75,6 @@ define(function(require, exports, module) {
             });
         }
         
-        /*
-            TODO:
-            
-            DOCS:
-            - Update Tree documentation:
-                - Expand/Collapse using .isOpen = true/false + tree.refresh
-                - Partial loading using status = potential + loadChildren
-                - use of scrollMargin
-                - afterChoose is not documented (it says choose event)
-            
-            BUGS:
-            - normal outline has wrong color on selection (of filtered text)
-            - test outline should highlight filtered text
-            - duplicate favorite gives an error
-            - tab.once("activate", function(){ setTimeout(function(){ decorateFile(tab); }); });
-            - in Editor: e.htmlNode is inconsistent e.html, e.aml is consistent
-            - run test button doesn't work if test panel.draw wasn't called
-            - [Can't reproduce] when filtering the client-config test cannot be found
-            - [Can't reproduce] when filtering too early, filtering yield no results
-            - [Can't reproduce] results window throws error when loop cannot find parents (line 385)
-            - Move rowheight change code to widget?
-            - Creating a newfile document should not require a path
-            - When adding a favorite the tree should scroll up
-            - Add a shortkey to open the last closed tab(s).
-                - Fix the last closed tab(s) list to be in the correct order
-        */
-        
         /***** Initialization *****/
         
         var plugin = new Panel("Ajax.org", main.consumes, {
