@@ -417,7 +417,8 @@ define(function(require, exports, module) {
                         
                         if (groupNode.type == "file") {
                             group.unshift(groupNode);
-                            groupNode.runner = pNode.parent.runner;
+                            groupNode.runner = pNode.runner || pNode.parent 
+                                && pNode.parent.runner;
                         }
                         else
                             group.splice(calcIndex(group, pNode), 0, groupNode);
