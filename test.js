@@ -307,7 +307,8 @@ define(function(require, exports, module) {
                     });
                 },
                 isAvailable: function(){
-                    return focussedPanel && focussedPanel.tree.selectedNodes.some(function(n){
+                    return focussedPanel && focussedPanel.tree 
+                      && focussedPanel.tree.selectedNodes.some(function(n){
                         return (n.findFileNode() || 0).fullOutput || false;
                     });
                 }
