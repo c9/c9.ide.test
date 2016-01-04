@@ -271,7 +271,7 @@ define(function(require, module, exports) {
             
             function getConfig(){
                 try {
-                    return test.config[query.id] 
+                    return test.config && test.config[query.id] 
                         ? JSON.parse(test.config[query.id]) 
                         : query.def;
                 } catch(e) {
