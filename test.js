@@ -107,6 +107,7 @@ define(function(require, exports, module) {
         var plugin = new Panel("Ajax.org", main.consumes, {
             index: options.index || 400,
             caption: "Test",
+            buttonCSSClass: "test",
             minWidth: 150,
             where: options.where || "left"
         });
