@@ -73,19 +73,19 @@ define(function(require, module, exports) {
                 },
             */
             
-            plugin.on("load", function(){
+            plugin.on("load", function() {
                 test.register(plugin);
                 
                 if (!query) return;
                 
                 var prefDef = {
-                    "Test" : {
+                    "Test": {
                         position: 1000,
                     }
                 };
                 prefDef.Test[query.label] = {
                     position: query.position || 1000,
-                    "Config To Fetch All Test Files In The Workspace" : {
+                    "Config To Fetch All Test Files In The Workspace": {
                        name: "txtTest",
                        type: "textarea-row",
                        fixedFont: true,
@@ -105,35 +105,35 @@ define(function(require, module, exports) {
                         
                         // Validate
                         try { JSON.parse(ta.value); }
-                        catch(e) { 
+                        catch (e) { 
                             showError("Invalid JSON " + e.message); 
                             return;
                         }
                         
                         test.config[query.id] = ta.value;
-                        test.saveConfig(function(){
-                            update(function(){
+                        test.saveConfig(function() {
+                            update(function() {
                                 all.refresh();
                             });
                         });
                     });
                     
-                    test.on("ready", function(){
+                    test.on("ready", function() {
                         ta.setValue(test.config[query.id] || DEFAULTSCRIPT);
                     }, plugin);
-                    test.on("updateConfig", function(){
+                    test.on("updateConfig", function() {
                         ta.setValue(test.config[query.id] || DEFAULTSCRIPT);
                     }, plugin);
                 }, plugin);
                 
-                function addFile(path, value){
+                function addFile(path, value) {
                     if (isTest(path, value) && !all.findFileByPath(path)) {
                         createFile(path);
                         all.refresh();
                     }
                 }
                 
-                function removeTestFile(path){
+                function removeTestFile(path) {
                     var fileNode = all.findFileByPath(path);
                     if (fileNode) {
                         plugin.root.items.remove(fileNode);
@@ -141,8 +141,8 @@ define(function(require, module, exports) {
                     }
                 }
                 
-                function rmdir(path){
-                    plugin.root.findAllNodes("file").forEach(function(fileNode){
+                function rmdir(path) {
+                    plugin.root.findAllNodes("file").forEach(function(fileNode) {
                         if (fileNode.path.indexOf(path) === 0) {
                             plugin.root.items.remove(fileNode);
                         }
@@ -150,34 +150,34 @@ define(function(require, module, exports) {
                     all.refresh();
                 }
                 
-                fs.on("afterWriteFile", function(e){
+                fs.on("afterWriteFile", function(e) {
                     addFile(e.path, e.args[1]);
                 }, plugin);
-                fs.on("afterUnlink", function(e){
+                fs.on("afterUnlink", function(e) {
                     removeTestFile(e.path);
                 }, plugin);
-                fs.on("afterRmfile", function(e){
+                fs.on("afterRmfile", function(e) {
                     removeTestFile(e.path);
                 }, plugin);
-                fs.on("afterRmdir", function(e){
+                fs.on("afterRmdir", function(e) {
                     rmdir(e.path);
                 }, plugin);
-                fs.on("afterCopy", function(e){
+                fs.on("afterCopy", function(e) {
                     var fromPath = e.args[0];
                     var toPath = e.args[1];
                     
-                    plugin.root.findAllNodes("file").forEach(function(fileNode){
+                    plugin.root.findAllNodes("file").forEach(function(fileNode) {
                         if (fileNode.path.indexOf(fromPath) === 0) {
                             createFile(fileNode.path.replace(fromPath, toPath));
                         }
                     });
                     all.refresh();
                 }, plugin);
-                fs.on("afterRename", function(e){
+                fs.on("afterRename", function(e) {
                     var fromPath = e.args[0];
                     var toPath = e.args[1];
                     
-                    plugin.root.findAllNodes("file").forEach(function(fileNode){
+                    plugin.root.findAllNodes("file").forEach(function(fileNode) {
                         if (fileNode.path.indexOf(fromPath) === 0) {
                             fileNode.path = fileNode.path.replace(fromPath, toPath);
                             fileNode.label = fileNode.path.substr(1);
@@ -186,30 +186,30 @@ define(function(require, module, exports) {
                     all.refresh();
                 }, plugin);
                 
-                watcher.on("delete", function(e){
+                watcher.on("delete", function(e) {
                     rmdir(e.path);
                 }, plugin);
-                watcher.on("directory", function(e){
+                watcher.on("directory", function(e) {
                     // TODO: Run fetch() in this directory to get the new tests
                     // all.refresh();
                 }, plugin);
-                watcher.on("change", function(e){
+                watcher.on("change", function(e) {
                     var fileNode = all.findFileByPath(e.path);
                     if (fileNode && fileNode.status == "pending") {
-                        plugin.update(fileNode, function(err){
+                        plugin.update(fileNode, function(err) {
                             if (!err) all.refresh();
                         });
                     }
                 }, plugin);
             });
             
-            plugin.on("unload", function(){
+            plugin.on("unload", function() {
                 test.unregister(plugin);
             });
 
             /***** Methods *****/
             
-            function getForm(){
+            function getForm() {
                 if (!formOptions.length) return false;
                 if (form) return form;
                 
@@ -223,28 +223,28 @@ define(function(require, module, exports) {
                 return form;
             }
             
-            function parseScript(def){
+            function parseScript(def) {
                 var script = ["grep -lsRi"];
                 
                 if ((def.match || 0).content) 
-                    def.match.content.forEach(function(q){
+                    def.match.content.forEach(function(q) {
                         script.push("-E " + makeArg(q));
                     });
                 
                 if ((def.exclude || 0).dir)
-                    def.exclude.dir.forEach(function(q){
+                    def.exclude.dir.forEach(function(q) {
                         script.push("--exclude-dir " + makeArg(q));
                     });
                     
                 if ((def.exclude || 0).file)
-                    def.exclude.file.forEach(function(q){
+                    def.exclude.file.forEach(function(q) {
                         script.push("--exclude " + makeArg(q));
                     });
                 
                 script.push(def.search);
                 
                 if ((def.match || 0).filename) 
-                    def.match.filename.forEach(function(q){
+                    def.match.filename.forEach(function(q) {
                         if (q.charAt(0) == "-")
                             script.push("| grep -v " + makeArg(q.substr(1)));
                         else
@@ -254,11 +254,11 @@ define(function(require, module, exports) {
                 return script.join(" ");
             }
             
-            function makeArg(str){
+            function makeArg(str) {
                 return "'" + str.replace(/'/g, "\\'") + "'";
             }
             
-            function createFile(path, items){
+            function createFile(path, items) {
                 var file = new File({
                     label: getName ? getName(path) : path,
                     path: path
@@ -269,28 +269,28 @@ define(function(require, module, exports) {
                 return file;
             }
             
-            function getConfig(){
+            function getConfig() {
                 try {
                     return test.config && test.config[query.id] 
                         ? JSON.parse(test.config[query.id]) 
                         : query.def;
-                } catch(e) {
+                } catch (e) {
                     return query.def;
                 }
             }
             
-            function fetchFromCache(callback){
-                fs.readFile("~/.c9/cache/" + plugin.name, function(err, data){
+            function fetchFromCache(callback) {
+                fs.readFile("~/.c9/cache/" + plugin.name, function(err, data) {
                     if (err)
                         return callback(err);
                     
                     try { callback(null, JSON.parse(data)); }
-                    catch(e) { callback(); }
+                    catch (e) { callback(); }
                 });
             }
             
-            function writeToCache(cache, callback){
-                fs.writeFile("~/.c9/cache/" + plugin.name + "/index", cache, function(err){
+            function writeToCache(cache, callback) {
+                fs.writeFile("~/.c9/cache/" + plugin.name + "/index", cache, function(err) {
                     callback && callback(err);
                 });
             }
@@ -311,13 +311,13 @@ define(function(require, module, exports) {
                     if (err) return callback(err);
                     
                     var stdout = "", stderr = "";
-                    p.stdout.on("data", function(c){
+                    p.stdout.on("data", function(c) {
                         stdout += c;
                     });
-                    p.stderr.on("data", function(c){
+                    p.stderr.on("data", function(c) {
                         stderr += c;
                     });
-                    p.on("exit", function(){
+                    p.on("exit", function() {
                         callback(null, stdout);
                     });
                 });
@@ -336,20 +336,20 @@ define(function(require, module, exports) {
                 */
                 
                 var isUpdating, initialUpdate = true;
-                update = function(otherCallback){
+                update = function(otherCallback) {
                     if (isUpdating) return fsUpdate(null, 10000);
                     
                     isUpdating = true;
                     
                     async.parallel({
-                        cache: function(cb){
+                        cache: function(cb) {
                             if (initialUpdate) {
                                 initialUpdate = false; // Only fetch cache at startup
                                 
-                                fetchFromCache(function(err, nodes){
+                                fetchFromCache(function(err, nodes) {
                                     if (!nodes || err) return cb();
                                     
-                                    nodes.forEach(function(node){
+                                    nodes.forEach(function(node) {
                                         if (!node.label) {
                                             node.label = getName(node.path);
                                             node.status = "pending";
@@ -367,8 +367,8 @@ define(function(require, module, exports) {
                                 cb();
                             }
                         },
-                        recent: function(callback){
-                            plugin.fetch(function(err, list){
+                        recent: function(callback) {
+                            plugin.fetch(function(err, list) {
                                 isUpdating = false;
                                 
                                 if (err) return callback(err);
@@ -376,7 +376,7 @@ define(function(require, module, exports) {
                                 var items = [];
                                 var newCache = [];
                                 
-                                list.split("\n").forEach(function(name){
+                                list.split("\n").forEach(function(name) {
                                     var path = "/" + name;
                                     if (!name || filter(path)) return;
                                     
@@ -394,7 +394,7 @@ define(function(require, module, exports) {
                                 callback(null, items);
                             });
                         }
-                    }, function(err, data){
+                    }, function(err, data) {
                         otherCallback && otherCallback();
                         if (err) return callback(err);
                         
@@ -404,7 +404,7 @@ define(function(require, module, exports) {
                 };
                 
                 var timer;
-                function fsUpdate(e, time){
+                function fsUpdate(e, time) {
                     clearTimeout(timer);
                     timer = setTimeout(update, time || 1000);
                 }
@@ -433,7 +433,7 @@ define(function(require, module, exports) {
                 },
             */
             
-            function isTest(path, value){
+            function isTest(path, value) {
                 var def = getConfig();
                 
                 var reSearch = util.escapeRegExp(def.search)
@@ -443,14 +443,14 @@ define(function(require, module, exports) {
                 if (!path.match(reSearch)) return false;
                 
                 if (((def.match || 0).content || 0).length) {
-                    if (!def.match.content.some(function(q){
+                    if (!def.match.content.some(function(q) {
                         return (value || "").match(new RegExp(q));
                     })) return false;
                 }
                 
                 var filename = basename(path);
                 if (((def.match || 0).filename || 0).length) {
-                    if (!def.match.filename.some(function(q){
+                    if (!def.match.filename.some(function(q) {
                         if (q.charAt(0) == "-")
                             return !filename.match(new RegExp(q.substr(1)));
                         else
@@ -460,13 +460,13 @@ define(function(require, module, exports) {
                 
                 var dirpath = dirname(path);
                 if (((def.exclude || 0).dir || 0).length) {
-                    if (def.exclude.dir.some(function(q){
+                    if (def.exclude.dir.some(function(q) {
                         return dirpath.match(new RegExp(q));
                     })) return false;
                 }
                     
                 if (((def.exclude || 0).file || 0).length) {
-                    if (def.exclude.file.some(function(q){
+                    if (def.exclude.file.some(function(q) {
                         return filename.match(new RegExp(q));
                     })) return false;
                 }
@@ -482,34 +482,34 @@ define(function(require, module, exports) {
                 /**
                  * @property {String} caption
                  */
-                get caption(){ return caption; },
+                get caption() { return caption; },
                 
                 /**
                  * @property {Array} options
                  */
-                get form(){ return getForm(); },
+                get form() { return getForm(); },
                 
                 /**
                  * 
                  */
-                get meta(){ return meta; },
+                get meta() { return meta; },
                 
                 /**
                  * 
                  */
-                get update(){ return update },
+                get update() { return update; },
                 
                 /**
                  * 
                  */
-                get defaultParallel(){ return defaultParallel; },
-                set defaultParallel(v){ defaultParallel = v; },
+                get defaultParallel() { return defaultParallel; },
+                set defaultParallel(v) { defaultParallel = v; },
                 
                 /**
                  * 
                  */
-                get defaultParallelConcurrency(){ return defaultParallelConcurrency; },
-                set defaultParallelConcurrency(v){ defaultParallelConcurrency = v; },
+                get defaultParallelConcurrency() { return defaultParallelConcurrency; },
+                set defaultParallelConcurrency(v) { defaultParallelConcurrency = v; },
                 
                 /**
                  * 

@@ -22,7 +22,7 @@ define(function(require, module, exports) {
             var showTitle = options.showTitle || false;
             var amlFrame;
 
-            plugin.on("load", function(){
+            plugin.on("load", function() {
                 // Draw panel when test panel is drawn
                 test.once("drawPanels", draw, plugin);
             });
@@ -31,7 +31,7 @@ define(function(require, module, exports) {
                 amlFrame = showTitle ? ui.frame({
                     buttons: "min",
                     activetitle: "min",
-                    "class"     : "absframe " + options.class,
+                    "class": "absframe " + options.class,
                     style: "position:relative;" + (style || ""),
                     textselect: options.textselect,
                     // height      : height,
@@ -57,7 +57,7 @@ define(function(require, module, exports) {
 
                 emit.sticky("draw", { aml: amlFrame, html: amlFrame.$int });
 
-                amlFrame.on("prop.height", function(){
+                amlFrame.on("prop.height", function() {
                     emit("resize");
                 });
                 
@@ -83,7 +83,7 @@ define(function(require, module, exports) {
 
             /***** Methods *****/
 
-            function show(){
+            function show() {
                 if (amlFrame) {
                     if (amlFrame.restore) amlFrame.restore();
                     else amlFrame.show();
@@ -91,7 +91,7 @@ define(function(require, module, exports) {
                 }
             }
 
-            function hide(){
+            function hide() {
                 amlFrame.hide();
                 emit("hide");
             }
@@ -127,18 +127,18 @@ define(function(require, module, exports) {
                  * @private
                  * @readonly
                  */
-                get aml(){ return amlFrame; },
+                get aml() { return amlFrame; },
                 
                 /**
                  * 
                  */
-                get visible(){ return amlFrame.visible; },
+                get visible() { return amlFrame.visible; },
                 
                 /**
                  * @property {Number} height
                  */
-                get height(){ return amlFrame.getHeight(); },
-                set height(v){ 
+                get height() { return amlFrame.getHeight(); },
+                set height(v) { 
                     if (height != v) {
                         height = v; 
                         amlFrame.setHeight(v); 

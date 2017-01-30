@@ -51,7 +51,7 @@ define(function(require, exports, module) {
             //     bindKey: { mac: "Command-.", win: "Ctrl-." }
             // });
             
-            panels.on("afterAnimate", function(){
+            panels.on("afterAnimate", function() {
                 if (panels.isActive("test"))
                     tree && tree.resize();
             });
@@ -61,16 +61,16 @@ define(function(require, exports, module) {
             //     command: "commands" 
             // }), 250, plugin);
             
-            settings.on("read", function(){
+            settings.on("read", function() {
                 settings.setDefaults("user/test", [["collapsegroups", false]]);
             }, plugin);
             
             prefs.add({
-                "Test" : {
+                "Test": {
                     position: 1000,
-                    "Test Runner" : {
+                    "Test Runner": {
                         position: 100,
-                        "Collapse Passed and Skipped Groups" : {
+                        "Collapse Passed and Skipped Groups": {
                             type: "checkbox",
                             position: 200,
                             setting: "user/test/@collapsegroups"
@@ -211,22 +211,22 @@ define(function(require, exports, module) {
                 commands.exec("runtest");
             });
             
-            tree.on("focus", function(){
+            tree.on("focus", function() {
                 test.focussedPanel = plugin;
             });
             
-            tree.on("select", function(){
+            tree.on("select", function() {
                 openTestFile([tree.selectedNode], true);
             });
             
-            tree.on("afterChoose",  function(){
+            tree.on("afterChoose", function() {
                 if (tree.selectedNode && !tree.model.hasChildren(tree.selectedNode))
                     openTestFile([tree.selectedNode], false);
             });
             
             tree.on("afterRender", recalc);
             
-            layout.on("eachTheme", function(e){
+            layout.on("eachTheme", function(e) {
                 var height = parseInt(ui.getStyleRule(".filetree .tree-row", "height"), 10) || 22;
                 tree.rowHeightInner = height;
                 tree.rowHeight = height;
@@ -234,24 +234,24 @@ define(function(require, exports, module) {
                 if (e.changed && tree) tree.resize(true);
             });
             
-            all.on("draw", function(){
+            all.on("draw", function() {
                 // Menu
                 opts.aml.setAttribute("contextmenu", all.contextMenu.aml);
             }, plugin);
             
             // Hook clear
-            test.on("clear", function(){
+            test.on("clear", function() {
                 clear();
             }, plugin);
             
             plugin.hide();
             
             // Process Result
-            all.on("result", function(e){ handleResult(e.node); }, plugin);
-            all.on("clearResult", function(e){ clearResult(e.node); }, plugin);
+            all.on("result", function(e) { handleResult(e.node); }, plugin);
+            all.on("clearResult", function(e) { clearResult(e.node); }, plugin);
             
-            (function _(node){
-                node.items.forEach(function(node){
+            (function _(node) {
+                node.items.forEach(function(node) {
                     if (node.type == "file") {
                         if (node.passed !== undefined)
                             handleResult(node);
@@ -260,7 +260,7 @@ define(function(require, exports, module) {
                 });
             })(all.root);
             
-            settings.on("read", function(){
+            settings.on("read", function() {
                 test.settingsMenu.append(new MenuItem({ 
                     caption: "Collapse Passed and Skipped Groups", 
                     checked: "user/test/@collapsegroups",
@@ -269,7 +269,7 @@ define(function(require, exports, module) {
                 }));
             }, plugin);
             
-            settings.on("user/test/@collapsegroups", function(value){
+            settings.on("user/test/@collapsegroups", function(value) {
                 if (plugin.visible) {
                     skipNode.isOpen = !value;
                     passNode.isOpen = !value;
@@ -280,11 +280,11 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function openTestFile(nodes, onlyWhenOpen){
+        function openTestFile(nodes, onlyWhenOpen) {
             all.openTestFile(nodes || tree.selectedNodes, onlyWhenOpen);
         }
         
-        function skip(nodes, callback){
+        function skip(nodes, callback) {
             if (typeof nodes == "function")
                 callback = nodes, nodes = null;
             
@@ -293,7 +293,7 @@ define(function(require, exports, module) {
             all.skip(nodes, callback);
         }
         
-        function remove(nodes, callback){
+        function remove(nodes, callback) {
             if (typeof nodes == "function")
                 callback = nodes, nodes = null;
             
@@ -302,7 +302,7 @@ define(function(require, exports, module) {
             all.remove(nodes, callback);
         }
         
-        function clear(){
+        function clear() {
             plugin.hide();
             
             failNode.items.length = 0;
@@ -328,7 +328,7 @@ define(function(require, exports, module) {
         }
         
         // Calculate the index of the 
-        function calcIndex(group, node){
+        function calcIndex(group, node) {
             var pitems = node.parent.items;
             var idx = pitems.indexOf(node);
             var pass = node.passed;
@@ -337,7 +337,7 @@ define(function(require, exports, module) {
             for (var i = idx; i >= 0; i--) {
                 if (pitems[i].passed != pass) continue;
                 
-                group.some(function(n, j){ 
+                group.some(function(n, j) { 
                     if (n.label == pitems[i].label) {
                         found = j + 1;
                         return true; 
@@ -348,8 +348,8 @@ define(function(require, exports, module) {
             return found;
         }
         
-        function clearResult(node){
-            (function _(items){
+        function clearResult(node) {
+            (function _(items) {
                 for (var i = items.length - 1; i >= 0; i--) {
                     if (items[i].label == node.label)
                         items.splice(i, 1);
@@ -361,7 +361,7 @@ define(function(require, exports, module) {
             tree.refresh();
         }
         
-        function handleResult(node){
+        function handleResult(node) {
             var nodes = [failNode, passNode, errNode, termNode, skipNode];
             var results = [failNode.items, passNode.items, errNode.items, termNode.items, skipNode.items];
             
@@ -373,7 +373,7 @@ define(function(require, exports, module) {
             var hasFail = results[0].length || results[2].length;
             
             rootNode.items.length = 0;
-            [0,2,3,1,4].forEach(function(i){
+            [0, 2, 3, 1, 4].forEach(function(i) {
                 if (results[i].length) {
                     rootNode.items.push(nodes[i]);
                     
@@ -403,11 +403,11 @@ define(function(require, exports, module) {
                     parentList.push(loop);
                 }
                 
-                (function recur(pNode, group, name){
+                (function recur(pNode, group, name) {
                     if (!pNode) return;
                     
                     var groupNode;
-                    if (!group.some(function(n){
+                    if (!group.some(function(n) {
                         if (n.label == pNode.label) {
                             groupNode = n;
                             return true;
@@ -449,7 +449,7 @@ define(function(require, exports, module) {
                                 if (!cachedNode.parent) break;
                                 cachedNode.parent.items.remove(cachedNode);
                                 cachedNode = cachedNode.parent;
-                            } while(!cachedNode.items.length && cachedNode.type != "result");
+                            } while (!cachedNode.items.length && cachedNode.type != "result");
                         }
                         state[name + " " + groupNode.label] = groupNode;
                     }
@@ -458,7 +458,7 @@ define(function(require, exports, module) {
                 })(parentList.pop(), group, "");
             }
             else {
-                node.items.forEach(function(n){
+                node.items.forEach(function(n) {
                     importResultsToTree(n, results);
                 });
                 
@@ -467,7 +467,7 @@ define(function(require, exports, module) {
             }
         }
         
-        function run(nodes, options, callback){
+        function run(nodes, options, callback) {
             if (nodes && !Array.isArray(nodes))
                 callback = options, options = nodes, nodes = null;
             
@@ -480,7 +480,7 @@ define(function(require, exports, module) {
             all.run(nodes, options, callback);
         }
         
-        function stop(callback){
+        function stop(callback) {
             all.stop(callback);
         }
         
@@ -498,7 +498,7 @@ define(function(require, exports, module) {
         plugin.on("hide", function(e) {
             test.resize();
         });
-        plugin.on("unload", function(){
+        plugin.on("unload", function() {
             drawn = false;
         });
         

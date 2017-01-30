@@ -42,21 +42,21 @@ define(function(require, exports, module) {
             if (test.inactive)
                 return;
                 
-            test.on("coverage", function(e){
+            test.on("coverage", function(e) {
                 addToLibrary(e.node);
                 if (!showCoverage)
                     commands.exec("togglecoverage");
             }, plugin);
-            test.on("clearCoverage", function(e){
+            test.on("clearCoverage", function(e) {
                 removeFromLibrary(e.node);
             }, plugin);
             
-            test.on("clear", function(){
+            test.on("clear", function() {
                 clear();
             }, plugin);
             
             // Hook opening of known files
-            tabManager.on("open", function(e){
+            tabManager.on("open", function(e) {
                 var tab = e.tab;
                 if (!showCoverage) return;
                 
@@ -71,17 +71,17 @@ define(function(require, exports, module) {
                 // hint: "runs the selected test(s) in the test panel with code coverage enabled",
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
-                exec: function(editor, args){
+                exec: function(editor, args) {
                     var tree = test.focussedPanel.tree;
                     var fileNode = tree.selectedNode.findFileNode();
                     
                     if (tests[fileNode.path]) {
-                        tests[fileNode.path].paths.forEach(function(path){
-                            tabManager.openFile(path, true, function(){});
+                        tests[fileNode.path].paths.forEach(function(path) {
+                            tabManager.openFile(path, true, function() {});
                         });
                     }
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     var tree = test.focussedPanel.tree;
                     if (!tree || !tree.selectedNode) return false;
                     var fileNode = tree.selectedNode.findFileNode();
@@ -94,7 +94,7 @@ define(function(require, exports, module) {
                 // hint: "runs the selected test(s) in the test panel with code coverage enabled",
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
-                exec: function(){
+                exec: function() {
                     showCoverage = !showCoverage;
                     settings.set("state/test/coverage/@show", showCoverage);
                     
@@ -112,7 +112,7 @@ define(function(require, exports, module) {
                         }
                     }
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     for (var path in tests) { 
                         if (tests[path].all) return true; 
                     }
@@ -125,10 +125,10 @@ define(function(require, exports, module) {
                 // hint: "runs the selected test(s) in the test panel with code coverage enabled",
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
-                exec: function(){
+                exec: function() {
                     clear();
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     for (var path in tests) { 
                         if (tests[path].all) return true; 
                     }
@@ -136,7 +136,7 @@ define(function(require, exports, module) {
                 }
             }, plugin);
             
-            settings.on("read", function(){
+            settings.on("read", function() {
                 settings.setDefaults("user/test/coverage", [
                     ["alwayson", false],
                     ["fullline", true],
@@ -159,7 +159,7 @@ define(function(require, exports, module) {
                     button.show();
                 }
                 
-                all.once("draw", function(){
+                all.once("draw", function() {
                     test.settingsMenu.append(new Divider({ position: 400 }));
                     test.settingsMenu.append(new MenuItem({ 
                         caption: "Show Coverage", 
@@ -183,12 +183,12 @@ define(function(require, exports, module) {
                 });
             }, plugin);
             
-            settings.on("user/test/coverage/@fullline", function(value){
+            settings.on("user/test/coverage/@fullline", function(value) {
                 if (!showCoverage) return;
                 commands.exec("togglecoverage");
                 commands.exec("togglecoverage");
             }, plugin);
-            settings.on("user/test/coverage/@testfiles", function(value){
+            settings.on("user/test/coverage/@testfiles", function(value) {
                 if (!showCoverage) return;
                 var tab;
                 if (value) {
@@ -207,33 +207,33 @@ define(function(require, exports, module) {
                     }
                 }
             }, plugin);
-            settings.on("user/test/coverage/@toolbar", function(value){
+            settings.on("user/test/coverage/@toolbar", function(value) {
                 value 
                     ? settings.getNumber("state/test/coverage/@total") && button.show() 
                     : button.hide();
             }, plugin);
             
             prefs.add({
-                "Test" : {
+                "Test": {
                     position: 1000,
-                    "Code Coverage" : {
+                    "Code Coverage": {
                         position: 400,
-                        "Always Run With Code Coverage" : {
+                        "Always Run With Code Coverage": {
                             type: "checkbox",
                             position: 100,
                             setting: "user/test/coverage/@alwayson"
                         },
-                        "Mark Full Line Coverage In Editor" : {
+                        "Mark Full Line Coverage In Editor": {
                             type: "checkbox",
                             position: 200,
                             setting: "user/test/coverage/@fullline"
                         },
-                        "Show Code Coverage In Test Files" : {
+                        "Show Code Coverage In Test Files": {
                             type: "checkbox",
                             position: 300,
                             setting: "user/test/coverage/@testfiles"
                         },
-                        "Show Total Code Coverage In Toolbar" : {
+                        "Show Total Code Coverage In Toolbar": {
                             type: "checkbox",
                             position: 400,
                             setting: "user/test/coverage/@toolbar"
@@ -244,11 +244,11 @@ define(function(require, exports, module) {
             
             // Save hooks
             // TODO figure out what changed in the file and only run applicable tests
-            save.on("afterSave", function(e){
+            save.on("afterSave", function(e) {
                 if (!settings.getBool("user/test/@runonsave") || !files[e.path])
                     return;
                 
-                var tests = Object.keys(files[e.path].coverage).map(function(path){
+                var tests = Object.keys(files[e.path].coverage).map(function(path) {
                     return all.findTest(path);
                 });
                 
@@ -256,13 +256,13 @@ define(function(require, exports, module) {
                 commands.exec(cmd, null, { nodes: tests });
             }, plugin);
             
-            all.on("draw", function(){
+            all.on("draw", function() {
                 var menuRelatedFiles = new Menu({}, plugin);
-                menuRelatedFiles.on("itemclick", function(e){
+                menuRelatedFiles.on("itemclick", function(e) {
                     tabManager.openFile(e.value, true);
                 });
                 
-                menuRelatedFiles.on("show", function(){
+                menuRelatedFiles.on("show", function() {
                     var tree = test.focussedPanel.tree;
                     var fileNode = tree.selectedNode.findFileNode();
                     
@@ -272,7 +272,7 @@ define(function(require, exports, module) {
                     }
                     
                     if (tests[fileNode.path]) {
-                        tests[fileNode.path].paths.forEach(function(path){
+                        tests[fileNode.path].paths.forEach(function(path) {
                             menuRelatedFiles.append(new MenuItem({
                                 caption: path,
                                 value: path
@@ -285,7 +285,7 @@ define(function(require, exports, module) {
                     caption: "Open Related Files", 
                     position: 450,
                     submenu: menuRelatedFiles,
-                    isAvailable: function(){
+                    isAvailable: function() {
                         var tree = test.focussedPanel.tree;
                         if (!tree || !tree.selectedNode) return false;
                         var fileNode = tree.selectedNode.findFileNode();
@@ -296,7 +296,7 @@ define(function(require, exports, module) {
         }
         
         var drawn;
-        function draw(){
+        function draw() {
             if (drawn) return;
             drawn = true;
             
@@ -336,13 +336,13 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function addToLibrary(node){
+        function addToLibrary(node) {
             var fileNode = node.findFileNode();
             var coverageFiles = node.coverage.files;
             
             if (!tests[fileNode.path] || !tests[fileNode.path].all) {
                 tests[fileNode.path] = { 
-                    paths: coverageFiles.map(function(coverage){
+                    paths: coverageFiles.map(function(coverage) {
                         return coverage.file.replace(reWs, "");
                     }),
                     node: fileNode,
@@ -350,7 +350,7 @@ define(function(require, exports, module) {
                 };
             }
             
-            coverageFiles.forEach(function(coverage){
+            coverageFiles.forEach(function(coverage) {
                 var path = coverage.file.replace(reWs, "");
                 var tab;
                 
@@ -385,10 +385,10 @@ define(function(require, exports, module) {
                         
                         for (var path in fInfo.coverage) {
                             var cvg = fInfo.coverage[path];
-                            (cvg.lines.covered || []).forEach(function(nr){
+                            (cvg.lines.covered || []).forEach(function(nr) {
                                 covered[nr] = true;
                             });
-                            (cvg.lines.uncovered || []).forEach(function(nr){
+                            (cvg.lines.uncovered || []).forEach(function(nr) {
                                 uncovered[nr] = true;
                             });
                         }
@@ -411,7 +411,7 @@ define(function(require, exports, module) {
             emit("update");
         }
         
-        function removeFromLibrary(node){
+        function removeFromLibrary(node) {
             var path = typeof node == "string" ? node : node.findFileNode().path;
             
             if (!tests[path]) return;
@@ -431,7 +431,7 @@ define(function(require, exports, module) {
             
             if (!all) return; // Already cleared
             
-            all.forEach(function(coverage){
+            all.forEach(function(coverage) {
                 var path = coverage.file.replace(reWs, "");
                 var tab;
                 
@@ -450,7 +450,7 @@ define(function(require, exports, module) {
             emit("update");
         }
         
-        function updateGlobalCoverage(){
+        function updateGlobalCoverage() {
             var totalLines = 0, coveredLines = 0;
             
             for (var path in files) {
@@ -477,7 +477,7 @@ define(function(require, exports, module) {
             session.coverageLines.push({ marker: marker, gutter: row, type: type });
         }
 
-        function decorateTab(tab, isTest){
+        function decorateTab(tab, isTest) {
             if (isTest && !tests[tab.path]) return;
             else if (!files[tab.path]) return;
             
@@ -486,8 +486,8 @@ define(function(require, exports, module) {
             
             var session = tab.document.getSession().session;
             if (!session) {
-                tab.once("activate", function(){ 
-                    setTimeout(function(){ 
+                tab.once("activate", function() { 
+                    setTimeout(function() { 
                         decorateTab(tab, isTest); 
                     });
                 });
@@ -499,25 +499,25 @@ define(function(require, exports, module) {
             var coverage = isTest ? tests[tab.path].own : files[tab.path];
             var showMarker = settings.getBool("user/test/coverage/@fullline");
             if (coverage.lines.covered) {
-                coverage.lines.covered.forEach(function(row){
+                coverage.lines.covered.forEach(function(row) {
                     addMarker(session, "covered", row - 1, showMarker);
                 });
             }
             if (coverage.lines.uncovered) {
-                coverage.lines.uncovered.forEach(function(row){
+                coverage.lines.uncovered.forEach(function(row) {
                     addMarker(session, "uncovered", row - 1, showMarker);
                 });
             }
         }
         
-        function clearDecoration(session){
+        function clearDecoration(session) {
             if (session.document) {
                 session = session.document.getSession().session;
                 if (!session) return;
             }
             
             if (session.coverageLines) {
-                session.coverageLines.forEach(function(i){
+                session.coverageLines.forEach(function(i) {
                     if (i.marker) session.removeMarker(i.marker);
                     session.removeGutterDecoration(i.gutter, i.type);
                 });
@@ -525,8 +525,8 @@ define(function(require, exports, module) {
             session.coverageLines = [];
         }
         
-        function clearAllDecorations(){
-            tabManager.getTabs().forEach(function(tab){
+        function clearAllDecorations() {
+            tabManager.getTabs().forEach(function(tab) {
                 if (tab.editorType != "ace") return;
                 var session = tab.document.getSession().session;
                 if (session && session.coverageLines) clearDecoration(session);
@@ -536,7 +536,7 @@ define(function(require, exports, module) {
             settings.set("state/test/coverage/@show", false);
         }
         
-        function clear(){
+        function clear() {
             for (var path in tests) {
                 removeFromLibrary(path);
             }
@@ -570,17 +570,17 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            get buttonMenu(){ return menu; },
+            get buttonMenu() { return menu; },
             
             /**
              * 
              */
-            get tests(){ return tests; },
+            get tests() { return tests; },
             
             /**
              * 
              */
-            get files(){ return files; },
+            get files() { return files; },
             
             /**
              * 

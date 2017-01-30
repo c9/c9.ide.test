@@ -18,7 +18,7 @@ define(function(require, exports, module) {
         ["items"]
     );
     
-    File.prototype.__defineGetter__("passed", function(){ 
+    File.prototype.__defineGetter__("passed", function() { 
         return typeof this.data.ownPassed == "number"
             ? this.data.ownPassed
             : this.data.passed;

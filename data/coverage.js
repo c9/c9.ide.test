@@ -127,7 +127,7 @@ define(function(require, exports, module) {
             return new Coverage({
                 files: data,
                 path: path
-            })
+            });
         } 
         else {
             return false;

@@ -33,8 +33,8 @@ define(function(require, exports, module) {
         var Data = require("./data/data");
         
         // Destructive conversion process
-        Data.fromJSON = function(list){
-            return list.map(function(node){
+        Data.fromJSON = function(list) {
+            return list.map(function(node) {
                 if (node instanceof Data) return node;
                 if (node.items) node.items = Data.fromJSON(node.items);
                 
@@ -66,10 +66,10 @@ define(function(require, exports, module) {
                     
                     runners: [],
                     
-                    register: function(){},
-                    unregister: function(){},
-                    on: function(){},
-                    once: function(){},
+                    register: function() {},
+                    unregister: function() {},
+                    on: function() {},
+                    once: function() {},
                     inactive: true
                 }
             });
@@ -105,19 +105,19 @@ define(function(require, exports, module) {
                 hint: "runs the selected test(s) in the test panel",
                 // bindKey: { mac: "F6", win: "Ctrl-F5" },
                 group: "Test",
-                exec: function(editor, args){
+                exec: function(editor, args) {
                     if (settings.getBool("user/test/coverage/@alwayson"))
                         return commands.exec("runtestwithcoverage", editor, args);
                     
                     transformRunButton("stop");
                     focussedPanel.run(args.nodes || null, {
                         transformRun: args.transformRun
-                    }, function(err, nodes){
+                    }, function(err, nodes) {
                         transformRunButton("run");
                         if (err) return console.log(err);
                         
                         if (nodes) {
-                            nodes.forEach(function(node){
+                            nodes.forEach(function(node) {
                                 emit(node.coverage
                                     ? "coverage"
                                     : "clearCoverage", { node: node });
@@ -125,7 +125,7 @@ define(function(require, exports, module) {
                         }
                     });
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     return focussedPanel ? true : false;
                 }
             }, plugin);
@@ -135,7 +135,7 @@ define(function(require, exports, module) {
                 hint: "runs the focussed test or last run test",
                 bindKey: { mac: "F6", win: "Ctrl-F5" },
                 group: "Test",
-                exec: function(editor, args){
+                exec: function(editor, args) {
                     var path = tabManager.focussedTab.path;
                     var test = focussedPanel.findFileByPath(path);
                     return commands.exec("runtest", editor, { 
@@ -143,7 +143,7 @@ define(function(require, exports, module) {
                         transformRun: true
                     });
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     var path = (tabManager.focussedTab || 0).path;
                     return focussedPanel && (focussedPanel.findFileByPath(path) || lastTest)
                         ? true : false;
@@ -155,7 +155,7 @@ define(function(require, exports, module) {
                 hint: "runs the focussed test or last run test with code coverage",
                 bindKey: { mac: "Shift-F6", win: "Ctrl-Shift-F5" },
                 group: "Test",
-                exec: function(editor, args){
+                exec: function(editor, args) {
                     var path = tabManager.focussedTab.path;
                     var test = focussedPanel.findFileByPath(path);
                     return commands.exec("runtestwithcoverage", editor, { 
@@ -163,7 +163,7 @@ define(function(require, exports, module) {
                         transformRun: true
                     });
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     var path = (tabManager.focussedTab || 0).path;
                     return focussedPanel && (focussedPanel.findFileByPath(path) || lastTest) 
                         ? true : false;
@@ -175,16 +175,16 @@ define(function(require, exports, module) {
                 hint: "runs the selected test(s) in the test panel with code coverage enabled",
                 // bindKey: { mac: "Shift-F6", win: "Ctrl-Shift-F5" },
                 group: "Test",
-                exec: function(editor, args){
+                exec: function(editor, args) {
                     transformRunButton("stop");
                     focussedPanel.run(args.nodes || null, { 
                         withCodeCoverage: true 
-                    }, function(err, nodes){
+                    }, function(err, nodes) {
                         transformRunButton("run");
                         if (err) return console.log(err);
                         
                         if (nodes) {
-                            nodes.forEach(function(node){
+                            nodes.forEach(function(node) {
                                 emit(node.coverage
                                     ? "coverage"
                                     : "clearCoverage", { node: node });
@@ -192,7 +192,7 @@ define(function(require, exports, module) {
                         }
                     });
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     return focussedPanel ? true : false;
                 }
             }, plugin);
@@ -202,13 +202,13 @@ define(function(require, exports, module) {
                 // hint: "runs the selected test(s) in the test panel",
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
-                exec: function(editor, args){
+                exec: function(editor, args) {
                     btnRun.disable();
-                    focussedPanel.stop(function(){
+                    focussedPanel.stop(function() {
                         btnRun.enable();
                     });
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     return focussedPanel ? true : false;
                 }
             }, plugin);
@@ -218,7 +218,7 @@ define(function(require, exports, module) {
                 // hint: "runs the selected test(s) in the test panel",
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
-                exec: function(){
+                exec: function() {
                     emit("clear");
                 }
             }, plugin);
@@ -228,12 +228,12 @@ define(function(require, exports, module) {
                 // hint: "runs the selected test(s) in the test panel",
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
-                exec: function(){
-                    focussedPanel.skip(function(){});
+                exec: function() {
+                    focussedPanel.skip(function() {});
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     return focussedPanel && focussedPanel.tree 
-                      && focussedPanel.tree.selectedNodes.some(function(n){
+                      && focussedPanel.tree.selectedNodes.some(function(n) {
                         if (n.type == "file") return true;
                     });
                 }
@@ -244,12 +244,12 @@ define(function(require, exports, module) {
                 // hint: "runs the selected test(s) in the test panel",
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
-                exec: function(){
-                    focussedPanel.remove(function(){});
+                exec: function() {
+                    focussedPanel.remove(function() {});
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     return focussedPanel && focussedPanel.tree 
-                      && focussedPanel.tree.selectedNodes.some(function(n){
+                      && focussedPanel.tree.selectedNodes.some(function(n) {
                         if (n.type == "file") return true;
                     });
                 }
@@ -260,9 +260,9 @@ define(function(require, exports, module) {
                 // hint: "runs the selected test(s) in the test panel",
                 // bindKey: { mac: "Command-O", win: "Ctrl-O" },
                 group: "Test",
-                exec: function(args){
+                exec: function(args) {
                     var nodes = args.nodes || focussedPanel.tree.selectedNodes;
-                    nodes.forEach(function(n){
+                    nodes.forEach(function(n) {
                         var output = (n.findFileNode() || 0).fullOutput;
                         if (!output) return;
                         
@@ -277,12 +277,12 @@ define(function(require, exports, module) {
                                 }
                             },
                             value: output
-                        }, function(){});
+                        }, function() {});
                     });
                 },
-                isAvailable: function(){
+                isAvailable: function() {
                     return focussedPanel && focussedPanel.tree 
-                      && focussedPanel.tree.selectedNodes.some(function(n){
+                      && focussedPanel.tree.selectedNodes.some(function(n) {
                         return (n.findFileNode() || 0).fullOutput || false;
                     });
                 }
@@ -292,8 +292,8 @@ define(function(require, exports, module) {
                 onclick: openTestConfigFile
             }), 900, plugin);
             
-            function readConfig(cb){
-                fs.readFile(configPath, function(err, data){
+            function readConfig(cb) {
+                fs.readFile(configPath, function(err, data) {
                     if (err && err.code != "ENOENT")
                         return showError("Could not load " + configPath 
                             + ". The test panel is disabled. Please restart " 
@@ -301,24 +301,24 @@ define(function(require, exports, module) {
                     
                     parse(data || "");
                     
-                    cb && cb()
+                    cb && cb();
                     
                     ready = true;
                     emit.sticky("ready");
                 });
             }
-            readConfig(function(){
+            readConfig(function() {
                 watcher.watch(configPath);
-                watcher.on("change", function(e){
+                watcher.on("change", function(e) {
                     if (e.path == configPath) {
-                        readConfig(function(){
+                        readConfig(function() {
                             emit("updateConfig");
                         });
                     }
                 });
             });
             
-            save.on("afterSave", function(e){
+            save.on("afterSave", function(e) {
                 if (e.path == configPath) {
                     parse(e.value);
                     emit("updateConfig");
@@ -327,7 +327,7 @@ define(function(require, exports, module) {
         }
         
         var drawnMenu = false;
-        function drawMenu(){
+        function drawMenu() {
             if (drawnMenu) return;
             drawnMenu = true;
             
@@ -363,9 +363,9 @@ define(function(require, exports, module) {
             plugin.addElement(toolbar);
             
             // Run Menu
-            var emptyLabel = new ui.label({ caption: "No Settings "});
+            var emptyLabel = new ui.label({ caption: "No Settings " });
             mnuRun = new ui.menu({ class: "runner-config-menu" });
-            mnuRun.addEventListener("prop.visible", function(e){
+            mnuRun.addEventListener("prop.visible", function(e) {
                 if (!e.value) return;
                 
                 var runners = [], found = {};
@@ -375,9 +375,9 @@ define(function(require, exports, module) {
                 }
                 
                 if (focussedPanel.tree.selectedNode) {
-                    focussedPanel.tree.selectedNodes.forEach(function(n){
+                    focussedPanel.tree.selectedNodes.forEach(function(n) {
                         if (n.type == "all" || n.type == "root" || n.type == "runner") {
-                            n.findAllNodes("runner").forEach(function(n){
+                            n.findAllNodes("runner").forEach(function(n) {
                                 var runner = n.runner;
                                 if (found[n.name]) return;
                                 found[n.name] = true;
@@ -401,7 +401,7 @@ define(function(require, exports, module) {
                     return;
                 }
                 
-                runners.forEach(function(runner){
+                runners.forEach(function(runner) {
                     if (runner.form) {
                         if (!runner.meta.$label) {
                             runner.meta.$label = new ui.label({
@@ -455,7 +455,7 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function registerTestRunner(runner){
+        function registerTestRunner(runner) {
             drawMenu();
             
             runners.push(runner);
@@ -463,13 +463,13 @@ define(function(require, exports, module) {
             emit("register", { runner: runner });
         }
         
-        function unregisterTestRunner(runner){
+        function unregisterTestRunner(runner) {
             runners.splice(runners.indexOf(runner), 1);
             
             emit("unregister", { runner: runner });
         }
         
-        function transformRunButton(type){
+        function transformRunButton(type) {
             if (!drawn) return;
             btnRun.setAttribute("caption", type == "stop" ? "Stop" : "Run");
             btnRun.setAttribute("command", type == "stop" ? "stoptest" : "runtest");
@@ -478,18 +478,18 @@ define(function(require, exports, module) {
         
         // TODO: https://github.com/tj/js-yaml/blob/master/lib/yaml.js
         // OR: https://github.com/jeremyfa/yaml.js/blob/develop/dist/yaml.min.js
-        function convertToType(x){
+        function convertToType(x) {
             if (x.toLowerCase() == "true") return true;
             if (x.toLowerCase() == "false") return false;
             if (typeof parseFloat(x) == "number") return parseFloat(x);
             throw new Error("Unknown Type");
         }
-        function parse(data){
+        function parse(data) {
             if (!config) config = {};
             
             var keepNewline, stack = [config], top = config, name, create, value;
                 
-            data.split("\n").forEach(function(rawLine){
+            data.split("\n").forEach(function(rawLine) {
                 // line = line.trim();
                 var line = rawLine.split("#")[0].trimRight();
                 
@@ -531,7 +531,7 @@ define(function(require, exports, module) {
             return config;
         }
         
-        function saveConfig(callback){
+        function saveConfig(callback) {
             var contents = "";
             
             var item;
@@ -566,29 +566,29 @@ define(function(require, exports, module) {
             emit("updateConfig");
         }
         
-        function resize(){
+        function resize() {
             emit("resize");
         }
         
-        function refresh(){
+        function refresh() {
             emit("update");
         }
         
-        function setCoverage(node){
+        function setCoverage(node) {
             emit("coverage", { node: node });
         }
         
-        function clearCoverage(node){
+        function clearCoverage(node) {
             emit("clearCoverage", { node: node });
         }
         
-        function openTestConfigFile(){
+        function openTestConfigFile() {
             tabManager.open({
                 path: configPath,
                 newOnError: true,
                 value: "excluded:\n  - \n\nskipped:\n  - \n",
                 focus: true
-            }, function(){});
+            }, function() {});
         }
         
         /***** Lifecycle *****/
@@ -641,39 +641,39 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            get ready(){ return ready; },
+            get ready() { return ready; },
             
             /**
              * 
              */
-            get drawn(){ return drawn; },
+            get drawn() { return drawn; },
             
             /**
              * 
              */
-            get config(){ return config; },
+            get config() { return config; },
             
             /**
              * 
              */
-            get runners(){ return runners; },
+            get runners() { return runners; },
             
             /**
              * 
              */
-            get settingsMenu(){ return mnuSettings; },
+            get settingsMenu() { return mnuSettings; },
             
             /**
              * 
              */
-            get focussedPanel(){ return focussedPanel; },
-            set focussedPanel(v){ focussedPanel = v; },
+            get focussedPanel() { return focussedPanel; },
+            set focussedPanel(v) { focussedPanel = v; },
             
             /**
              * 
              */
-            get lastTest(){ return lastTest; },
-            set lastTest(v){ lastTest = v; },
+            get lastTest() { return lastTest; },
+            set lastTest(v) { lastTest = v; },
             
             /**
              * 

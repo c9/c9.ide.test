@@ -31,15 +31,15 @@ define(function(require, exports, module) {
         
         var handle = editors.register("coverageview", "Coverage View", CoverageView, extensions);
         
-        handle.on("load", function(){
+        handle.on("load", function() {
             commands.addCommand({
                 name: "opencoverageview",
                 // hint: "runs the selected test(s) in the test panel",
                 // bindKey: { mac: "F6", win: "F6" },
                 group: "Test",
-                exec: function(editor, args){
+                exec: function(editor, args) {
                     var tab;
-                    if (tabManager.getTabs().some(function(t){
+                    if (tabManager.getTabs().some(function(t) {
                         if (t.editorType == "coverageview") {
                             tab = t;
                             return true;
@@ -53,12 +53,12 @@ define(function(require, exports, module) {
                             editorType: "coverageview", 
                             focus: true, 
                             pane: console.getPanes()[0]
-                        }, function(){});
+                        }, function() {});
                     }
                 }
             }, handle);
             
-            coverage.on("draw", function(){
+            coverage.on("draw", function() {
                 coverage.buttonMenu.append(new Divider());
                 coverage.buttonMenu.append(new MenuItem({ 
                     caption: "Open Code Coverage View", 
@@ -67,7 +67,7 @@ define(function(require, exports, module) {
             }, handle);
         });
                           
-        function CoverageView(){
+        function CoverageView() {
             var plugin = new Editor("Ajax.org", main.consumes, extensions);
             var datagrid, dropdown;
             
@@ -103,7 +103,7 @@ define(function(require, exports, module) {
                     ]
                 }));
                 
-                dropdown.on("afterchange", function(){
+                dropdown.on("afterchange", function() {
                     update();
                 });
                 
@@ -111,7 +111,7 @@ define(function(require, exports, module) {
                 datagrid = new Datagrid({
                     container: container.$int,
                 
-                    columns : [
+                    columns: [
                         {
                             caption: "Hierarchy",
                             value: "label",
@@ -121,7 +121,7 @@ define(function(require, exports, module) {
                         {
                             caption: "Covered (%)",
                             width: "20%",
-                            getText: function(node){
+                            getText: function(node) {
                                 return node.covered + "%";
                             }
                         }, 
@@ -133,12 +133,12 @@ define(function(require, exports, module) {
                     ]
                 }, plugin);
                 
-                datagrid.on("afterChoose", function(){
+                datagrid.on("afterChoose", function() {
                     tabManager.openFile("/" + datagrid.selectedNode.label, 
-                        true, function(){});
+                        true, function() {});
                 });
                 
-                coverage.on("update", function(){
+                coverage.on("update", function() {
                     update();
                 }, plugin);
                 
@@ -149,7 +149,7 @@ define(function(require, exports, module) {
             
             /***** Method *****/
             
-            function update(){
+            function update() {
                 var nodes = [];
                 var lookup = nodes.lookup || (nodes.lookup = {});
                 var filter = dropdown.value;
@@ -160,7 +160,7 @@ define(function(require, exports, module) {
                 }
                 else {
                     files = {};
-                    coverage.tests[filter].paths.forEach(function(path){
+                    coverage.tests[filter].paths.forEach(function(path) {
                         var cvg = coverage.files[path];
                         if (!cvg) return;
                         
